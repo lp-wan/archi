@@ -169,11 +169,11 @@ information with LPWAN Application Servers (App) through a central Network
 Gateway (NGW), which can be powered and is typically a lot less constrained than
 the Devices.
 Because Devices embed built-in applications, the traffic flows to be compressed
-are known in advance and the location of the C/D and F/R functions (e.g., at the Dev and NGW), and the associated rules, can be pre provisionned in the system before use.
+are known in advance and the location of the C/D and F/R functions (e.g., at the Dev and NGW), and the associated rules, can be pre provisioned in the system before use.
 
 Nevertheless, SCHC is very generic and its applicability is not limited to
 star-oriented deployments and/or to use cases where applications are very static
-and the state provisionned in advance.
+and the state provisioned in advance.
 {{-SCHCoPPP}} describes an alternate deployment where
 the C/D and/or F/R operations are performed between peers of equal capabilities
 over a PPP {{?rfc2516}} connection. SCHC over PPP  illustrates that with SCHC,
@@ -195,7 +195,7 @@ Name (URN) {{?rfc8141}}, ensuring that the peers use the exact same set of rules
 
 ## Layering with SCHC Instances
 
-The rule database contains at least one set of rules that are specific per Device.
+The rule database contains at least one set of rules per Device.
 There is thus a SCHC instance per pair of endpoints.
 {{rfc8724}} states that a SCHC instance needs the rules to process
 C/D and F/R before the session starts, and that rules cannot be modified during
@@ -217,7 +217,7 @@ applies before LPWAN transportation layer.
   p C    |  inner |                                           |  inner |
   p H    +--------+                                           +--------+
   . C    |  SCHC  |                                           |  SCHC  |
-         |  inner |   cryptographical boundary                |  inner |
+         |  inner |     cryptographic boundary                |  inner |
  -._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._
   A S    |  CoAP  |                                           |  CoAP  |
   p C    |  outer |                                           |  outer |
@@ -241,7 +241,7 @@ applies before LPWAN transportation layer.
 This document defines a generic architecture for SCHC that can be used at any of these levels.
 The goal of the architectural document is to orchestrate the different protocols and data model
 defined by the LPWAN working group to design an operational and interoperable
-framework for allowing IP application over contrained networks.
+framework for allowing IP application over constrained networks.
 
 
 
@@ -250,7 +250,7 @@ framework for allowing IP application over contrained networks.
 
 # SCHC Data Model
 
-A SCHC instance, summarized in the {{Fig-Glob-Arch1}}, implies C/D and/or F/R present in both end and that both ends are provisionned with the same set of rules.
+A SCHC instance, summarized in the {{Fig-Glob-Arch1}}, implies C/D and/or F/R present in both end and that both ends are provisioned with the same set of rules.
 
 ~~~~
        (-------)                                (-------)
@@ -267,7 +267,7 @@ A SCHC instance, summarized in the {{Fig-Glob-Arch1}}, implies C/D and/or F/R pr
 
 
 A common rule representation that expresses the SCHC rules in an interoperable
-fashion is needed yo be able to provision end-points from different vendors
+fashion is needed to be able to provision end-points from different vendors
 To that effect, {{-Model}} defines a rule representation using the
 [YANG](#rfc7950) formalism.
 
@@ -285,7 +285,7 @@ To that effect, {{-Model}} defines a rule representation using the
    ===>| C & F |===>
        +-------+
 ~~~~
-{: #Fig-RM title='Summerized SCHC elements'}
+{: #Fig-RM title='Summarized SCHC elements'}
 
 The Rule Manager (RM) is in charge of handling data derived from the YANG Data
 Model and apply changes to the rules database {{Fig-RM}}.
@@ -302,8 +302,7 @@ The RM traffic may be itself compressed by SCHC: if CORECONF protocol is used, {
 # SCHC Device Lifecycle
 In the context of LPWANs, the expectation is that SCHC rules are associated with a
 physical device that is deployed in a network. This section describes the actions
-taken to enable an autimatic commissioning of the device in the network.
-SCHC
+taken to enable an automatic commissioning of the device in the network.
 
 ## Device Development
 
@@ -315,11 +314,11 @@ The expectation for the development cycle is that message formats are documented
 
 3. In the protocol model, both endpoint generate a packet format that is imposed by a protocol. In that case, the protocol itself is the source to generate the Rules. Both ends of the SCHC compression are operated in middle boxes, and special attention must be taken to ensure that they operate on the compatible Rule sets, basically the same major version of the same Rule Set.
 
-Depending on the deployment, the tools thar generate the Rules should provide knobs to optimize the Rule set, e.g., more rules vs. larger residue.
+Depending on the deployment, the tools that generate the Rules should provide knobs to optimize the Rule set, e.g., more rules vs. larger residue.
 
 ## Rules Publication
 
-In the device model and in the protocol model, at least one of the endpoints must obtain the rule set dynamically. The expectation is that the Rule Sets are published to a reachable repository and versionned (minor, major). Each rule set should have its own Uniform Resource Names (URN) {{!RFC8141}} and a version.
+In the device model and in the protocol model, at least one of the endpoints must obtain the rule set dynamically. The expectation is that the Rule Sets are published to a reachable repository and versioned (minor, major). Each rule set should have its own Uniform Resource Names (URN) {{!RFC8141}} and a version.
 
 
 
@@ -332,19 +331,19 @@ A corrupted Rule Set may be used for multiple forms of attacks, more in {{Securi
 [//]: # (how to provision the GW with the security and the rule set for the new device?)
 -->
 
-The device and the network should mutually authenticate themselves. The autonomic approach {{!RFC8993}} provides a model to achieve this at scale with zero touchn, in networks where enough bandwidth and compute are available. In highly constrained networks, one touch is usually necessary to program keys in the devices.
+The device and the network should mutually authenticate themselves. The autonomic approach {{!RFC8993}} provides a model to achieve this at scale with zero touch, in networks where enough bandwidth and compute are available. In highly constrained networks, one touch is usually necessary to program keys in the devices.
 
 The initial handshake between the SCHC endpoints should comprise a capability exchange whereby URN and the version of the rule set are obtained or compared. SCHC may not be used if both ends can not agree on an URN and a major version.  Manufacturer Usage Descriptions (MUD) {{!RFC8520}} may be used for that purpose in the device model.
 
-Upon the handshake, both ends can agree on a rule set, their role when the rules are asymmetrical, and fetch the rule set if necessary. Optionally, a node that fetwhed a rule set may inform the other end that it is reacy from transmission.
+Upon the handshake, both ends can agree on a rule set, their role when the rules are asymmetrical, and fetch the rule set if necessary. Optionally, a node that fetched a rule set may inform the other end that it is ready from transmission.
 
 
 ## SCHC Device Maintenance
 
 URN update without device update (bug fix)
-FUOTA => new URN => reprovisionning
+FUOTA => new URN => reprovisioning
 
-## SCHC Device Decommissionning
+## SCHC Device Decommissioning
 
 Signal from device/vendor/network admin
 
