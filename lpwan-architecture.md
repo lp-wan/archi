@@ -195,7 +195,7 @@ Name (URN) {{?rfc8141}}, ensuring that the peers use the exact same set of rules
 
 ## Layering with SCHC Instances
 
-The rule database contains at least one set of rules that are specific per Device.
+The rule database contains at least one set of rules per Device.
 There is thus a SCHC instance per pair of endpoints.
 {{rfc8724}} states that a SCHC instance needs the rules to process
 C/D and F/R before the session starts, and that rules cannot be modified during
