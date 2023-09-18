@@ -5,10 +5,10 @@
 SCHC Working Group                                              A. Pelov
 Internet-Draft                                                    Acklio
 Intended status: Informational                                P. Thubert
-Expires: 1 October 2023                                    Cisco Systems
+Expires: 21 March 2024                                                  
                                                              A. Minaburo
                                                                   Acklio
-                                                           30 March 2023
+                                                       18 September 2023
 
 
          Static Context Header Compression (SCHC) Architecture
@@ -33,7 +33,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 1 October 2023.
+   This Internet-Draft will expire on 21 March 2024.
 
 Copyright Notice
 
@@ -45,17 +45,17 @@ Copyright Notice
    license-info) in effect on the date of publication of this document.
    Please review these documents carefully, as they describe your rights
    and restrictions with respect to this document.  Code Components
-   extracted from this document must include Simplified BSD License text
-   as described in Section 4.e of the Trust Legal Provisions and are
-   provided without warranty as described in the Simplified BSD License.
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
 
 
 
 
 
-Pelov, et al.            Expires 1 October 2023                 [Page 1]
+Pelov, et al.             Expires 21 March 2024                 [Page 1]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
 Table of Contents
@@ -109,9 +109,9 @@ Table of Contents
 
 
 
-Pelov, et al.            Expires 1 October 2023                 [Page 2]
+Pelov, et al.             Expires 21 March 2024                 [Page 2]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
 2.  LPWAN Technologies and Profiles
@@ -165,9 +165,9 @@ Internet-Draft              SCHC Architecture                 March 2023
 
 
 
-Pelov, et al.            Expires 1 October 2023                 [Page 3]
+Pelov, et al.             Expires 21 March 2024                 [Page 3]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
 4.  SCHC Applicability
@@ -221,9 +221,9 @@ Internet-Draft              SCHC Architecture                 March 2023
 
 
 
-Pelov, et al.            Expires 1 October 2023                 [Page 4]
+Pelov, et al.             Expires 21 March 2024                 [Page 4]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
    Typically, an LPWAN network topology is star-oriented, which means
@@ -277,9 +277,9 @@ Internet-Draft              SCHC Architecture                 March 2023
 
 
 
-Pelov, et al.            Expires 1 October 2023                 [Page 5]
+Pelov, et al.             Expires 21 March 2024                 [Page 5]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
    that the device supports, and the Device does not need to manipulate
@@ -333,9 +333,9 @@ Internet-Draft              SCHC Architecture                 March 2023
 
 
 
-Pelov, et al.            Expires 1 October 2023                 [Page 6]
+Pelov, et al.             Expires 21 March 2024                 [Page 6]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
 5.3.  Layering with SCHC Instances
@@ -382,16 +382,16 @@ Internet-Draft              SCHC Architecture                 March 2023
    This document defines a generic architecture for SCHC that can be
    used at any of these levels.  The goal of the architectural document
    is to orchestrate the different protocols and data model defined by
-   the LPWAN working group to design an operational and interoperable
-   framework for allowing IP application over contrained networks.
+   the LPWAN and SCHC working groups to design an operational and
+   interoperable framework for allowing IP application over contrained
+   networks.
 
 
 
 
-
-Pelov, et al.            Expires 1 October 2023                 [Page 7]
+Pelov, et al.             Expires 21 March 2024                 [Page 7]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
 6.  SCHC Data Model
@@ -413,8 +413,8 @@ Internet-Draft              SCHC Architecture                 March 2023
                      Figure 4: Summarized SCHC elements
 
    A common rule representation that expresses the SCHC rules in an
-   interoperable fashion is needed yo be able to provision end-points
-   from different vendors To that effect, [rfc9363] defines a rule
+   interoperable fashion is needed to be able to provision end-points
+   from different vendors to that effect, [rfc9363] defines a rule
    representation using the YANG [rfc7950] formalism.
 
    [rfc9363] defines an YANG data model to represent the rules.  This
@@ -445,9 +445,9 @@ Internet-Draft              SCHC Architecture                 March 2023
 
 
 
-Pelov, et al.            Expires 1 October 2023                 [Page 8]
+Pelov, et al.             Expires 21 March 2024                 [Page 8]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
    The RM is an Application using the Internet to exchange information,
@@ -501,9 +501,9 @@ Internet-Draft              SCHC Architecture                 March 2023
 
 
 
-Pelov, et al.            Expires 1 October 2023                 [Page 9]
+Pelov, et al.             Expires 21 March 2024                 [Page 9]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
    3.  In the protocol model, both endpoint generate a packet format
@@ -513,7 +513,7 @@ Internet-Draft              SCHC Architecture                 March 2023
        must be taken to ensure that they operate on the compatible Rule
        sets, basically the same major version of the same Rule Set.
 
-   Depending on the deployment, the tools thar generate the Rules should
+   Depending on the deployment, the tools that generate the Rules should
    provide knobs to optimize the Rule set, e.g., more rules vs. larger
    residue.
 
@@ -545,7 +545,7 @@ Internet-Draft              SCHC Architecture                 March 2023
 
    Upon the handshake, both ends can agree on a rule set, their role
    when the rules are asymmetrical, and fetch the rule set if necessary.
-   Optionally, a node that fetwhed a rule set may inform the other end
+   Optionally, a node that fetched a rule set may inform the other end
    that it is reacy from transmission.
 
 7.4.  SCHC Device Maintenance
@@ -557,9 +557,9 @@ Internet-Draft              SCHC Architecture                 March 2023
 
 
 
-Pelov, et al.            Expires 1 October 2023                [Page 10]
+Pelov, et al.             Expires 21 March 2024                [Page 10]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
 7.5.  SCHC Device Decommissionning
@@ -613,9 +613,9 @@ Internet-Draft              SCHC Architecture                 March 2023
 
 
 
-Pelov, et al.            Expires 1 October 2023                [Page 11]
+Pelov, et al.             Expires 21 March 2024                [Page 11]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
    [rfc8824]  Minaburo, A., Toutain, L., and R. Andreasen, "Static
@@ -639,15 +639,15 @@ Internet-Draft              SCHC Architecture                 March 2023
    [I-D.ietf-core-comi]
               Veillette, M., Van der Stok, P., Pelov, A., Bierman, A.,
               and C. Bormann, "CoAP Management Interface (CORECONF)",
-              Work in Progress, Internet-Draft, draft-ietf-core-comi-12,
-              13 March 2023,
-              <https://tools.ietf.org/html/draft-ietf-core-comi-12>.
+              Work in Progress, Internet-Draft, draft-ietf-core-comi-16,
+              4 September 2023, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-core-comi-16>.
 
    [I-D.thubert-schc-over-ppp]
               Thubert, P., "SCHC over PPP", Work in Progress, Internet-
               Draft, draft-thubert-schc-over-ppp-00, 29 March 2023,
-              <https://tools.ietf.org/html/draft-thubert-schc-over-ppp-
-              00>.
+              <https://datatracker.ietf.org/doc/html/draft-thubert-schc-
+              over-ppp-00>.
 
    [rfc2516]  Mamakos, L., Lidl, K., Evarts, J., Carrel, D., Simone, D.,
               and R. Wheeler, "A Method for Transmitting PPP Over
@@ -669,9 +669,9 @@ Internet-Draft              SCHC Architecture                 March 2023
 
 
 
-Pelov, et al.            Expires 1 October 2023                [Page 12]
+Pelov, et al.             Expires 21 March 2024                [Page 12]
 
-Internet-Draft              SCHC Architecture                 March 2023
+Internet-Draft              SCHC Architecture             September 2023
 
 
    [rfc7950]  Bjorklund, M., Ed., "The YANG 1.1 Data Modeling Language",
@@ -717,35 +717,26 @@ Internet-Draft              SCHC Architecture                 March 2023
 
 Authors' Addresses
 
-
-
-
-
-
-
-
-
-Pelov, et al.            Expires 1 October 2023                [Page 13]
-
-Internet-Draft              SCHC Architecture                 March 2023
-
-
    Alexander Pelov
    Acklio
    1137A avenue des Champs Blancs
    35510 Cesson-Sevigne Cedex
    France
 
+
+
+Pelov, et al.             Expires 21 March 2024                [Page 13]
+
+Internet-Draft              SCHC Architecture             September 2023
+
+
    Email: a@ackl.io
 
 
    Pascal Thubert
-   Cisco Systems
-   45 Allee des Ormes - BP1200
-   06254 Mougins - Sophia Antipolis
+   06330 Roquefort les Pins
    France
-
-   Email: pthubert@cisco.com
+   Email: pascal.thubert@gmail.com
 
 
    Ana Minaburo
@@ -753,7 +744,6 @@ Internet-Draft              SCHC Architecture                 March 2023
    1137A avenue des Champs Blancs
    35510 Cesson-Sevigne Cedex
    France
-
    Email: ana@ackl.io
 
 
@@ -781,4 +771,14 @@ Internet-Draft              SCHC Architecture                 March 2023
 
 
 
-Pelov, et al.            Expires 1 October 2023                [Page 14]
+
+
+
+
+
+
+
+
+
+
+Pelov, et al.             Expires 21 March 2024                [Page 14]

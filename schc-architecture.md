@@ -27,12 +27,10 @@ author:
   email: a@ackl.io
 - ins: P. Thubert
   name: Pascal Thubert
-  org:  Cisco Systems
-  street: Emerald Square, rue Evariste Galois
-  street: Batiment C
-  city:  06410 Biot - Sophia Antipolis
+  city:  06330 Roquefort les Pins
   country: France
-  email: pthubert@cisco.com
+  email: pascal.thubert@gmail.com
+  
 - ins: A. Minaburo
   name: Ana Minaburo
   org: Acklio
