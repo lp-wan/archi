@@ -20,7 +20,9 @@ area: Internet
 author:
 - ins: A. Pelov
   name: Alexander Pelov
-  city: 35510 Cesson-Sevigne Cedex
+  org: IMT Atlantique
+  street: rue de la Chataigneraie
+  city: 35576 Cesson-Sevigne Cedex
   country: France
   email: alexander.pelov@imt-atlantique.fr
 - ins: P. Thubert
@@ -44,10 +46,13 @@ informative:
   rfc8200: IPv6
   rfc7950: YANG
   rfc8376: Overview
+  rfc9011: SCHCoLoRaWAN
   rfc9363: Model
+  rfc9442: SCHCoSigFox
   I-D.thubert-schc-over-ppp: SCHCoPPP
   I-D.ietf-core-comi: COMI
-
+  I-D.ietf-6lo-schc-15dot4: SCHCo15dot4
+  I-D.ietf-intarea-schc-protocol-numbers: PN_and_Ethertype
 
 
 --- abstract
@@ -92,7 +97,7 @@ to which it is applied.
 Appendix D. "SCHC Parameters" of {{rfc8724}} lists the information that an LPWAN
 technology-specific document must provide to profile SCHC for that technology.
 
-As an example, {{!rfc9011}} provides the SCHC profile for LoRaWAN networks.
+As an example, {{rfc9011}} provides the SCHC profile for LoRaWAN networks.
 
 # The Static Context Header Compression
 
@@ -309,6 +314,72 @@ framework for allowing IP application over contrained networks.
 
 
 
+# SCHC Packet Formats
+
+SCHC can be used in multiple environments and multiple protocols.
+It was designed by default to work on native MAC frames with LPWAN technologies such as LoRaWAN{{rfc9011}}, IEEE std 802.15.4 {{-SCHCo15dot4}}, and SigFox{{rfc9442}}.
+
+To operate SCHC over Ethernet, IPv6, and UDP, the definition of, respectively, an Ethertype, an IP Protocol Number, and a UDP Port Number are necessary, more in {{-PN_and_Ethertype}}. In either case, there's a need for a SCHC header that is sufficient to identify the SCHC peers (endpoints) and their role (device vs. app), as well as the session between those peers that the packet pertains to.
+
+In either of the above cases, the expectation is that the SCHC header is transferred in a compressed form. This implies that the rules to uncompress the header are well known and separate from the rules that are used to uncompress the SCHC payload. The expectation is that for each layer, the format of the SCHC header and the compression rules are well known, with enough information to identify the session at that layer, but there is no expectation that they are the same across layers.
+
+
+## SCHC over Ethernet
+
+Before the SCHC compression takes place, the SCHC header shows as header as represented figure {{Fig-SCHC_hdr}}, that is virtually inserted before the real protocol header and data that are compressed in the session, e.g. a IPv6 in this figure.
+
+~~~~
+ +------------------+------------------+-------------+-----------
+ | IEEE 802 Header  | SCHC Header      | IPv6 Header | IPv6 NH
+ | Ethertype = SCHC | Ethertype = IPv6 |             | / ULP
+ +------------------+------------------+-------------+-----------
+                     <-
+                       SCHC overhead
+                                     ->
+~~~~
+{: #Fig-SCHC_hdr title='SCHC over Ethernet'}
+
+## SCHC over IPv6
+
+
+In the case of IPv6, the expectation is that the ULP checksum can be elided in the SCHC compression of the ULP, because the SCHC header has its own checksum that protects both the SCHC header and the whole ULP, header and payload.
+
+Before any compression takes place, the SCHC header shows as an IPv6 extension header as represented figure {{Fig-SCHC_hdr1}}, that is virtually inserted before the headers and data that are compressed in the session, e.g. a ULP in this figure
+
+~~~~
+ +-------------+-------------+------------+-----------
+ | IPv6 Header | SCHC Header | ULP Header | ULP PDU
+ |  NH=SCHC    | NH = ULP    |            | (Payload)
+ +-------------+-------------+------------+-----------
+                <-
+                SCHC overhead
+                           ->
+~~~~
+{: #Fig-SCHC_hdr1 title='SCHC over IPv6'}
+
+In the air, both the SCHC header (using well-known rules) and the ULP (using the rules indicated in the session) are compressed.
+The session endpoints are typically identified by the source and destination IP addresses. If the roles are well-known, then the endpoint information can be elided and deduced from the IP header. If there is only one session, it can be elided as well, otherwise a rule and residue are needed to extract the session ID. Finally, the SCHC extension header should contain a checksum that protects itself and all the ULP, so the ULP checksum can be elided in the compressed form of the ULP header.
+
+
+## SCHC over UDP
+
+When SCHC operates over the Internet, middleboxes may block packets with a next header that is SCHC. To avoid that issue, it would be desirable to prepaend a UDP header before the SCHC header as shown in figure {{Fig-SCHC_hdr2}}.
+
+~~~~
+ +-------------+-------------+-------------+------------+-----------
+ | IPv6 Header | UDP Header  | SCHC Header | ULP Header | ULP PDU
+ |  NH=UDP     | Port = SCHC | NH = ULP    |            | (Payload)
+ +-------------+-------------+-------------+------------+-----------
+                <-
+                       SCHC overhead
+                                          ->
+~
+~~~~
+{: #Fig-SCHC_hdr2 title='SCHC over UDP'}
+
+In that case, the destination port can indicate SCHC as in an header chain, and the source port can indicate the SCHC session in which case it can be elided in the compressed form of the SCHC header.
+The UDP checksum protects both the SCHC header and the whole ULP, so the SCHC and the ULP checksums can both be elided.
+In other words, in the SCHC over UDP case, the SCHC header can be fully elided, but the packet must carry the overhead of a full UDP header.
 
 # SCHC Data Model
 
@@ -393,9 +464,9 @@ A corrupted Rule Set may be used for multiple forms of attacks, more in {{Securi
 [//]: # (how to provision the GW with the security and the rule set for the new device?)
 -->
 
-The device and the network should mutually authenticate themselves. The autonomic approach {{!RFC8993}} provides a model to achieve this at scale with zero touch, in networks where enough bandwidth and compute are available. In highly constrained networks, one touch is usually necessary to program keys in the devices.
+The device and the network should mutually authenticate themselves. The autonomic approach {{?RFC8993}} provides a model to achieve this at scale with zero touch, in networks where enough bandwidth and compute are available. In highly constrained networks, one touch is usually necessary to program keys in the devices.
 
-The initial handshake between the SCHC endpoints should comprise a capability exchange whereby URN and the version of the rule set are obtained or compared. SCHC may not be used if both ends can not agree on an URN and a major version.  Manufacturer Usage Descriptions (MUD) {{!RFC8520}} may be used for that purpose in the device model.
+The initial handshake between the SCHC endpoints should comprise a capability exchange whereby URN and the version of the rule set are obtained or compared. SCHC may not be used if both ends can not agree on an URN and a major version.  Manufacturer Usage Descriptions (MUD) {{?RFC8520}} may be used for that purpose in the device model.
 
 Upon the handshake, both ends can agree on a rule set, their role when the rules are asymmetrical, and fetch the rule set if necessary. Optionally, a node that fetched a rule set may inform the other end that it is reacy from transmission.
 

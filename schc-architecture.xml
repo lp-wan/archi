@@ -19,10 +19,11 @@
     <title abbrev="SCHC Architecture">Static Context Header Compression (SCHC) Architecture</title>
 
     <author initials="A." surname="Pelov" fullname="Alexander Pelov">
-      <organization></organization>
+      <organization>IMT Atlantique</organization>
       <address>
         <postal>
-          <city>35510 Cesson-Sevigne Cedex</city>
+          <street>rue de la Chataigneraie</street>
+          <city>35576 Cesson-Sevigne Cedex</city>
           <country>France</country>
         </postal>
         <email>alexander.pelov@imt-atlantique.fr</email>
@@ -326,6 +327,71 @@ framework for allowing IP application over contrained networks.</t>
 
 </section>
 </section>
+<section anchor="schc-packet-formats"><name>SCHC Packet Formats</name>
+
+<t>SCHC can be used in multiple environments and multiple protocols.
+It was designed by default to work on native MAC frames with LPWAN technologies such as LoRaWAN<xref target="rfc9011"/>, IEEE std 802.15.4 <xref target="I-D.ietf-6lo-schc-15dot4"/>, and SigFox<xref target="rfc9442"/>.</t>
+
+<t>To operate SCHC over Ethernet, IPv6, and UDP, the definition of, respectively, an Ethertype, an IP Protocol Number, and a UDP Port Number are necessary, more in <xref target="I-D.ietf-intarea-schc-protocol-numbers"/>. In either case, there's a need for a SCHC header that is sufficient to identify the SCHC peers (endpoints) and their role (device vs. app), as well as the session between those peers that the packet pertains to.</t>
+
+<t>In either of the above cases, the expectation is that the SCHC header is transferred in a compressed form. This implies that the rules to uncompress the header are well known and separate from the rules that are used to uncompress the SCHC payload. The expectation is that for each layer, the format of the SCHC header and the compression rules are well known, with enough information to identify the session at that layer, but there is no expectation that they are the same across layers.</t>
+
+<section anchor="schc-over-ethernet"><name>SCHC over Ethernet</name>
+
+<t>Before the SCHC compression takes place, the SCHC header shows as header as represented figure <xref target="Fig-SCHC_hdr"/>, that is virtually inserted before the real protocol header and data that are compressed in the session, e.g. a IPv6 in this figure.</t>
+
+<figure title="SCHC over Ethernet" anchor="Fig-SCHC_hdr"><artwork><![CDATA[
+ +------------------+------------------+-------------+-----------
+ | IEEE 802 Header  | SCHC Header      | IPv6 Header | IPv6 NH
+ | Ethertype = SCHC | Ethertype = IPv6 |             | / ULP
+ +------------------+------------------+-------------+-----------
+                     <-
+                       SCHC overhead
+                                     ->
+]]></artwork></figure>
+
+</section>
+<section anchor="schc-over-ipv6"><name>SCHC over IPv6</name>
+
+<t>In the case of IPv6, the expectation is that the ULP checksum can be elided in the SCHC compression of the ULP, because the SCHC header has its own checksum that protects both the SCHC header and the whole ULP, header and payload.</t>
+
+<t>Before any compression takes place, the SCHC header shows as an IPv6 extension header as represented figure <xref target="Fig-SCHC_hdr1"/>, that is virtually inserted before the headers and data that are compressed in the session, e.g. a ULP in this figure</t>
+
+<figure title="SCHC over IPv6" anchor="Fig-SCHC_hdr1"><artwork><![CDATA[
+ +-------------+-------------+------------+-----------
+ | IPv6 Header | SCHC Header | ULP Header | ULP PDU
+ |  NH=SCHC    | NH = ULP    |            | (Payload)
+ +-------------+-------------+------------+-----------
+                <-
+                SCHC overhead
+                           ->
+]]></artwork></figure>
+
+<t>In the air, both the SCHC header (using well-known rules) and the ULP (using the rules indicated in the session) are compressed.
+The session endpoints are typically identified by the source and destination IP addresses. If the roles are well-known, then the endpoint information can be elided and deduced from the IP header. If there is only one session, it can be elided as well, otherwise a rule and residue are needed to extract the session ID. Finally, the SCHC extension header should contain a checksum that protects itself and all the ULP, so the ULP checksum can be elided in the compressed form of the ULP header.</t>
+
+</section>
+<section anchor="schc-over-udp"><name>SCHC over UDP</name>
+
+<t>When SCHC operates over the Internet, middleboxes may block packets with a next header that is SCHC. To avoid that issue, it would be desirable to prepaend a UDP header before the SCHC header as shown in figure <xref target="Fig-SCHC_hdr2"/>.</t>
+
+<figure title="SCHC over UDP" anchor="Fig-SCHC_hdr2"><artwork><![CDATA[
+ +-------------+-------------+-------------+------------+-----------
+ | IPv6 Header | UDP Header  | SCHC Header | ULP Header | ULP PDU
+ |  NH=UDP     | Port = SCHC | NH = ULP    |            | (Payload)
+ +-------------+-------------+-------------+------------+-----------
+                <-
+                       SCHC overhead
+                                          ->
+~
+]]></artwork></figure>
+
+<t>In that case, the destination port can indicate SCHC as in an header chain, and the source port can indicate the SCHC session in which case it can be elided in the compressed form of the SCHC header.
+The UDP checksum protects both the SCHC header and the whole ULP, so the SCHC and the ULP checksums can both be elided.
+In other words, in the SCHC over UDP case, the SCHC header can be fully elided, but the packet must carry the overhead of a full UDP header.</t>
+
+</section>
+</section>
 <section anchor="schc-data-model"><name>SCHC Data Model</name>
 
 <t>A SCHC instance, summarized in the <xref target="Fig-Glob-Arch1"/>, implies C/D and/or F/R present in both end and that both ends are provisioned with the same set of rules.</t>
@@ -524,21 +590,6 @@ protected against tempering, e.g., encrypted and signed.</t>
   <seriesInfo name='DOI' value='10.17487/RFC8174'/>
 </reference>
 
-<reference anchor='rfc9011'>
-  <front>
-    <title>Static Context Header Compression and Fragmentation (SCHC) over LoRaWAN</title>
-    <author fullname='O. Gimenez' initials='O.' role='editor' surname='Gimenez'/>
-    <author fullname='I. Petrov' initials='I.' role='editor' surname='Petrov'/>
-    <date month='April' year='2021'/>
-    <abstract>
-      <t>The Static Context Header Compression and fragmentation (SCHC) specification (RFC 8724) describes generic header compression and fragmentation techniques for Low-Power Wide Area Network (LPWAN) technologies. SCHC is a generic mechanism designed for great flexibility so that it can be adapted for any of the LPWAN technologies.</t>
-      <t>This document defines a profile of SCHC (RFC 8724) for use in LoRaWAN networks and provides elements such as efficient parameterization and modes of operation.</t>
-    </abstract>
-  </front>
-  <seriesInfo name='RFC' value='9011'/>
-  <seriesInfo name='DOI' value='10.17487/RFC9011'/>
-</reference>
-
 <reference anchor='RFC8141'>
   <front>
     <title>Uniform Resource Names (URNs)</title>
@@ -551,39 +602,6 @@ protected against tempering, e.g., encrypted and signed.</t>
   </front>
   <seriesInfo name='RFC' value='8141'/>
   <seriesInfo name='DOI' value='10.17487/RFC8141'/>
-</reference>
-
-<reference anchor='RFC8993'>
-  <front>
-    <title>A Reference Model for Autonomic Networking</title>
-    <author fullname='M. Behringer' initials='M.' role='editor' surname='Behringer'/>
-    <author fullname='B. Carpenter' initials='B.' surname='Carpenter'/>
-    <author fullname='T. Eckert' initials='T.' surname='Eckert'/>
-    <author fullname='L. Ciavaglia' initials='L.' surname='Ciavaglia'/>
-    <author fullname='J. Nobre' initials='J.' surname='Nobre'/>
-    <date month='May' year='2021'/>
-    <abstract>
-      <t>This document describes a reference model for Autonomic Networking for managed networks. It defines the behavior of an autonomic node, how the various elements in an autonomic context work together, and how autonomic services can use the infrastructure.</t>
-    </abstract>
-  </front>
-  <seriesInfo name='RFC' value='8993'/>
-  <seriesInfo name='DOI' value='10.17487/RFC8993'/>
-</reference>
-
-<reference anchor='RFC8520'>
-  <front>
-    <title>Manufacturer Usage Description Specification</title>
-    <author fullname='E. Lear' initials='E.' surname='Lear'/>
-    <author fullname='R. Droms' initials='R.' surname='Droms'/>
-    <author fullname='D. Romascanu' initials='D.' surname='Romascanu'/>
-    <date month='March' year='2019'/>
-    <abstract>
-      <t>This memo specifies a component-based architecture for Manufacturer Usage Descriptions (MUDs). The goal of MUD is to provide a means for end devices to signal to the network what sort of access and network functionality they require to properly function. The initial focus is on access control. Later work can delve into other aspects.</t>
-      <t>This memo specifies two YANG modules, IPv4 and IPv6 DHCP options, a Link Layer Discovery Protocol (LLDP) TLV, a URL, an X.509 certificate extension, and a means to sign and verify the descriptions.</t>
-    </abstract>
-  </front>
-  <seriesInfo name='RFC' value='8520'/>
-  <seriesInfo name='DOI' value='10.17487/RFC8520'/>
 </reference>
 
 
@@ -636,6 +654,21 @@ protected against tempering, e.g., encrypted and signed.</t>
   <seriesInfo name='DOI' value='10.17487/RFC7950'/>
 </reference>
 
+<reference anchor='rfc9011'>
+  <front>
+    <title>Static Context Header Compression and Fragmentation (SCHC) over LoRaWAN</title>
+    <author fullname='O. Gimenez' initials='O.' role='editor' surname='Gimenez'/>
+    <author fullname='I. Petrov' initials='I.' role='editor' surname='Petrov'/>
+    <date month='April' year='2021'/>
+    <abstract>
+      <t>The Static Context Header Compression and fragmentation (SCHC) specification (RFC 8724) describes generic header compression and fragmentation techniques for Low-Power Wide Area Network (LPWAN) technologies. SCHC is a generic mechanism designed for great flexibility so that it can be adapted for any of the LPWAN technologies.</t>
+      <t>This document defines a profile of SCHC (RFC 8724) for use in LoRaWAN networks and provides elements such as efficient parameterization and modes of operation.</t>
+    </abstract>
+  </front>
+  <seriesInfo name='RFC' value='9011'/>
+  <seriesInfo name='DOI' value='10.17487/RFC9011'/>
+</reference>
+
 <reference anchor='rfc9363'>
   <front>
     <title>A YANG Data Model for Static Context Header Compression (SCHC)</title>
@@ -649,6 +682,25 @@ protected against tempering, e.g., encrypted and signed.</t>
   </front>
   <seriesInfo name='RFC' value='9363'/>
   <seriesInfo name='DOI' value='10.17487/RFC9363'/>
+</reference>
+
+<reference anchor='rfc9442'>
+  <front>
+    <title>Static Context Header Compression (SCHC) over Sigfox Low-Power Wide Area Network (LPWAN)</title>
+    <author fullname='J. Z├║├▒iga' initials='J.' surname='Z├║├▒iga'/>
+    <author fullname='C. Gomez' initials='C.' surname='Gomez'/>
+    <author fullname='S. Aguilar' initials='S.' surname='Aguilar'/>
+    <author fullname='L. Toutain' initials='L.' surname='Toutain'/>
+    <author fullname='S. C├®spedes' initials='S.' surname='C├®spedes'/>
+    <author fullname='D. Wistuba' initials='D.' surname='Wistuba'/>
+    <author fullname='J. Boite' initials='J.' surname='Boite'/>
+    <date month='July' year='2023'/>
+    <abstract>
+      <t>The Static Context Header Compression (SCHC) and fragmentation specification (RFC 8724) describes a generic framework for application header compression and fragmentation modes designed for Low-Power Wide Area Network (LPWAN) technologies. This document defines a profile of SCHC over Sigfox LPWAN and provides optimal parameter values and modes of operation.</t>
+    </abstract>
+  </front>
+  <seriesInfo name='RFC' value='9442'/>
+  <seriesInfo name='DOI' value='10.17487/RFC9442'/>
 </reference>
 
 
@@ -706,6 +758,71 @@ protected against tempering, e.g., encrypted and signed.</t>
       </abstract>
    </front>
    <seriesInfo name='Internet-Draft' value='draft-ietf-core-comi-16'/>
+   
+</reference>
+
+
+<reference anchor='I-D.ietf-6lo-schc-15dot4'>
+   <front>
+      <title>Transmission of SCHC-compressed packets over IEEE 802.15.4 networks</title>
+      <author fullname='Carles Gomez' initials='C.' surname='Gomez'>
+         <organization>UPC</organization>
+      </author>
+      <author fullname='Ana Minaburo' initials='A.' surname='Minaburo'>
+         <organization>Consultant</organization>
+      </author>
+      <date day='30' month='September' year='2023'/>
+      <abstract>
+	 <t>   A framework called Static Context Header Compression and
+   fragmentation (SCHC) has been designed with the primary goal of
+   supporting IPv6 over Low Power Wide Area Network (LPWAN) technologies
+   [RFC8724].  One of the SCHC components is a header compression
+   mechanism.  If used properly, SCHC header compression allows a
+   greater compression ratio than that achievable with traditional
+   6LoWPAN header compression [RFC6282].  For this reason, it may make
+   sense to use SCHC header compression in some 6LoWPAN environments,
+   including IEEE 802.15.4 networks.  This document specifies how a
+   SCHC-compressed packet can be carried over IEEE 802.15.4 networks.
+   The document also enables the transmission of SCHC-compressed UDP/
+   CoAP headers over 6LoWPAN-compressed IPv6 packets.
+
+	 </t>
+      </abstract>
+   </front>
+   <seriesInfo name='Internet-Draft' value='draft-ietf-6lo-schc-15dot4-03'/>
+   
+</reference>
+
+
+<reference anchor='I-D.ietf-intarea-schc-protocol-numbers'>
+   <front>
+      <title>Protocol Numbers for SCHC</title>
+      <author fullname='Robert Moskowitz' initials='R.' surname='Moskowitz'>
+         <organization>HTT Consulting</organization>
+      </author>
+      <author fullname='Stuart W. Card' initials='S. W.' surname='Card'>
+         <organization>AX Enterprize, LLC</organization>
+      </author>
+      <author fullname='Adam Wiethuechter' initials='A.' surname='Wiethuechter'>
+         <organization>AX Enterprize, LLC</organization>
+      </author>
+      <author fullname='Pascal Thubert' initials='P.' surname='Thubert'>
+         <organization>Cisco Systems, Inc</organization>
+      </author>
+      <date day='10' month='April' year='2023'/>
+      <abstract>
+	 <t>   This document requests an Internet Protocol Number, an Ethertype, and
+   UDP port assignment for SCHC.  The Internet Protocol Number request
+   is so that SCHC can be used for IP independent SCHC of other
+   transports such as UDP and ESP.  The Ethertype is to support generic
+   use of native SCHC over any IEEE 802 technology for IP and non-IP
+   protocols.  The UDP port request is to support End-to-End SCHC
+   through potentially blocking firewalls.
+
+	 </t>
+      </abstract>
+   </front>
+   <seriesInfo name='Internet-Draft' value='draft-ietf-intarea-schc-protocol-numbers-00'/>
    
 </reference>
 
@@ -836,6 +953,39 @@ protected against tempering, e.g., encrypted and signed.</t>
   <seriesInfo name='DOI' value='10.17487/RFC8949'/>
 </reference>
 
+<reference anchor='RFC8993'>
+  <front>
+    <title>A Reference Model for Autonomic Networking</title>
+    <author fullname='M. Behringer' initials='M.' role='editor' surname='Behringer'/>
+    <author fullname='B. Carpenter' initials='B.' surname='Carpenter'/>
+    <author fullname='T. Eckert' initials='T.' surname='Eckert'/>
+    <author fullname='L. Ciavaglia' initials='L.' surname='Ciavaglia'/>
+    <author fullname='J. Nobre' initials='J.' surname='Nobre'/>
+    <date month='May' year='2021'/>
+    <abstract>
+      <t>This document describes a reference model for Autonomic Networking for managed networks. It defines the behavior of an autonomic node, how the various elements in an autonomic context work together, and how autonomic services can use the infrastructure.</t>
+    </abstract>
+  </front>
+  <seriesInfo name='RFC' value='8993'/>
+  <seriesInfo name='DOI' value='10.17487/RFC8993'/>
+</reference>
+
+<reference anchor='RFC8520'>
+  <front>
+    <title>Manufacturer Usage Description Specification</title>
+    <author fullname='E. Lear' initials='E.' surname='Lear'/>
+    <author fullname='R. Droms' initials='R.' surname='Droms'/>
+    <author fullname='D. Romascanu' initials='D.' surname='Romascanu'/>
+    <date month='March' year='2019'/>
+    <abstract>
+      <t>This memo specifies a component-based architecture for Manufacturer Usage Descriptions (MUDs). The goal of MUD is to provide a means for end devices to signal to the network what sort of access and network functionality they require to properly function. The initial focus is on access control. Later work can delve into other aspects.</t>
+      <t>This memo specifies two YANG modules, IPv4 and IPv6 DHCP options, a Link Layer Discovery Protocol (LLDP) TLV, a URL, an X.509 certificate extension, and a means to sign and verify the descriptions.</t>
+    </abstract>
+  </front>
+  <seriesInfo name='RFC' value='8520'/>
+  <seriesInfo name='DOI' value='10.17487/RFC8520'/>
+</reference>
+
 
 
 
@@ -847,170 +997,198 @@ protected against tempering, e.g., encrypted and signed.</t>
   </back>
 
 <!-- ##markdown-source:
-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
-43FGrK0g6IU/SJWN1q9FvgAd+DeTdTcUeNCV1UKKuyBM/a6H71B+AVTc9Kot
-f/oJvEQY7iCDXaHf2imZgbw0BKecUeHsLm7vRC5O4dPM8ZlwLb8Yse1/veT4
-4OygLzfrx14LgwP7hBrOi32w78E03MWhJBebYf5FNHASJEu5uxFBM3jFiH5U
-pQLoYjFsLWuYdHuff3tqApKDSOJ/ATfR3gCYTgAA
+H4sIAAAAAAAAA81c6XIjOXL+X08Bd0d4qB2SaqmPmdHOsRod3bJ10DqivTG7
+niiyQLLcxQK3Dqk53e1n8bP4yZwngCKlPnbHEWbMIRYLQCKRx5eJBAaDQZLU
+TVpmv6aFK+2eaarWJvmyor/qZvfJk++e7CaZm5TpAn7OqnTaDHLbTAf1ZD4Z
+pNVknjd20rSVHTzZSSZps2fycuqSuh0v8rrOXXm9WkLLk6Pr4yRZ5nuJMfVq
+UdlpvWe+Wtn6K3zgqmbtSVPlkyZ8n7jFMo0fNG6iX5ImbwoY4tFVkzb5xBy4
+srFvG/PKppmt4OtiWVkixfSuDl4dbJn9iOxHSToeV/Z2z+BvnZ+Su5k8fe2q
+N3k5My8r1y6TtLIpzAhGqUrbJGnbzF21lwxg5jCF/aEZ2cLdApHMtP3CvgUW
+Ayn63FXQ8cnZtdlvirRs8r8B02nO1sIUYQlMZk2RmoN52qT5rLRVmuMbk7xZ
+7Zmnz59/88IcwJRcObiyt/gCfM3sW2JUWzYVvHVcpeUEG9lFmhd7JlUqhkuk
+4k/5ohmkfvjhtFL6R0NzPW/Htmr8DEZpPUmL6DETYp68ePr0ibl00MEUltAU
+tjYj6ORjdCypr2HDff1phk+HsLxJxL+zvEzHbeUCC8s0fkj8g2Wu2wKEt9nk
+3aUtS1vHHNt58uUcg7FlzIjM0lULELNbi5JcTSfffrP7jKVEvn+r3wcHbn+U
+oDastXj6zYs9czp6vX9eyxPQMxCI0e0L/v7Nd8/h+5/3z1/GLS5ubXWb2zt+
+9t2TnR0ex526yxQ6k+dPXzzdM2cus4U8ePZsV168ymfHDud8MjjUFWBFdtD3
+YLlcyouj0UjeIl2fOFBvmHwOXL84O4l/elE47mHneeYambnjL/F7edmg2vC7
+y8qB/rpiULYLoAGF7vxXtEJHzRxIAoORgDgMBiYdw8KC3ifJ9TyvDdihdmHL
+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
+QXIQSfwvL2/qfLNgAAA=
 
 -->
 

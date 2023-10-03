@@ -3,12 +3,12 @@
 
 
 SCHC Working Group                                              A. Pelov
-Internet-Draft                                                    Acklio
+Internet-Draft                                            IMT Atlantique
 Intended status: Informational                                P. Thubert
-Expires: 21 March 2024                                                  
+Expires: 5 April 2024                                                   
                                                              A. Minaburo
-                                                                  Acklio
-                                                       18 September 2023
+                                                              Consultant
+                                                          3 October 2023
 
 
          Static Context Header Compression (SCHC) Architecture
@@ -33,7 +33,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 March 2024.
+   This Internet-Draft will expire on 5 April 2024.
 
 Copyright Notice
 
@@ -45,17 +45,17 @@ Copyright Notice
    license-info) in effect on the date of publication of this document.
    Please review these documents carefully, as they describe your rights
    and restrictions with respect to this document.  Code Components
-   extracted from this document must include Revised BSD License text as
-   described in Section 4.e of the Trust Legal Provisions and are
-   provided without warranty as described in the Revised BSD License.
+   extracted from this document must include Simplified BSD License text
+   as described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Simplified BSD License.
 
 
 
 
 
-Pelov, et al.             Expires 21 March 2024                 [Page 1]
+Pelov, et al.             Expires 5 April 2024                  [Page 1]
 
-Internet-Draft              SCHC Architecture             September 2023
+Internet-Draft              SCHC Architecture               October 2023
 
 
 Table of Contents
@@ -70,21 +70,25 @@ Table of Contents
    5.  SCHC Architecture . . . . . . . . . . . . . . . . . . . . . .   4
      5.1.  SCHC Endpoints  . . . . . . . . . . . . . . . . . . . . .   4
      5.2.  SCHC Instances  . . . . . . . . . . . . . . . . . . . . .   5
-     5.3.  Layering with SCHC Instances  . . . . . . . . . . . . . .   7
-   6.  SCHC Data Model . . . . . . . . . . . . . . . . . . . . . . .   8
-   7.  SCHC Device Lifecycle . . . . . . . . . . . . . . . . . . . .   9
-     7.1.  Device Development  . . . . . . . . . . . . . . . . . . .   9
-     7.2.  Rules Publication . . . . . . . . . . . . . . . . . . . .  10
-     7.3.  SCHC Device Deployment  . . . . . . . . . . . . . . . . .  10
-     7.4.  SCHC Device Maintenance . . . . . . . . . . . . . . . . .  10
-     7.5.  SCHC Device Decommissionning  . . . . . . . . . . . . . .  11
-   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  11
-   9.  IANA Consideration  . . . . . . . . . . . . . . . . . . . . .  11
-   10. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  11
-   11. References  . . . . . . . . . . . . . . . . . . . . . . . . .  11
-     11.1.  Normative References . . . . . . . . . . . . . . . . . .  11
-     11.2.  Informative References . . . . . . . . . . . . . . . . .  12
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  13
+     5.3.  Layering with SCHC Instances  . . . . . . . . . . . . . .   6
+   6.  SCHC Packet Formats . . . . . . . . . . . . . . . . . . . . .   7
+     6.1.  SCHC over Ethernet  . . . . . . . . . . . . . . . . . . .   8
+     6.2.  SCHC over IPv6  . . . . . . . . . . . . . . . . . . . . .   8
+     6.3.  SCHC over UDP . . . . . . . . . . . . . . . . . . . . . .   9
+   7.  SCHC Data Model . . . . . . . . . . . . . . . . . . . . . . .  10
+   8.  SCHC Device Lifecycle . . . . . . . . . . . . . . . . . . . .  11
+     8.1.  Device Development  . . . . . . . . . . . . . . . . . . .  11
+     8.2.  Rules Publication . . . . . . . . . . . . . . . . . . . .  12
+     8.3.  SCHC Device Deployment  . . . . . . . . . . . . . . . . .  12
+     8.4.  SCHC Device Maintenance . . . . . . . . . . . . . . . . .  12
+     8.5.  SCHC Device Decommissionning  . . . . . . . . . . . . . .  13
+   9.  Security Considerations . . . . . . . . . . . . . . . . . . .  13
+   10. IANA Consideration  . . . . . . . . . . . . . . . . . . . . .  13
+   11. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  13
+   12. References  . . . . . . . . . . . . . . . . . . . . . . . . .  13
+     12.1.  Normative References . . . . . . . . . . . . . . . . . .  13
+     12.2.  Informative References . . . . . . . . . . . . . . . . .  14
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  16
 
 1.  Introduction
 
@@ -98,21 +102,24 @@ Table of Contents
    for header compression and fragmentation, based on a static context
    that is pre-installed on the SCHC endpoints.
 
+
+
+
+
+
+
+
+Pelov, et al.             Expires 5 April 2024                  [Page 2]
+
+Internet-Draft              SCHC Architecture               October 2023
+
+
    This document details the constitutive elements of a SCHC-based
    solution, and how the solution can be deployed.  It provides a
    general architecture for a SCHC deployment, positioning the required
    specifications, describing the possible deployment types, and
    indicating models whereby the rules can be distributed and installed
    to enable reliable and scalable operations.
-
-
-
-
-
-Pelov, et al.             Expires 21 March 2024                 [Page 2]
-
-Internet-Draft              SCHC Architecture             September 2023
-
 
 2.  LPWAN Technologies and Profiles
 
@@ -154,21 +161,17 @@ Internet-Draft              SCHC Architecture             September 2023
    SCHC packet size, the link error rate, and the reliability level
    required by the application.
 
+
+
+
+
+Pelov, et al.             Expires 5 April 2024                  [Page 3]
+
+Internet-Draft              SCHC Architecture               October 2023
+
+
    The ruleID allows to determine if it is a compression or
    fragmentation rule.
-
-
-
-
-
-
-
-
-
-Pelov, et al.             Expires 21 March 2024                 [Page 3]
-
-Internet-Draft              SCHC Architecture             September 2023
-
 
 4.  SCHC Applicability
 
@@ -210,27 +213,19 @@ Internet-Draft              SCHC Architecture             September 2023
 
                 Figure 1: Typical LPWAN Network Architecture
 
-
-
-
-
-
-
-
-
-
-
-
-Pelov, et al.             Expires 21 March 2024                 [Page 4]
-
-Internet-Draft              SCHC Architecture             September 2023
-
-
    Typically, an LPWAN network topology is star-oriented, which means
    that all packets between the same source-destination pair follow the
    same path from/to a central point.  In that model, highly constrained
    Devices (Dev) exchange information with LPWAN Application Servers
    (App) through a central Network Gateway (NGW), which can be powered
+
+
+
+Pelov, et al.             Expires 5 April 2024                  [Page 4]
+
+Internet-Draft              SCHC Architecture               October 2023
+
+
    and is typically a lot less constrained than the Devices.  Because
    Devices embed built-in applications, the traffic flows to be
    compressed are known in advance and the location of the C/D and F/R
@@ -274,17 +269,18 @@ Internet-Draft              SCHC Architecture             September 2023
    only one Instance for that Device, and all the traffic from and to
    the device is exchanged with the same Network Gateway.  All the
    traffic can thus be implicitly associated with the single Instance
-
-
-
-Pelov, et al.             Expires 21 March 2024                 [Page 5]
-
-Internet-Draft              SCHC Architecture             September 2023
-
-
    that the device supports, and the Device does not need to manipulate
    the concept.  For that reason, SCHC avoids to signal explicitly the
    Instance identification in its data packets.
+
+
+
+
+
+Pelov, et al.             Expires 5 April 2024                  [Page 5]
+
+Internet-Draft              SCHC Architecture               October 2023
+
 
    The Network Gateway, on the other hand, maintains multiple Instances,
    one per SCHC Device.  The Instance is derived from the lower layer,
@@ -326,23 +322,21 @@ Internet-Draft              SCHC Architecture             September 2023
    direction is from the node that initiated the PPP connection to the
    node that accepted it.
 
-
-
-
-
-
-
-
-Pelov, et al.             Expires 21 March 2024                 [Page 6]
-
-Internet-Draft              SCHC Architecture             September 2023
-
-
 5.3.  Layering with SCHC Instances
 
    [rfc8724] states that a SCHC instance needs the rules to process C/D
    and F/R before the session starts, and that rules cannot be modified
    during the session.
+
+
+
+
+
+
+Pelov, et al.             Expires 5 April 2024                  [Page 6]
+
+Internet-Draft              SCHC Architecture               October 2023
+
 
    As represented figure Figure 3, the compression of the IP and UDP
    headers may be operated by a network SCHC instance whereas the end-
@@ -386,17 +380,135 @@ Internet-Draft              SCHC Architecture             September 2023
    interoperable framework for allowing IP application over contrained
    networks.
 
+6.  SCHC Packet Formats
+
+   SCHC can be used in multiple environments and multiple protocols.  It
+   was designed by default to work on native MAC frames with LPWAN
+   technologies such as LoRaWAN[rfc9011], IEEE std 802.15.4
+   [I-D.ietf-6lo-schc-15dot4], and SigFox[rfc9442].
 
 
 
-Pelov, et al.             Expires 21 March 2024                 [Page 7]
+Pelov, et al.             Expires 5 April 2024                  [Page 7]
 
-Internet-Draft              SCHC Architecture             September 2023
+Internet-Draft              SCHC Architecture               October 2023
 
 
-6.  SCHC Data Model
+   To operate SCHC over Ethernet, IPv6, and UDP, the definition of,
+   respectively, an Ethertype, an IP Protocol Number, and a UDP Port
+   Number are necessary, more in
+   [I-D.ietf-intarea-schc-protocol-numbers].  In either case, there's a
+   need for a SCHC header that is sufficient to identify the SCHC peers
+   (endpoints) and their role (device vs. app), as well as the session
+   between those peers that the packet pertains to.
 
-   A SCHC instance, summarized in the Figure 4, implies C/D and/or F/R
+   In either of the above cases, the expectation is that the SCHC header
+   is transferred in a compressed form.  This implies that the rules to
+   uncompress the header are well known and separate from the rules that
+   are used to uncompress the SCHC payload.  The expectation is that for
+   each layer, the format of the SCHC header and the compression rules
+   are well known, with enough information to identify the session at
+   that layer, but there is no expectation that they are the same across
+   layers.
+
+6.1.  SCHC over Ethernet
+
+   Before the SCHC compression takes place, the SCHC header shows as
+   header as represented figure Figure 4, that is virtually inserted
+   before the real protocol header and data that are compressed in the
+   session, e.g. a IPv6 in this figure.
+
+    +------------------+------------------+-------------+-----------
+    | IEEE 802 Header  | SCHC Header      | IPv6 Header | IPv6 NH
+    | Ethertype = SCHC | Ethertype = IPv6 |             | / ULP
+    +------------------+------------------+-------------+-----------
+                        <-
+                          SCHC overhead
+                                        ->
+
+                        Figure 4: SCHC over Ethernet
+
+6.2.  SCHC over IPv6
+
+   In the case of IPv6, the expectation is that the ULP checksum can be
+   elided in the SCHC compression of the ULP, because the SCHC header
+   has its own checksum that protects both the SCHC header and the whole
+   ULP, header and payload.
+
+   Before any compression takes place, the SCHC header shows as an IPv6
+   extension header as represented figure Figure 5, that is virtually
+   inserted before the headers and data that are compressed in the
+   session, e.g. a ULP in this figure
+
+
+
+
+
+
+Pelov, et al.             Expires 5 April 2024                  [Page 8]
+
+Internet-Draft              SCHC Architecture               October 2023
+
+
+    +-------------+-------------+------------+-----------
+    | IPv6 Header | SCHC Header | ULP Header | ULP PDU
+    |  NH=SCHC    | NH = ULP    |            | (Payload)
+    +-------------+-------------+------------+-----------
+                   <-
+                   SCHC overhead
+                              ->
+
+                          Figure 5: SCHC over IPv6
+
+   In the air, both the SCHC header (using well-known rules) and the ULP
+   (using the rules indicated in the session) are compressed.  The
+   session endpoints are typically identified by the source and
+   destination IP addresses.  If the roles are well-known, then the
+   endpoint information can be elided and deduced from the IP header.
+   If there is only one session, it can be elided as well, otherwise a
+   rule and residue are needed to extract the session ID.  Finally, the
+   SCHC extension header should contain a checksum that protects itself
+   and all the ULP, so the ULP checksum can be elided in the compressed
+   form of the ULP header.
+
+6.3.  SCHC over UDP
+
+   When SCHC operates over the Internet, middleboxes may block packets
+   with a next header that is SCHC.  To avoid that issue, it would be
+   desirable to prepaend a UDP header before the SCHC header as shown in
+   figure Figure 6.
+
+    +-------------+-------------+-------------+------------+-----------
+    | IPv6 Header | UDP Header  | SCHC Header | ULP Header | ULP PDU
+    |  NH=UDP     | Port = SCHC | NH = ULP    |            | (Payload)
+    +-------------+-------------+-------------+------------+-----------
+                   <-
+                          SCHC overhead
+                                             ->
+   ~
+
+                          Figure 6: SCHC over UDP
+
+   In that case, the destination port can indicate SCHC as in an header
+   chain, and the source port can indicate the SCHC session in which
+   case it can be elided in the compressed form of the SCHC header.  The
+   UDP checksum protects both the SCHC header and the whole ULP, so the
+   SCHC and the ULP checksums can both be elided.  In other words, in
+   the SCHC over UDP case, the SCHC header can be fully elided, but the
+   packet must carry the overhead of a full UDP header.
+
+
+
+
+
+Pelov, et al.             Expires 5 April 2024                  [Page 9]
+
+Internet-Draft              SCHC Architecture               October 2023
+
+
+7.  SCHC Data Model
+
+   A SCHC instance, summarized in the Figure 7, implies C/D and/or F/R
    present in both end and that both ends are provisioned with the same
    set of rules.
 
@@ -410,7 +522,7 @@ Internet-Draft              SCHC Architecture             September 2023
       ===>| C & F |===>                        ===>| R & D |===>
           +-------+
 
-                     Figure 4: Summarized SCHC elements
+                     Figure 7: Summarized SCHC elements
 
    A common rule representation that expresses the SCHC rules in an
    interoperable fashion is needed to be able to provision end-points
@@ -436,18 +548,18 @@ Internet-Draft              SCHC Architecture             September 2023
       ===>| C & F |===>
           +-------+
 
-                     Figure 5: Summerized SCHC elements
+                     Figure 8: Summerized SCHC elements
 
    The Rule Manager (RM) is in charge of handling data derived from the
-   YANG Data Model and apply changes to the rules database Figure 5.
+   YANG Data Model and apply changes to the rules database Figure 8.
 
 
 
 
 
-Pelov, et al.             Expires 21 March 2024                 [Page 8]
+Pelov, et al.             Expires 5 April 2024                 [Page 10]
 
-Internet-Draft              SCHC Architecture             September 2023
+Internet-Draft              SCHC Architecture               October 2023
 
 
    The RM is an Application using the Internet to exchange information,
@@ -468,14 +580,14 @@ Internet-Draft              SCHC Architecture             September 2023
    itself compressed by SCHC: if CORECONF protocol is used, [rfc8824]
    can be applied.
 
-7.  SCHC Device Lifecycle
+8.  SCHC Device Lifecycle
 
    In the context of LPWANs, the expectation is that SCHC rules are
    associated with a physical device that is deployed in a network.
    This section describes the actions taken to enable an automatic
    commissioning of the device in the network.
 
-7.1.  Device Development
+8.1.  Device Development
 
    The expectation for the development cycle is that message formats are
    documented as a data model that is used to generate rules.  Several
@@ -501,9 +613,9 @@ Internet-Draft              SCHC Architecture             September 2023
 
 
 
-Pelov, et al.             Expires 21 March 2024                 [Page 9]
+Pelov, et al.             Expires 5 April 2024                 [Page 11]
 
-Internet-Draft              SCHC Architecture             September 2023
+Internet-Draft              SCHC Architecture               October 2023
 
 
    3.  In the protocol model, both endpoint generate a packet format
@@ -517,7 +629,7 @@ Internet-Draft              SCHC Architecture             September 2023
    provide knobs to optimize the Rule set, e.g., more rules vs. larger
    residue.
 
-7.2.  Rules Publication
+8.2.  Rules Publication
 
    In the device model and in the protocol model, at least one of the
    endpoints must obtain the rule set dynamically.  The expectation is
@@ -527,9 +639,9 @@ Internet-Draft              SCHC Architecture             September 2023
 
    The Rule Set should be authenticated to ensure that it is genuine, or
    obtained from a trusted app store.  A corrupted Rule Set may be used
-   for multiple forms of attacks, more in Section 8.
+   for multiple forms of attacks, more in Section 9.
 
-7.3.  SCHC Device Deployment
+8.3.  SCHC Device Deployment
 
    The device and the network should mutually authenticate themselves.
    The autonomic approach [RFC8993] provides a model to achieve this at
@@ -548,7 +660,7 @@ Internet-Draft              SCHC Architecture             September 2023
    Optionally, a node that fetched a rule set may inform the other end
    that it is reacy from transmission.
 
-7.4.  SCHC Device Maintenance
+8.4.  SCHC Device Maintenance
 
    URN update without device update (bug fix) FUOTA => new URN =>
    reprovisioning
@@ -557,16 +669,16 @@ Internet-Draft              SCHC Architecture             September 2023
 
 
 
-Pelov, et al.             Expires 21 March 2024                [Page 10]
+Pelov, et al.             Expires 5 April 2024                 [Page 12]
 
-Internet-Draft              SCHC Architecture             September 2023
+Internet-Draft              SCHC Architecture               October 2023
 
 
-7.5.  SCHC Device Decommissionning
+8.5.  SCHC Device Decommissionning
 
    Signal from device/vendor/network admin
 
-8.  Security Considerations
+9.  Security Considerations
 
    SCHC is sensitive to the rules that could be abused to form arbitrary
    long messages or as a form of attack against the C/D and/or F/R
@@ -575,17 +687,17 @@ Internet-Draft              SCHC Architecture             September 2023
    distributed in a fashion that is protected against tempering, e.g.,
    encrypted and signed.
 
-9.  IANA Consideration
+10.  IANA Consideration
 
    This document has no request to IANA
 
-10.  Acknowledgements
+11.  Acknowledgements
 
    The authors would like to thank (in alphabetic order):
 
-11.  References
+12.  References
 
-11.1.  Normative References
+12.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -600,11 +712,6 @@ Internet-Draft              SCHC Architecture             September 2023
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
 
-   [RFC8520]  Lear, E., Droms, R., and D. Romascanu, "Manufacturer Usage
-              Description Specification", RFC 8520,
-              DOI 10.17487/RFC8520, March 2019,
-              <https://www.rfc-editor.org/rfc/rfc8520>.
-
    [rfc8724]  Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and JC.
               Zuniga, "SCHC: Generic Framework for Static Context Header
               Compression and Fragmentation", RFC 8724,
@@ -613,9 +720,14 @@ Internet-Draft              SCHC Architecture             September 2023
 
 
 
-Pelov, et al.             Expires 21 March 2024                [Page 11]
+
+
+
+
+
+Pelov, et al.             Expires 5 April 2024                 [Page 13]
 
-Internet-Draft              SCHC Architecture             September 2023
+Internet-Draft              SCHC Architecture               October 2023
 
 
    [rfc8824]  Minaburo, A., Toutain, L., and R. Andreasen, "Static
@@ -624,30 +736,34 @@ Internet-Draft              SCHC Architecture             September 2023
               DOI 10.17487/RFC8824, June 2021,
               <https://www.rfc-editor.org/rfc/rfc8824>.
 
-   [RFC8993]  Behringer, M., Ed., Carpenter, B., Eckert, T., Ciavaglia,
-              L., and J. Nobre, "A Reference Model for Autonomic
-              Networking", RFC 8993, DOI 10.17487/RFC8993, May 2021,
-              <https://www.rfc-editor.org/rfc/rfc8993>.
+12.2.  Informative References
 
-   [rfc9011]  Gimenez, O., Ed. and I. Petrov, Ed., "Static Context
-              Header Compression and Fragmentation (SCHC) over LoRaWAN",
-              RFC 9011, DOI 10.17487/RFC9011, April 2021,
-              <https://www.rfc-editor.org/rfc/rfc9011>.
-
-11.2.  Informative References
+   [I-D.ietf-6lo-schc-15dot4]
+              Gomez, C. and A. Minaburo, "Transmission of SCHC-
+              compressed packets over IEEE 802.15.4 networks", Work in
+              Progress, Internet-Draft, draft-ietf-6lo-schc-15dot4-03,
+              30 September 2023, <https://tools.ietf.org/html/draft-
+              ietf-6lo-schc-15dot4-03>.
 
    [I-D.ietf-core-comi]
               Veillette, M., Van der Stok, P., Pelov, A., Bierman, A.,
               and C. Bormann, "CoAP Management Interface (CORECONF)",
               Work in Progress, Internet-Draft, draft-ietf-core-comi-16,
-              4 September 2023, <https://datatracker.ietf.org/doc/html/
-              draft-ietf-core-comi-16>.
+              4 September 2023,
+              <https://tools.ietf.org/html/draft-ietf-core-comi-16>.
+
+   [I-D.ietf-intarea-schc-protocol-numbers]
+              Moskowitz, R., Card, S. W., Wiethuechter, A., and P.
+              Thubert, "Protocol Numbers for SCHC", Work in Progress,
+              Internet-Draft, draft-ietf-intarea-schc-protocol-numbers-
+              00, 10 April 2023, <https://tools.ietf.org/html/draft-
+              ietf-intarea-schc-protocol-numbers-00>.
 
    [I-D.thubert-schc-over-ppp]
               Thubert, P., "SCHC over PPP", Work in Progress, Internet-
               Draft, draft-thubert-schc-over-ppp-00, 29 March 2023,
-              <https://datatracker.ietf.org/doc/html/draft-thubert-schc-
-              over-ppp-00>.
+              <https://tools.ietf.org/html/draft-thubert-schc-over-ppp-
+              00>.
 
    [rfc2516]  Mamakos, L., Lidl, K., Evarts, J., Carrel, D., Simone, D.,
               and R. Wheeler, "A Method for Transmitting PPP Over
@@ -659,20 +775,21 @@ Internet-Draft              SCHC Architecture             September 2023
               (NETCONF)", RFC 6241, DOI 10.17487/RFC6241, June 2011,
               <https://www.rfc-editor.org/rfc/rfc6241>.
 
+
+
+
+
+
+
+Pelov, et al.             Expires 5 April 2024                 [Page 14]
+
+Internet-Draft              SCHC Architecture               October 2023
+
+
    [RFC7252]  Shelby, Z., Hartke, K., and C. Bormann, "The Constrained
               Application Protocol (CoAP)", RFC 7252,
               DOI 10.17487/RFC7252, June 2014,
               <https://www.rfc-editor.org/rfc/rfc7252>.
-
-
-
-
-
-
-Pelov, et al.             Expires 21 March 2024                [Page 12]
-
-Internet-Draft              SCHC Architecture             September 2023
-
 
    [rfc7950]  Bjorklund, M., Ed., "The YANG 1.1 Data Modeling Language",
               RFC 7950, DOI 10.17487/RFC7950, August 2016,
@@ -700,6 +817,11 @@ Internet-Draft              SCHC Architecture             September 2023
               Overview", RFC 8376, DOI 10.17487/RFC8376, May 2018,
               <https://www.rfc-editor.org/rfc/rfc8376>.
 
+   [RFC8520]  Lear, E., Droms, R., and D. Romascanu, "Manufacturer Usage
+              Description Specification", RFC 8520,
+              DOI 10.17487/RFC8520, March 2019,
+              <https://www.rfc-editor.org/rfc/rfc8520>.
+
    [RFC8613]  Selander, G., Mattsson, J., Palombini, F., and L. Seitz,
               "Object Security for Constrained RESTful Environments
               (OSCORE)", RFC 8613, DOI 10.17487/RFC8613, July 2019,
@@ -710,75 +832,65 @@ Internet-Draft              SCHC Architecture             September 2023
               DOI 10.17487/RFC8949, December 2020,
               <https://www.rfc-editor.org/rfc/rfc8949>.
 
+
+
+
+
+
+Pelov, et al.             Expires 5 April 2024                 [Page 15]
+
+Internet-Draft              SCHC Architecture               October 2023
+
+
+   [RFC8993]  Behringer, M., Ed., Carpenter, B., Eckert, T., Ciavaglia,
+              L., and J. Nobre, "A Reference Model for Autonomic
+              Networking", RFC 8993, DOI 10.17487/RFC8993, May 2021,
+              <https://www.rfc-editor.org/rfc/rfc8993>.
+
+   [rfc9011]  Gimenez, O., Ed. and I. Petrov, Ed., "Static Context
+              Header Compression and Fragmentation (SCHC) over LoRaWAN",
+              RFC 9011, DOI 10.17487/RFC9011, April 2021,
+              <https://www.rfc-editor.org/rfc/rfc9011>.
+
    [rfc9363]  Minaburo, A. and L. Toutain, "A YANG Data Model for Static
               Context Header Compression (SCHC)", RFC 9363,
               DOI 10.17487/RFC9363, March 2023,
               <https://www.rfc-editor.org/rfc/rfc9363>.
 
+   [rfc9442]  Z├║├▒iga, J., Gomez, C., Aguilar, S., Toutain, L.,
+              C├®spedes, S., Wistuba, D., and J. Boite, "Static Context
+              Header Compression (SCHC) over Sigfox Low-Power Wide Area
+              Network (LPWAN)", RFC 9442, DOI 10.17487/RFC9442, July
+              2023, <https://www.rfc-editor.org/rfc/rfc9442>.
+
 Authors' Addresses
 
    Alexander Pelov
-   Acklio
-   1137A avenue des Champs Blancs
-   35510 Cesson-Sevigne Cedex
+   IMT Atlantique
+   rue de la Chataigneraie
+   35576 Cesson-Sevigne Cedex
    France
 
-
-
-Pelov, et al.             Expires 21 March 2024                [Page 13]
-
-Internet-Draft              SCHC Architecture             September 2023
-
-
-   Email: a@ackl.io
+   Email: alexander.pelov@imt-atlantique.fr
 
 
    Pascal Thubert
    06330 Roquefort les Pins
    France
+
    Email: pascal.thubert@gmail.com
 
 
    Ana Minaburo
-   Acklio
-   1137A avenue des Champs Blancs
+   Consultant
+   rue de Rennes
    35510 Cesson-Sevigne Cedex
    France
-   Email: ana@ackl.io
+
+   Email: anaminaburo@gmail.com
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Pelov, et al.             Expires 21 March 2024                [Page 14]
+Pelov, et al.             Expires 5 April 2024                 [Page 16]
