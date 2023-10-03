@@ -20,24 +20,22 @@ area: Internet
 author:
 - ins: A. Pelov
   name: Alexander Pelov
-  org: Acklio
-  street: 1137A avenue des Champs Blancs
   city: 35510 Cesson-Sevigne Cedex
   country: France
-  email: a@ackl.io
+  email: alexander.pelov@imt-atlantique.fr
 - ins: P. Thubert
   name: Pascal Thubert
   city:  06330 Roquefort les Pins
   country: France
   email: pascal.thubert@gmail.com
-  
+
 - ins: A. Minaburo
   name: Ana Minaburo
-  org: Acklio
-  street: 1137A avenue des Champs Blancs
+  org: Consultant
+  street: rue de Rennes
   city: 35510 Cesson-Sevigne Cedex
   country: France
-  email: ana@ackl.io
+  email: anaminaburo@gmail.com
 normative:
   rfc8724: SCHC
   rfc8824: SCHC-CoAP
