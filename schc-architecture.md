@@ -49,7 +49,7 @@ informative:
   rfc9011: SCHCoLoRaWAN
   rfc9363: Model
   rfc9442: SCHCoSigFox
-  I-D.thubert-schc-over-ppp: SCHCoPPP
+  I-D.ietf-schc-over-ppp: SCHCoPPP
   I-D.ietf-core-comi: COMI
   I-D.ietf-6lo-schc-15dot4: SCHCo15dot4
   I-D.ietf-intarea-schc-protocol-numbers: PN_and_Ethertype
@@ -363,7 +363,7 @@ The session endpoints are typically identified by the source and destination IP 
 
 ## SCHC over UDP
 
-When SCHC operates over the Internet, middleboxes may block packets with a next header that is SCHC. To avoid that issue, it would be desirable to prepaend a UDP header before the SCHC header as shown in figure {{Fig-SCHC_hdr2}}.
+When SCHC operates over the Internet, middleboxes may block packets with a next header that is SCHC. To avoid that issue, it would be desirable to prepend a UDP header before the SCHC header as shown in figure {{Fig-SCHC_hdr2}}.
 
 ~~~~
  +-------------+-------------+-------------+------------+-----------
