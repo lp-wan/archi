@@ -2,7 +2,7 @@
 
 stand_alone: true
 ipr: trust200902
-docname: draft-ietf-schc-architecture-01
+docname: draft-ietf-schc-architecture-02
 cat: info
 submissionType: IETF
 
