@@ -5,14 +5,14 @@
 SCHC Working Group                                              A. Pelov
 Internet-Draft                                            IMT Atlantique
 Intended status: Informational                                P. Thubert
-Expires: 5 April 2024                                                   
+Expires: 11 October 2024                                                
                                                              A. Minaburo
                                                               Consultant
-                                                          3 October 2023
+                                                            9 April 2024
 
 
          Static Context Header Compression (SCHC) Architecture
-                    draft-ietf-schc-architecture-01
+                    draft-ietf-schc-architecture-02
 
 Abstract
 
@@ -33,11 +33,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 5 April 2024.
+   This Internet-Draft will expire on 11 October 2024.
 
 Copyright Notice
 
-   Copyright (c) 2023 IETF Trust and the persons identified as the
+   Copyright (c) 2024 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -45,50 +45,57 @@ Copyright Notice
    license-info) in effect on the date of publication of this document.
    Please review these documents carefully, as they describe your rights
    and restrictions with respect to this document.  Code Components
-   extracted from this document must include Simplified BSD License text
-   as described in Section 4.e of the Trust Legal Provisions and are
-   provided without warranty as described in the Simplified BSD License.
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
 
 
 
 
 
-Pelov, et al.             Expires 5 April 2024                  [Page 1]
+Pelov, et al.            Expires 11 October 2024                [Page 1]
 
-Internet-Draft              SCHC Architecture               October 2023
+Internet-Draft              SCHC Architecture                 April 2024
 
 
 Table of Contents
 
    1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
-   2.  LPWAN Technologies and Profiles . . . . . . . . . . . . . . .   3
-   3.  The Static Context Header Compression . . . . . . . . . . . .   3
-   4.  SCHC Applicability  . . . . . . . . . . . . . . . . . . . . .   4
-     4.1.  LPWAN Overview  . . . . . . . . . . . . . . . . . . . . .   4
-     4.2.  Compressing Serial Streams  . . . . . . . . . . . . . . .   4
-     4.3.  Example: Goose and DLMS . . . . . . . . . . . . . . . . .   4
-   5.  SCHC Architecture . . . . . . . . . . . . . . . . . . . . . .   4
-     5.1.  SCHC Endpoints  . . . . . . . . . . . . . . . . . . . . .   4
-     5.2.  SCHC Instances  . . . . . . . . . . . . . . . . . . . . .   5
-     5.3.  Layering with SCHC Instances  . . . . . . . . . . . . . .   6
-   6.  SCHC Packet Formats . . . . . . . . . . . . . . . . . . . . .   7
-     6.1.  SCHC over Ethernet  . . . . . . . . . . . . . . . . . . .   8
-     6.2.  SCHC over IPv6  . . . . . . . . . . . . . . . . . . . . .   8
-     6.3.  SCHC over UDP . . . . . . . . . . . . . . . . . . . . . .   9
-   7.  SCHC Data Model . . . . . . . . . . . . . . . . . . . . . . .  10
-   8.  SCHC Device Lifecycle . . . . . . . . . . . . . . . . . . . .  11
-     8.1.  Device Development  . . . . . . . . . . . . . . . . . . .  11
-     8.2.  Rules Publication . . . . . . . . . . . . . . . . . . . .  12
-     8.3.  SCHC Device Deployment  . . . . . . . . . . . . . . . . .  12
-     8.4.  SCHC Device Maintenance . . . . . . . . . . . . . . . . .  12
-     8.5.  SCHC Device Decommissionning  . . . . . . . . . . . . . .  13
-   9.  Security Considerations . . . . . . . . . . . . . . . . . . .  13
-   10. IANA Consideration  . . . . . . . . . . . . . . . . . . . . .  13
-   11. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  13
-   12. References  . . . . . . . . . . . . . . . . . . . . . . . . .  13
-     12.1.  Normative References . . . . . . . . . . . . . . . . . .  13
-     12.2.  Informative References . . . . . . . . . . . . . . . . .  14
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  16
+   2.  Requirements Language . . . . . . . . . . . . . . . . . . . .   3
+   3.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
+   4.  Building Blocks . . . . . . . . . . . . . . . . . . . . . . .   4
+     4.1.  SCHC layer  . . . . . . . . . . . . . . . . . . . . . . .   4
+     4.2.  SCHC Header Instance  . . . . . . . . . . . . . . . . . .   4
+       4.2.1.  SCHC Header . . . . . . . . . . . . . . . . . . . . .   5
+     4.3.  SCHC Packet Instance  . . . . . . . . . . . . . . . . . .   6
+       4.3.1.  SCHC Packet . . . . . . . . . . . . . . . . . . . . .   7
+     4.4.  SCHC Profiles . . . . . . . . . . . . . . . . . . . . . .   8
+     4.5.  SCHC Operation  . . . . . . . . . . . . . . . . . . . . .   8
+       4.5.1.  SCHC Rules  . . . . . . . . . . . . . . . . . . . . .   9
+       4.5.2.  SoR identification  . . . . . . . . . . . . . . . . .   9
+     4.6.  SCHC Management . . . . . . . . . . . . . . . . . . . . .   9
+       4.6.1.  SCHC Data Model . . . . . . . . . . . . . . . . . . .  10
+   5.  SCHC Architecture . . . . . . . . . . . . . . . . . . . . . .  11
+   6.  The Static Context Header Compression . . . . . . . . . . . .  14
+     6.1.  SCHC over Network Technologies  . . . . . . . . . . . . .  15
+       6.1.1.  SCHC over PPP . . . . . . . . . . . . . . . . . . . .  16
+       6.1.2.  SCHC over Ethernet  . . . . . . . . . . . . . . . . .  16
+       6.1.3.  SCHC over IPv6  . . . . . . . . . . . . . . . . . . .  17
+       6.1.4.  SCHC over UDP . . . . . . . . . . . . . . . . . . . .  17
+   7.  SCHC Endpoints for LPWAN Networks . . . . . . . . . . . . . .  18
+     7.1.  SCHC Device Lifecycle . . . . . . . . . . . . . . . . . .  19
+       7.1.1.  Device Development  . . . . . . . . . . . . . . . . .  19
+       7.1.2.  Rules Publication . . . . . . . . . . . . . . . . . .  19
+       7.1.3.  SCHC Device Deployment  . . . . . . . . . . . . . . .  20
+       7.1.4.  SCHC Device Maintenance . . . . . . . . . . . . . . .  20
+       7.1.5.  SCHC Device Decommissionning  . . . . . . . . . . . .  20
+   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  20
+   9.  IANA Consideration  . . . . . . . . . . . . . . . . . . . . .  20
+   10. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  20
+   11. References  . . . . . . . . . . . . . . . . . . . . . . . . .  20
+     11.1.  Normative References . . . . . . . . . . . . . . . . . .  21
+     11.2.  Informative References . . . . . . . . . . . . . . . . .  21
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  23
 
 1.  Introduction
 
@@ -96,23 +103,22 @@ Table of Contents
    over selected Low-Power Wide Area Networking (LPWAN) radio
    technologies. [rfc8376] presents an overview of those technologies.
 
+
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024                [Page 2]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
    The Static Context Header Compression (SCHC) [rfc8724] technology is
    the core product of the IETF LPWAN working group and was the basis to
    form the SCHC Working Group. [rfc8724] defines a generic framework
    for header compression and fragmentation, based on a static context
    that is pre-installed on the SCHC endpoints.
-
-
-
-
-
-
-
-
-Pelov, et al.             Expires 5 April 2024                  [Page 2]
-
-Internet-Draft              SCHC Architecture               October 2023
-
 
    This document details the constitutive elements of a SCHC-based
    solution, and how the solution can be deployed.  It provides a
@@ -121,116 +127,290 @@ Internet-Draft              SCHC Architecture               October 2023
    indicating models whereby the rules can be distributed and installed
    to enable reliable and scalable operations.
 
-2.  LPWAN Technologies and Profiles
+2.  Requirements Language
 
-   Because LPWAN technologies [rfc8376] have strict yet distinct
-   constraints, e.g., in terms of maximum frame size, throughput, and/or
-   directionality, a SCHC instance must be profiled to adapt to the
-   specific necessities of the technology to which it is applied.
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+3.  Terminology
+
+   *  C/D.  Compression and Decompression.
+
+   *  Context.  All the information related to the Rules for SCHC
+      Header, Non-Compression, C/D and F/R and CORECONF_Management.
+
+   *  FID.  Field Identifiers, describing the name of the field in a
+      protocol header.
+
+   *  F/R.  Fragmentation and Reassembly.
+
+   *  Rule.  A description of the header fields to performs compression/
+      decompression, fragmentation/reassembly, SCHC Instances and
+      CORECONF_Management.
+
+   *  SCHC Entities.  A host (Device, Application and Network Gateway)
+      involved in the SCHC process.
+
+   *  SCHC Instance.  The different stages of SCHC in a host.  Each
+      instance will have its Set of Rules (SoR), based on the profile,
+      the protocols, the device, the behaviour and a Set of Variables
+      (SoV).
+
+   *  SCHC Session.  This layer provides the management of SCHC
+      instances, the SoR of each instance and the dialog between hosts
+      to keep the SCHC synchronization.
+
+
+
+Pelov, et al.            Expires 11 October 2024                [Page 3]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+   *  SoR (Set of rules).  Group of Rules used in a SCHC Instance.  The
+      set of rules contains Rules for different nature as compression,
+      no compression, fragmentation, SCHC Instances and CORECONF
+      management.
+
+   *  SoV (Set of Variables).  External information that needs to be
+      known to identify the correct protocol, the session id, and the
+      flow when there is one.
+
+   *  Core SCHC.  SCHC entity located upstream in the Network Gateway.
+
+   *  Device SCHC.  SCHC entity located downstream.
+
+4.  Building Blocks
+
+   This section specifies the principal blocks defined for building and
+   using the SCHC architecture in any network topology and protocol.
+
+4.1.  SCHC layer
+
+   SCHC Layer is a building block composed at least of a SCHC Packet
+   Instance as described in the [rfc8724].  A SCHC Header Instance may
+   be added, it controls the SCHC Layer.  The SCHC Header Instance is
+   used with different SCHC Packets Instances if they are defined in the
+   same SCHC Layer.
+
+   Note that a SCHC Layer is different from an ISO layer Figure 1.
+
+4.2.  SCHC Header Instance
+
+   The SCHC Header Instance manages the SCHC Headers and provides the
+   information and the selection of a SCHC Packet Instance.  SCHC Header
+   is mandatory and can be free of charge for very constrained networks
+   such as LPWAN.  It allows the recognition of SCHC as the next header
+   and can give the protocol that SCHC has compressed.  Figure 1 shows
+   the SCHC layer that needs to be introduced in the Architecture when
+   SCHC is used to compress different protocols together or
+   independently as [rfc8824] has described for CoAP.  Notice that the
+   parenthesis in the figure indicates a SCHC compression.
+
+   A discriminator identifies the SCHC Instances, which can be:
+
+   *  A source and destination addresses of the packet carrying SCHC
+      packets
+
+   *  A source and destination port number of the transport layer
+      carrying SCHC packets
+
+
+
+
+Pelov, et al.            Expires 11 October 2024                [Page 4]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+   *  An MPLS label
+
+   *  A TLS Association
+
+   *  Any other kind of connection id.
+
+   +---------------+---------------+---------------+
+   | SCHC Packet   | SCHC Packet   | SCHC Packet   | S
+   | Instance ___  | Instance ___  | Instance ___  | C
+   |         [SoR] |         [SoR] |         [SoR] | H
+   |         [___] |         [___] |         [___] | C
+   |               |               |               |
+   |               |               |               | L
+   +----inst_id1---+----inst_id2---+----inst_id3---+ A
+   .            SCHC Header Instance         ___   . Y
+   .                                        [SoR]  . E
+   .                                        [___]  . R
+   +...............................................+
+                  _____________^
+                 /
+               /
+              +-- Discriminator: (SCHC HEADER)(SCHC PACKET)
+
+   Each Packet Instance contains its own Set of Rules,
+   but share the same SCHC Header.
+
+                        Figure 1: SCHC Session Layer
+
+4.2.1.  SCHC Header
+
+   SCHC Header carries information to allow the SCHC layer to work
+   correctly.  For example, it selects the correct Instance and checks
+   the validity of the datagram.  There IS NOT always a RuleID if there
+   is only one Rule for the SCHC Header, whose length is 0.  The SCHC
+   Header format is not fixed, and the SoR MUST have one or more Rules
+   describing the formats.  SCHC Header contains different fields.  For
+   Instance, when the SCHC header may identify the next protocol in the
+   stack, the format of the SCHC header takes the format as Figure 2
+   shows.
+
+
+
+
+
+
+
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024                [Page 5]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+   Non-compressed SCHC Header Format:
+   +- - - - - - +- - - - - - -+- - -+
+   | Session ID | Protocol ID | CRC |
+   +- - - - - - +- - - - - - -+- - -+
+
+   SCHC Header Compressed:
+   +- - - - -+- - - - - - - - - - +
+   | Rule ID | Compressed Residue |
+   +- - - - -+- - - - - - - - - - +
+
+   Rule uses to compressed the SCHC Header:
+   RuleID
+   +------------+--+---+--+-----+------+-----------+
+   |     FID    |FL|POS|DI| TV  |  MO  |     CDA   |
+   +------------+--+---+--+-----+------+-----------+
+   | SCHC.sesid |10| 1 |Bi|0x00 |MSB(7)| LSB       |
+   | SCHC.proto | 8| 1 |Bi|value|equal | not-sent  |
+   | SCHC.CRC   | 8| 1 |Bi|     |ignore| value-sent|
+   +------------+--+---+--+-----+------+-----------+
+
+     Figure 2: Example of SCHC Header Format and the corresponding Rule
+
+   In this example the Rule defines:
+
+   *  A SessionID is 10 bits length and it is used to identify the SoR
+      used for this instance of SCHC.
+
+   *  A Protocol ID in 1-byte length giving the value send in the layer
+      below the SCHC packet to identify the uncompressed protocol stack.
+
+   *  And A CRC.  The CRC field is 8 bits length and covers the SCHC
+      header and the SCHC packet from error.  When it is elided by the
+      compression, the layer-4 checksum MUST be replaced by another
+      validation sequence.
+
+4.3.  SCHC Packet Instance
+
+   SCHC Packet Instance is characterized by a particular SoR common with
+   the corresponding distant entity.  The [rfc8724] defines a protocol
+   operation between a pair of peers.  In a SCHC layer, several SCHC
+   Instances may contain different SoR.
+
+
+
+
+
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024                [Page 6]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+   When the SCHC Device is a highly constrained unit, there is typically
+   only one Instance for that Device, and all the traffic from and to
+   the device is exchanged with the same Network Gateway.  All the
+   traffic can thus be implicitly associated with the single Instance
+   that the device supports, and the Device does not need to manipulate
+   the concept.  For that reason, SCHC avoids to signal explicitly the
+   Instance identification in its data packets.
+
+   The Network Gateway, on the other hand, maintains multiple Instances,
+   one per SCHC Device.  The Instance is derived from the lower layer,
+   typically the source of an incoming SCHC packet as a discriminator in
+   the Figure 1.  The Instance is used in particular to select the set
+   of rules that apply to the SCHC Device, and the current state of
+   their exchange, e.g., timers and previous fragments.
+
+4.3.1.  SCHC Packet
+
+   The SCHC Packet is composed of a RuleID follows by the content
+   described in the Rule.  The content may be a C/D packet, a F/R
+   packet, a CORECONF_Management or a Non Compressed packet.  As defined
+   in the [rfc8724], the SCHC packet for C/D is composed of the
+   Compressed Header followed by the payload from the original packet.
+   Figure 3 shows the compressed header format that is composed of the
+   RuledID and a Compressed Residue, which is the output of compressing
+   a packet header with a Rule.
+
+   C/D Compressed Packet:
+
+   +------------+----------------------+
+   |   RuleID   | Compressed Residue   |
+   +------------+----------------------+
+
+   F/R Compressed Packet:
+
+   +------------+----------------------+-----
+   |   RuleID   | Fragmentation Header | Tiles
+   +------------+----------------------+-----
+
+   CORECONF_Management Compressed Packet:
+
+   +------------+----------------------+
+   |   RuleID   | Compressed Residue   |
+   +------------+----------------------+
+
+                           Figure 3: SCHC Packet
+
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024                [Page 7]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+4.4.  SCHC Profiles
+
+   A SCHC profile is the specification to adapt the use of SCHC with the
+   necessities of the technology to which it is applied.  In the case of
+   star topologies and because LPWAN technologies [rfc8376] have strict
+   yet distinct constraints, e.g., in terms of maximum frame size,
+   throughput, and directionality, also a SCHC instance and the
+   fragmentation model with the parameters' values for its use.
 
    Appendix D.  "SCHC Parameters" of [rfc8724] lists the information
    that an LPWAN technology-specific document must provide to profile
-   SCHC for that technology.
+   SCHC fragmentation for that technology.
 
-   As an example, [rfc9011] provides the SCHC profile for LoRaWAN
-   networks.
+   As an example, [rfc9011] provides the SCHC fragmentation profile for
+   LoRaWAN networks.
 
-3.  The Static Context Header Compression
-
-   SCHC [rfc8724] specifies an extreme compression capability based on a
-   state that must match on the compressor and decompressor side.  This
-   state comprises a set of Compression/Decompression (C/D) rules.
-
-   The SCHC Parser analyzes incoming packets and creates a list of
-   fields that it matches against the compression rules.  The rule that
-   matches best is used to compress the packet, and the rule identifier
-   (RuleID) is transmitted together with the compression residue to the
-   decompressor.  Based on the RuleID and the residue, the decompressor
-   can rebuild the original packet and forward it in its uncompressed
-   form over the Internet.
-
-   [rfc8724] also provides a Fragmentation/Reassembly (F/R) capability
-   to cope with the maximum and/or variable frame size of a Link, which
-   is extremely constrained in the case of an LPWAN network.
-
-   If a SCHC-compressed packet is too large to be sent in a single Link-
-   Layer PDU, the SCHC fragmentation can be applied on the compressed
-   packet.  The process of SCHC fragmentation is similar to that of
-   compression; the fragmentation rules that are programmed for this
-   Device are checked to find the most appropriate one, regarding the
-   SCHC packet size, the link error rate, and the reliability level
-   required by the application.
-
-
-
-
-
-Pelov, et al.             Expires 5 April 2024                  [Page 3]
-
-Internet-Draft              SCHC Architecture               October 2023
-
-
-   The ruleID allows to determine if it is a compression or
-   fragmentation rule.
-
-4.  SCHC Applicability
-
-4.1.  LPWAN Overview
-
-4.2.  Compressing Serial Streams
-
-   [rfc8724] was defined to compress IPv6 [rfc8200] and UDP; but SCHC
-   really is a generic compression and fragmentation technology.  As
-   such, SCHC is agnostic to which protocol it compresses and at which
-   layer it is operated.  The C/D peers may be hosted by different
-   entities for different layers, and the F/R operation may also be
-   performed between different parties, or different sub-layers in the
-   same stack, and/or managed by different organizations.
-
-   If a protocol or a layer requires additional capabilities, it is
-   always possible to document more specifically how to use SCHC in that
-   context, or to specify additional behaviours.  For instance,
-   [rfc8824] extends the compression to CoAP [RFC7252] and OSCORE
-   [RFC8613].
-
-4.3.  Example: Goose and DLMS
-
-5.  SCHC Architecture
-
-5.1.  SCHC Endpoints
-
-   Section 3 of [rfc8724] depicts a typical network architecture for an
-   LPWAN network, simplified from that shown in [rfc8376] and reproduced
-   in Figure 1.
-
-    ()   ()   ()       |
-     ()  () () ()     / \       +---------+
-   () () () () () () /   \======|    ^    |             +-----------+
-    ()  ()   ()     |           | <--|--> |             |Application|
-   ()  ()  ()  ()  / \==========|    v    |=============|   Server  |
-     ()  ()  ()   /   \         +---------+             +-----------+
-    Dev            RGWs             NGW                      App
-
-                Figure 1: Typical LPWAN Network Architecture
-
-   Typically, an LPWAN network topology is star-oriented, which means
-   that all packets between the same source-destination pair follow the
-   same path from/to a central point.  In that model, highly constrained
-   Devices (Dev) exchange information with LPWAN Application Servers
-   (App) through a central Network Gateway (NGW), which can be powered
-
-
-
-Pelov, et al.             Expires 5 April 2024                  [Page 4]
-
-Internet-Draft              SCHC Architecture               October 2023
-
-
-   and is typically a lot less constrained than the Devices.  Because
-   Devices embed built-in applications, the traffic flows to be
-   compressed are known in advance and the location of the C/D and F/R
-   functions (e.g., at the Dev and NGW), and the associated rules, can
-   be pre provisioned in the system before use.
+4.5.  SCHC Operation
 
    The SCHC operation requires a shared sense of which SCHC Device is
    Uplink (Dev to App) and which is Downlink (App to Dev), see
@@ -245,13 +425,13 @@ Internet-Draft              SCHC Architecture               October 2023
    Nevertheless, SCHC is very generic and its applicability is not
    limited to star-oriented deployments and/or to use cases where
    applications are very static and the state provisioned in advance.
-   In particular, a peer-to-peer (P2P) SCHC Instance (see Section 5.2)
+   In particular, a peer-to-peer (P2P) SCHC Instance (see Section 4.3)
    may be set up between peers of equivalent capabilities, and the link
    direction cannot be inferred, either from the network topology nor
    from the device capability.
 
    In that case, by convention, the device that initiates the connection
-   that sustains the SCHC Instance is considered as being Downlink, IOW
+   that sustains the SCHC Instance is considered as being Downlink, i.e.
    it plays the role of the Dev in [rfc8724].
 
    This convention can be reversed, e.g., by configuration, but for
@@ -259,140 +439,378 @@ Internet-Draft              SCHC Architecture               October 2023
    that both ends are aware of their role, and then again this
    determination is based on extrinsic properties.
 
-5.2.  SCHC Instances
-
-   [rfc8724] defines a protocol operation between a pair of peers.  A
-   session called a SCHC Instance is established and SCHC maintains a
-   state and timers associated to that Instance.
-
-   When the SCHC Device is a highly constrained unit, there is typically
-   only one Instance for that Device, and all the traffic from and to
-   the device is exchanged with the same Network Gateway.  All the
-   traffic can thus be implicitly associated with the single Instance
-   that the device supports, and the Device does not need to manipulate
-   the concept.  For that reason, SCHC avoids to signal explicitly the
-   Instance identification in its data packets.
 
 
 
 
 
-Pelov, et al.             Expires 5 April 2024                  [Page 5]
+
+Pelov, et al.            Expires 11 October 2024                [Page 8]
 
-Internet-Draft              SCHC Architecture               October 2023
+Internet-Draft              SCHC Architecture                 April 2024
 
 
-   The Network Gateway, on the other hand, maintains multiple Instances,
-   one per SCHC Device.  The Instance is derived from the lower layer,
-   typically the source of an incoming SCHC packet.  The Instance is
-   used in particular to select from the rule database the set of rules
-   that apply to the SCHC Device, and the current state of their
-   exchange, e.g., timers and previous fragments.
+4.5.1.  SCHC Rules
 
-   This architecture generalizes the model to any kind of peers.  In the
-   case of more capable devices, a SCHC Device may maintain more than
-   one Instance with the same peer, or a set of different peers.  Since
-   SCHC does not signal the Instance in its packets, the information
-   must be derived from a lower layer point to point information.  For
-   instance, the SCHC session can be associated one-to-one with a
-   tunnel, a TLS session, or a TCP or a PPP connection.
+   SCHC Rules are a description of the header protocols fields, into a
+   list of Field Descriptors.  The [rfc8724] gives the format of the
+   Rule description for C/D, F/R and non-compression.  In the same
+   manner the SCHC Header and SCHc CORECONF_Management will use the
+   [rfc8724] field descriptors to compress the format information.
 
-   For instance, [I-D.thubert-schc-over-ppp] describes a type of
-   deployment where the C/D and/or F/R operations are performed between
-   peers of equal capabilities over a PPP [rfc2516] connection.  SCHC
-   over PPP illustrates that with SCHC, the protocols that are
-   compressed can be discovered dynamically and the rules can be fetched
-   on-demand by both parties from the same Uniform Resource Name (URN)
-   [rfc8141], ensuring that the peers use the exact same set of rules.
+   Each type of Rule is identified with a RuleID.  There are different
+   types of Rules: C/D, F/R, SCHC Header, CORECONF_Management and No
+   Compression.  Notice that each Rule type used an independent range of
+   RuleID to identify its rules.
 
-       +----------+  Wi-Fi /   +----------+                ....
-       |    IP    |  Ethernet  |    IP    |            ..          )
-       |   Host   +-----/------+  Router  +----------(   Internet   )
-       | SCHC C/D |  Serial    | SCHC C/D |            (         )
-       +----------+            +----------+               ...
-                   <-- SCHC -->
-                     over PPP
+   A Rule does not describe how the compressor parses a packet header.
+   Rules only describe the behavior for each header field.
 
-                    Figure 2: PPP-based SCHC Deployment
+   SCHC Action.  ToDo
 
-   In that case, the SCHC Instance is derived from the PPP connection.
-   This means that there can be only one Instance per PPP connection,
-   and that all the flow and only the flow of that Instance is exchanged
-   within the PPP connection.  As discussed in Section 5.1, the Uplink
-   direction is from the node that initiated the PPP connection to the
-   node that accepted it.
+4.5.2.  SoR identification
 
-5.3.  Layering with SCHC Instances
+   ToDo
 
-   [rfc8724] states that a SCHC instance needs the rules to process C/D
-   and F/R before the session starts, and that rules cannot be modified
-   during the session.
+4.6.  SCHC Management
 
+   RFC9363 writes that only the management can be done by the two
+   entities of the instance, and other SoR cannot be manipulated.
 
+   Management rules are explicitly define in the SoR, see Figure 4.
+   They are compression Rules for CORECONF messages to get or modify the
+   SoR of the instance.  The management can be limited with the
+   [I-D.ietf-schc-access-control] access definition.
 
+   +-----------------+                 +-----------------+
+   |       ^         |                 |       ^         |
+   |  C/D  !  M ___  |                 |       !  M ___  |
+   |       +-->[SoR] |       ...       |       +-->[SoR] |
+   |       !   [___] |                 |       !   [___] |
+   |       !         |                 |       !         |
+   |      F/R        |                 |      F/R        |
+   +------ins_id1----+-----ins_idi-----+------ins_idn----+
+   .                   C/D  !                       ___  .
+   .                        +--------------------->[SoR] .
+   .                       F/R               M     [___] .
+   +.................. Discriminator ....................+
+
+                        Figure 4: Inband Management
 
 
 
-Pelov, et al.             Expires 5 April 2024                  [Page 6]
+
+
+Pelov, et al.            Expires 11 October 2024                [Page 9]
 
-Internet-Draft              SCHC Architecture               October 2023
+Internet-Draft              SCHC Architecture                 April 2024
 
 
-   As represented figure Figure 3, the compression of the IP and UDP
-   headers may be operated by a network SCHC instance whereas the end-
-   to-end compression of the application payload happens between the
-   Device and the application.  The compression of the application
-   payload may be split in two instances to deal with the encrypted
-   portion of the application PDU.  Fragmentation applies before LPWAN
-   transportation layer.
+4.6.1.  SCHC Data Model
 
-         (Device)            (NGW)                              (App)
+   A SCHC instance, summarized in the Figure 5, implies C/D and/or F/R
+   and CORECONF_Management and SCHC Instances Rules present in both end
+   and that both ends are provisioned with the same SoR.
 
-         +--------+                                           +--------+
-  A S    |  CoAP  |                                           |  CoAP  |
-  p C    |  inner |                                           |  inner |
-  p H    +--------+                                           +--------+
-  . C    |  SCHC  |                                           |  SCHC  |
-         |  inner |   cryptographical boundary                |  inner |
- -._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._
-  A S    |  CoAP  |                                           |  CoAP  |
-  p C    |  outer |                                           |  outer |
-  p H    +--------+                                           +--------+
-  . C    |  SCHC  |                                           |  SCHC  |
-         |  outer |   layer / functional boundary             |  outer |
- -._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._
-  N      .  UDP   .                                           .  UDP   .
-  e      ..........     ..................                    ..........
-  t      .  IPv6  .     .      IPv6      .                    .  IPv6  .
-  w S    ..........     ..................                    ..........
-  o C    .SCHC/L3 .     . SCHC/L3.       .                    .        .
-  r H    ..........     ..........       .                    .        .
-  k C    .  LPWAN .     . LPWAN  .       .                    .        .
-         ..........     ..................                    ..........
-             ((((LPWAN))))             ------   Internet  ------
+           -----                                  -----
+          [ SoR ]                                [ SoR ]
+           -----                                  -----
+             .                                      .
+             .                                      .
+             .                                      .
+          +- M ---+                              +- M ---+
+      <===| R & D |<===                      <===| C & F |<===
+      ===>| C & F |===>                      ===>| R & D |===>
+          +-------+                              +-------+
 
-        Figure 3: Different SCHC instances in a global system
+                     Figure 5: Summarized SCHC elements
+
+   A common rule representation that expresses the SCHC rules in an
+   interoperable fashion is needed to be able to provision end-points
+   from different vendors to that effect, [rfc9363] defines a rule
+   representation using the YANG [rfc7950] formalism.
+
+   [rfc9363] defines a YANG data model to represent the rules.  This
+   enables the use of several protocols for rule management, such as
+   NETCONF[RFC6241], RESTCONF[RFC8040], and
+   CORECONF[I-D.ietf-core-comi].  NETCONF uses SSH, RESTCONF uses HTTPS,
+   and CORECONF uses CoAP(s) as their respective transport layer
+   protocols.  The data is represented in XML under NETCONF, in
+   JSON[RFC8259] under RESTCONF and in CBOR[RFC8949] under CORECONF.
+
+                  create
+           -----  read    +=======+
+          [ SoR ]<------->|Rule   |<-----+ NETCONF,
+           -----  update  |Manager|      | RESTCONF or
+                   delete +=======+      | CORECONF
+              +--------------------------+ request
+              |
+              v M
+          +---+---+
+      <===| R & D |<===
+      ===>| C & F |===>
+          +-------+
+
+                     Figure 6: Summerized SCHC elements
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 10]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+   The Rule Manager (RM) is in charge of handling data derived from the
+   YANG Data Model and apply changes to the context and SoR of each SCHC
+   Instance Figure 6.
+
+   The RM is an Application using the Internet to exchange information,
+   therefore:
+
+   *  for the network-level SCHC, the communication does not require
+      routing.  Each of the end-points having an RM and both RMs can be
+      viewed on the same link, therefore wellknown Link Local addresses
+      can be used to identify the Device and the core RM.  L2 security
+      MAY be deemed as sufficient, if it provides the necessary level of
+      protection.
+
+   *  for application-level SCHC, routing is involved and global IP
+      addresses SHOULD be used.  End-to-end encryption is RECOMMENDED.
+
+   Management messages can also be carried in the negotiation protocol,
+   for instace, the [I-D.ietf-schc-over-ppp] proposes a solution.  The
+   RM traffic may be itself compressed by SCHC: if CORECONF protocol is
+   used, [rfc8824] can be applied.
+
+5.  SCHC Architecture
+
+   As described in [rfc8824], SCHC feasibility enables combining several
+   SCHC instances.  The [rfc8724] states that a SCHC instance needs the
+   rules to process C/D and F/R before the session starts and that the
+   SoR of the instance control layer cannot be modified.  However, the
+   rules may be updated in certain instances to improve the performance
+   of C/D, F/R, or CORECONF_Management.  The
+   [I-D.ietf-schc-access-control] defines the possible modifications and
+   who can modify, update, create and delete Rules or part of them in
+   the instances' SoR.
+
+   As represented in Figure 7, the compression of the IP and UDP headers
+   may be operated by a network SCHC instance whereas the end-to-end
+   compression of the application payload happens between the Device and
+   the application.  The compression of the application payload may be
+   split in two instances to deal with the encrypted portion of the
+   application PDU.  Fragmentation applies before LPWAN transportation
+   layer.
+
+
+
+
+
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 11]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+            (Device)            (NGW)                           (App)
+
+            +--------+                                        +--------+
+     A S    |  CoAP  |                                        |  CoAP  |
+     p C    |  inner |                                        |  inner |
+     p H    +--------+                                        +--------+
+     . C    |  SCHC  |                                        |  SCHC  |
+            |  inner |   cryptographical boundary             |  inner |
+    -._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-.._.-._.-._.-._.-._
+     A S    |  CoAP  |                                        |  CoAP  |
+     p C    |  outer |                                        |  outer |
+     p H    +--------+                                        +--------+
+     . C    |  SCHC  |                                        |  SCHC  |
+            |  outer |   layer / functional boundary          |  outer |
+    -._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.-._.--._.-._.-._.-._
+     N      .  UDP   .                                        .  UDP   .
+     e      ..........     ..................                 ..........
+     t      .  IPv6  .     .      IPv6      .                 .  IPv6  .
+     w S    ..........     ..................                 ..........
+     o C    .SCHC/L3 .     . SCHC/L3.       .                 .        .
+     r H    ..........     ..........       .                 .        .
+     k C    .  LPWAN .     . LPWAN  .       .                 .        .
+            ..........     ..................                 ..........
+                ((((LPWAN))))             ------   Internet  ------
+
+           Figure 7: Different SCHC instances in a global system
 
    This document defines a generic architecture for SCHC that can be
    used at any of these levels.  The goal of the architectural document
    is to orchestrate the different protocols and data model defined by
    the LPWAN and SCHC working groups to design an operational and
-   interoperable framework for allowing IP application over contrained
+   interoperable framework for allowing IP application over constrained
    networks.
 
-6.  SCHC Packet Formats
+   The Figure 8 shows the protocol stack and the corresponding SCHC
+   layers enabling the compression of the different protocol headers.
+   The SCHC header eases the introduction of intermediary host in the
+   end-to-end communication transparently.  All the SCHC headers are
+   compressed and in some cases are elided, for example for LPWAN
+   networks.  The layers using encryption does not have a SCHC header in
+   the middle because they are the same entity.  Figure 9 shows an
+   example of an IP/UDP/CoAP in an LPWAN network.
+
+
+
+
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 12]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+   DEV                                 NGW              APP
+
+   {[(Encrypted Application Layer)]} . . . . . . . . {[(EAL)]}
+   (Application Layer Protocol) . . . . . . . . . . .({[ALP]})
+   (SCHC) . . . . . . . . . . . . . . . . . . . . . ({[SCHC]})
+   {[(Encrypted Security Layer)]} . . . . . . . . . .{[(ESL)]}
+   {(Security Layer Protocol)}. . . . . . . . . . . . .{(SLP)}
+   {(SCHC)} . . . . . . . . . . . . . . . . . . . . . {(SCHC)}
+   (Transport Layer Protocol). . . (TLP) TLP . . . . . .TLP
+   {(SCHC)} . . . . . . . . . . {(SCHC)}
+   (Internet Layer Protocol) . . . (IP)  IP . . . . . . IP
+   (SCHC). . . . . . . . . . . . .(SCHC)
+   Network Layer Protocol . . . . . . . . . . . . . . . NLP
+
+   Where: {} Optional; [] Encrypted; () Compressed.
+
+                        Figure 8: SCHC Architecture
+
+   In Figure 8, each line represents a layer, parentheses surround a
+   compressed header, and if it is optional, it has curly brackets.  All
+   the SCHC layers are compressed.  Square brackets represent the
+   encrypted data; if the encryption is optional, curly brackets precede
+   the square brackets.
+
+   Intermediary Routers or gateways may know only one layer's SoR and
+   forward the rest of the compressed packet to the next hub.
+
+   Example for an LPWAN network receiving a IP/UDP/CoAP using OSCORE:
+
+      +--------------CoAP OSCORE & PAYLOAD----------------------+
+   A  .                                                         .
+   P  |----------------------(OSCORE)---------------------------|
+   P  |                                                         |
+      |                                                         |
+      +-----------------------CoAP(OSCORE)----------------------+
+      | +-----------------+                 +-----------------+ |
+      | |       ^         |                 |       ^         | |
+      | |  C/D  !  M ___  |                 |       !  M ___  | |
+   S  | |       +-->[SoR] |       ...       |       +-->[SoR] | |
+   C  | |       !   [___] |                 |       !   [___] | |
+   H  | |       !         |                 |       !         | |
+   C  | |      F/R        |                 |      F/R        | |
+      | +------ins_id1----+-----ins_idi-----+------ins_idn----+ |
+      | |                   C/D  !                            | |
+      | |             (RuleID)(CoAP)(OSCORE)             ___  | |
+      | |                        +--------------------->[SoR] | |
+      | |                       F/R               M     [___] | |
+      +--IP:A->B/UDP:Dest=SCHC(SCHC HDR)(RuleID)(CoAP)(OSCORE)--+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 13]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+   U  |         ^                                               |
+   D  |         |                                               |
+   P  |         |                                               |
+      +---------------------------------------------------------+
+   I  |         |                                               |
+   P  |         |                                               |
+      +--IP:A->B/UDP:Dest=SCHC;(SCHC HDR)(RuleID)(CoAP)(OSCORE)-+
+      | +-----------------+                 +-----------------+ |
+      | |       ^         |                 |       ^         | |
+      | |  C/D  !  M ___  |                 |       !  M ___  | |
+   S  | |       +-->[SoR] |       ...       |       +-->[SoR] | |
+   C  | |       !   [___] |                 |       !   [___] | |
+   H  | | RuleID(IP/UDP)  |                 |       !         | |
+   C  | |   (SCHC HEADER) |                 |       !         | |
+      | |  (RuleID)(CoAP))|                 |       !         | |
+      | |       ! (OSCORE)|                 |       !         | |
+      | |      F/R        |                 |      F/R        | |
+      | +------ins_id1----+-----ins_idi-----+------ins_idn----+ |
+      | |                   C/D  !                            | |
+      | |                  (SCHC Packet)                      | |
+      | |                        |                       ___  | |
+      | |                        +--------------------->[SoR] | |
+      | |                       F/R               M     [___] | |
+      +-+-----------Discriminator Implicit--------------------+-+
+   N      ______________^
+   E     /
+   T    | ()(RuleID(IP/UDP)(SCHC_HEADER)RuleID(COAP)(OSCORE))PAYLOAD
+   W    | ^ ^---------+
+        | |            \
+        +-(SCHC Header)(SCHC Packet)
+
+                    Figure 9: SCHC Architecture Example
+
+6.  The Static Context Header Compression
+
+   SCHC [rfc8724] specifies an extreme compression capability based on a
+   description that must match on the compressor and decompressor side.
+   This description comprises a set of Compression/Decompression (C/D)
+   rules.
+
+   The SCHC Parser analyzes incoming packets and creates a list of
+   fields that it matches against the compression rules.  The rule that
+   matches is used to compress the packet, and the rule identifier
+   (RuleID) is transmitted together with the compression residue to the
+   decompressor.  Based on the RuleID and the residue, the decompressor
+   can rebuild the original packet and forward it in its uncompressed
+   form over the Internet.  When no Rule matches the header, the No
+   Compression Rule is used.  When several Rules match the header the
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 14]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+   implementation must choose one.  How it is done or based on which
+   parameters is out of the scope of this document.  SCHC compresses
+   datagrams and there is no notion of flows.
+
+   [rfc8724] also provides a Fragmentation/Reassembly (F/R) capability
+   to cope with the maximum and/or variable frame size of a Link, which
+   is extremely constrained in the case of an LPWAN network.
+
+   If a SCHC-compressed packet is too large to be sent in a single Link-
+   Layer PDU, the SCHC fragmentation can be applied on the compressed
+   packet.  The process of SCHC fragmentation is similar to that of
+   compression; the fragmentation rules that are programmed for this
+   Device are checked to find the most appropriate one, regarding the
+   SCHC packet size, the link error rate, and the reliability level
+   required by the application.
+
+   The ruleID allows to determine if it is a compression or
+   fragmentation rule or any other type of Rule.
+
+6.1.  SCHC over Network Technologies
 
    SCHC can be used in multiple environments and multiple protocols.  It
    was designed by default to work on native MAC frames with LPWAN
    technologies such as LoRaWAN[rfc9011], IEEE std 802.15.4
    [I-D.ietf-6lo-schc-15dot4], and SigFox[rfc9442].
-
-
-
-Pelov, et al.             Expires 5 April 2024                  [Page 7]
-
-Internet-Draft              SCHC Architecture               October 2023
-
 
    To operate SCHC over Ethernet, IPv6, and UDP, the definition of,
    respectively, an Ethertype, an IP Protocol Number, and a UDP Port
@@ -411,83 +829,142 @@ Internet-Draft              SCHC Architecture               October 2023
    that layer, but there is no expectation that they are the same across
    layers.
 
-6.1.  SCHC over Ethernet
 
-   Before the SCHC compression takes place, the SCHC header shows as
-   header as represented figure Figure 4, that is virtually inserted
-   before the real protocol header and data that are compressed in the
-   session, e.g. a IPv6 in this figure.
 
-    +------------------+------------------+-------------+-----------
-    | IEEE 802 Header  | SCHC Header      | IPv6 Header | IPv6 NH
-    | Ethertype = SCHC | Ethertype = IPv6 |             | / ULP
-    +------------------+------------------+-------------+-----------
+
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 15]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+6.1.1.  SCHC over PPP
+
+   The LPWAN architecture (Figure 14) generalizes the model to any kind
+   of peers.  In the case of more capable devices, a SCHC Device may
+   maintain more than one Instance with the same peer, or a set of
+   different peers.  Since SCHC does not signal the Instance in its
+   packets, the information must be derived from a lower layer point to
+   point information.  For instance, the SCHC instance control can be
+   associated one-to-one with a tunnel, a TLS session, or a TCP or a PPP
+   connection.
+
+   For instance, [I-D.ietf-schc-over-ppp] describes a type of deployment
+   where the C/D and/or F/R operations are performed between peers of
+   equal capabilities over a PPP [rfc2516] connection.  SCHC over PPP
+   illustrates that with SCHC, the protocols that are compressed can be
+   discovered dynamically and the rules can be fetched on-demand using
+   CORECONF messages Rules, ensuring that the peers use the exact same
+   set of rules.
+
+       +----------+  Wi-Fi /   +----------+                ....
+       |    IP    |  Ethernet  |    IP    |            ..          )
+       |   Host   +-----/------+  Router  +----------(   Internet   )
+       | SCHC C/D |  Serial    | SCHC C/D |            (         )
+       +----------+            +----------+               ...
+                   <-- SCHC -->
+                     over PPP
+
+                    Figure 10: PPP-based SCHC Deployment
+
+   In that case, the SCHC Instance is derived from the PPP connection.
+   This means that there can be only one Instance per PPP connection,
+   and that all the flow and only the flow of that Instance is exchanged
+   within the PPP connection.  As discussed in Section 7, the Uplink
+   direction is from the node that initiated the PPP connection to the
+   node that accepted it.
+
+6.1.2.  SCHC over Ethernet
+
+   Before the SCHC compression takes place, the SCHC header showed in
+   the Figure 11, is virtually inserted before the real protocol header
+   and data that are compressed in the session, e.g. a IPv6 in this
+   figure.
+
+
+
+
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 16]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+                                          |---- SCHC PACKET ----|
+    +------------------+------------------+---------+-----------+
+    | IEEE 802 Header  | SCHC Header      | Rule ID | Compressed|
+    | Ethertype = SCHC | Ethertype = IPv6 |         | Residue   |
+    +------------------+------------------+---------+-----------+
                         <-
                           SCHC overhead
                                         ->
 
-                        Figure 4: SCHC over Ethernet
+                       Figure 11: SCHC over Ethernet
 
-6.2.  SCHC over IPv6
+6.1.3.  SCHC over IPv6
 
-   In the case of IPv6, the expectation is that the ULP checksum can be
-   elided in the SCHC compression of the ULP, because the SCHC header
-   has its own checksum that protects both the SCHC header and the whole
-   ULP, header and payload.
+   In the case of IPv6, the expectation is that the Upper Layer Protocol
+   (ULP) checksum can be elided in the SCHC compression of the ULP,
+   because the SCHC header may have its own checksum that protects both
+   the SCHC header and the whole ULP, header and payload.
 
-   Before any compression takes place, the SCHC header shows as an IPv6
-   extension header as represented figure Figure 5, that is virtually
-   inserted before the headers and data that are compressed in the
-   session, e.g. a ULP in this figure
+   The SCHC Header between IPv6 and the ULP is not needed because of the
+   Next Header field on the IPv6 header format.
 
-
-
-
-
-
-Pelov, et al.             Expires 5 April 2024                  [Page 8]
-
-Internet-Draft              SCHC Architecture               October 2023
-
-
-    +-------------+-------------+------------+-----------
-    | IPv6 Header | SCHC Header | ULP Header | ULP PDU
-    |  NH=SCHC    | NH = ULP    |            | (Payload)
-    +-------------+-------------+------------+-----------
+                                |---- SCHC Packet -----|
+    +-------------+-------------+---------+------------+
+    | IPv6 Header | SCHC Header | Rule ID | Compressed |
+    |  NH=SCHC    | NH = ULP    |         | Residue    |
+    +-------------+-------------+---------+------------+
                    <-
                    SCHC overhead
                               ->
 
-                          Figure 5: SCHC over IPv6
+                         Figure 12: SCHC over IPv6
 
-   In the air, both the SCHC header (using well-known rules) and the ULP
-   (using the rules indicated in the session) are compressed.  The
+   In the air, both the SCHC header and the ULP are compressed.  The
    session endpoints are typically identified by the source and
    destination IP addresses.  If the roles are well-known, then the
    endpoint information can be elided and deduced from the IP header.
    If there is only one session, it can be elided as well, otherwise a
-   rule and residue are needed to extract the session ID.  Finally, the
-   SCHC extension header should contain a checksum that protects itself
-   and all the ULP, so the ULP checksum can be elided in the compressed
-   form of the ULP header.
+   rule and residue are needed to extract the session ID.
 
-6.3.  SCHC over UDP
+6.1.4.  SCHC over UDP
 
    When SCHC operates over the Internet, middleboxes may block packets
    with a next header that is SCHC.  To avoid that issue, it would be
-   desirable to prepaend a UDP header before the SCHC header as shown in
-   figure Figure 6.
+   desirable to prepend a UDP header before the SCHC header as shown in
+   figure Figure 13.
 
-    +-------------+-------------+-------------+------------+-----------
-    | IPv6 Header | UDP Header  | SCHC Header | ULP Header | ULP PDU
-    |  NH=UDP     | Port = SCHC | NH = ULP    |            | (Payload)
-    +-------------+-------------+-------------+------------+-----------
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 17]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+                                              |---- SCHC Packet -----|
+    +-------------+-------------+-------------+---------+------------+
+    | IPv6 Header | UDP Header  | SCHC Header | Rule ID | Compressed |
+    |  NH=UDP     | Port = SCHC | NH = ULP    |         | Residue    |
+    +-------------+-------------+-------------+---------+------------+
                    <-
                           SCHC overhead
                                              ->
    ~
 
-                          Figure 6: SCHC over UDP
+                          Figure 13: SCHC over UDP
 
    In that case, the destination port can indicate SCHC as in an header
    chain, and the source port can indicate the SCHC session in which
@@ -497,97 +974,50 @@ Internet-Draft              SCHC Architecture               October 2023
    the SCHC over UDP case, the SCHC header can be fully elided, but the
    packet must carry the overhead of a full UDP header.
 
+7.  SCHC Endpoints for LPWAN Networks
+
+   Section 3 of [rfc8724] depicts a typical network architecture for an
+   LPWAN network, simplified from that shown in [rfc8376] and reproduced
+   in Figure 14.
+
+    ()   ()   ()       |
+     ()  () () ()     / \       +---------+
+   () () () () () () /   \======|    ^    |             +-----------+
+    ()  ()   ()     |           | <--|--> |             |Application|
+   ()  ()  ()  ()  / \==========|    v    |=============|   Server  |
+     ()  ()  ()   /   \         +---------+             +-----------+
+    Dev            RGWs             NGW                      App
+
+               Figure 14: Typical LPWAN Network Architecture
+
+   Typically, an LPWAN network topology is star-oriented, which means
+   that all packets between the same source-destination pair follow the
+   same path from/to a central point.  In that model, highly constrained
+   Devices (Dev) exchange information with LPWAN Application Servers
+   (App) through a central Network Gateway (NGW), which can be powered
+   and is typically a lot less constrained than the Devices.  Because
+   Devices embed built-in applications, the traffic flows to be
+   compressed are known in advance and the location of the C/D and F/R
+   functions (e.g., at the Dev and NGW), and the associated rules, can
+   be pre provisioned in the system before use.
 
 
 
 
-Pelov, et al.             Expires 5 April 2024                  [Page 9]
+
+Pelov, et al.            Expires 11 October 2024               [Page 18]
 
-Internet-Draft              SCHC Architecture               October 2023
+Internet-Draft              SCHC Architecture                 April 2024
 
 
-7.  SCHC Data Model
-
-   A SCHC instance, summarized in the Figure 7, implies C/D and/or F/R
-   present in both end and that both ends are provisioned with the same
-   set of rules.
-
-          (-------)                                (-------)
-          ( Rules )                                ( Rules )
-          (-------)                                (-------)
-           . read                                   . read
-           .                                        .
-          +-------+                                +-------+
-      <===| R & D |<===                        <===| C & F |<===
-      ===>| C & F |===>                        ===>| R & D |===>
-          +-------+
-
-                     Figure 7: Summarized SCHC elements
-
-   A common rule representation that expresses the SCHC rules in an
-   interoperable fashion is needed to be able to provision end-points
-   from different vendors to that effect, [rfc9363] defines a rule
-   representation using the YANG [rfc7950] formalism.
-
-   [rfc9363] defines an YANG data model to represent the rules.  This
-   enables the use of several protocols for rule management, such as
-   NETCONF[RFC6241], RESTCONF[RFC8040], and
-   CORECONF[I-D.ietf-core-comi].  NETCONF uses SSH, RESTCONF uses HTTPS,
-   and CORECONF uses CoAP(s) as their respective transport layer
-   protocols.  The data is represented in XML under NETCONF, in
-   JSON[RFC8259] under RESTCONF and in CBOR[RFC8949] under CORECONF.
-
-                     create
-          (-------)  read   +=======+ *
-          ( rules )<------->|Rule   |<--|-------->
-          (-------)  update |Manager|   NETCONF, RESTCONF or CORECONF
-             . read  delete +=======+   request
-             .
-          +-------+
-      <===| R & D |<===
-      ===>| C & F |===>
-          +-------+
-
-                     Figure 8: Summerized SCHC elements
-
-   The Rule Manager (RM) is in charge of handling data derived from the
-   YANG Data Model and apply changes to the rules database Figure 8.
-
-
-
-
-
-Pelov, et al.             Expires 5 April 2024                 [Page 10]
-
-Internet-Draft              SCHC Architecture               October 2023
-
-
-   The RM is an Application using the Internet to exchange information,
-   therefore:
-
-   *  for the network-level SCHC, the communication does not require
-      routing.  Each of the end-points having an RM and both RMs can be
-      viewed on the same link, therefore wellknown Link Local addresses
-      can be used to identify the Device and the core RM.  L2 security
-      MAY be deemed as sufficient, if it provides the necessary level of
-      protection.
-
-   *  for application-level SCHC, routing is involved and global IP
-      addresses SHOULD be used.  End-to-end encryption is RECOMMENDED.
-
-   Management messages can also be carried in the negotiation protocol
-   as proposed in [I-D.thubert-schc-over-ppp].  The RM traffic may be
-   itself compressed by SCHC: if CORECONF protocol is used, [rfc8824]
-   can be applied.
-
-8.  SCHC Device Lifecycle
+7.1.  SCHC Device Lifecycle
 
    In the context of LPWANs, the expectation is that SCHC rules are
    associated with a physical device that is deployed in a network.
    This section describes the actions taken to enable an automatic
    commissioning of the device in the network.
 
-8.1.  Device Development
+7.1.1.  Device Development
 
    The expectation for the development cycle is that message formats are
    documented as a data model that is used to generate rules.  Several
@@ -595,53 +1025,48 @@ Internet-Draft              SCHC Architecture               October 2023
 
    1.  In the application model, an interface definition language and
        binary communication protocol such as Apache Thrift is used, and
-       the serialization code includes the SCHC operation.  This model
-       imposes that both ends are compiled with the generated structures
-       and linked with generated code that represents the rule
-       operation.
+       the parser code includes the SCHC operation.  This model imposes
+       that both ends are compiled with the generated structures and
+       linked with generated code that represents the rule operation.
 
    2.  In the device model, the rules are generated separately.  Only
        the device-side code is linked with generated code.  The Rules
        are published separately to be used by a generic SCHC engine that
        operates in a middle box such as a SCHC gateway.
 
-
-
-
-
-
-
-
-
-Pelov, et al.             Expires 5 April 2024                 [Page 11]
-
-Internet-Draft              SCHC Architecture               October 2023
-
-
    3.  In the protocol model, both endpoint generate a packet format
        that is imposed by a protocol.  In that case, the protocol itself
        is the source to generate the Rules.  Both ends of the SCHC
        compression are operated in middle boxes, and special attention
-       must be taken to ensure that they operate on the compatible Rule
-       sets, basically the same major version of the same Rule Set.
+       must be taken to ensure that they operate on the compatible SoR,
+       basically the same major version of the same SoR.
 
    Depending on the deployment, the tools that generate the Rules should
-   provide knobs to optimize the Rule set, e.g., more rules vs. larger
+   provide knobs to optimize the SoR, e.g., more rules vs. larger
    residue.
 
-8.2.  Rules Publication
+7.1.2.  Rules Publication
 
    In the device model and in the protocol model, at least one of the
-   endpoints must obtain the rule set dynamically.  The expectation is
-   that the Rule Sets are published to a reachable repository and
-   versionned (minor, major).  Each rule set should have its own Uniform
-   Resource Names (URN) [RFC8141] and a version.
+   endpoints must obtain the SoR dynamically.  The expectation is that
+   the SoR are published to a reachable repository and versionned
+   (minor, major).  Each SoR should have its own Uniform Resource Names
+   (URN) [RFC8141] and a version.
 
-   The Rule Set should be authenticated to ensure that it is genuine, or
-   obtained from a trusted app store.  A corrupted Rule Set may be used
-   for multiple forms of attacks, more in Section 9.
+   The SoR should be authenticated to ensure that it is genuine, or
+   obtained from a trusted app store.  A corrupted SoR may be used for
+   multiple forms of attacks, more in Section 8.
 
-8.3.  SCHC Device Deployment
+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 19]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+7.1.3.  SCHC Device Deployment
 
    The device and the network should mutually authenticate themselves.
    The autonomic approach [RFC8993] provides a model to achieve this at
@@ -650,35 +1075,27 @@ Internet-Draft              SCHC Architecture               October 2023
    necessary to program keys in the devices.
 
    The initial handshake between the SCHC endpoints should comprise a
-   capability exchange whereby URN and the version of the rule set are
+   capability exchange whereby URN and the version of the SoR are
    obtained or compared.  SCHC may not be used if both ends can not
-   agree on an URN and a major version.  Manufacturer Usage Descriptions
-   (MUD) [RFC8520] may be used for that purpose in the device model.
+   agree on an URN and a major version.
+   Manufacturer Usage Descriptions (MUD) [RFC8520] may be used for that
+   purpose in the device model.
 
-   Upon the handshake, both ends can agree on a rule set, their role
-   when the rules are asymmetrical, and fetch the rule set if necessary.
-   Optionally, a node that fetched a rule set may inform the other end
-   that it is reacy from transmission.
+   Upon the handshake, both ends can agree on a SoR, their role when the
+   rules are asymmetrical, and fetch the SoR if necessary.  Optionally,
+   a node that fetched a SoR may inform the other end that it is reacy
+   from transmission.
 
-8.4.  SCHC Device Maintenance
+7.1.4.  SCHC Device Maintenance
 
    URN update without device update (bug fix) FUOTA => new URN =>
    reprovisioning
 
-
-
-
-
-Pelov, et al.             Expires 5 April 2024                 [Page 12]
-
-Internet-Draft              SCHC Architecture               October 2023
-
-
-8.5.  SCHC Device Decommissionning
+7.1.5.  SCHC Device Decommissionning
 
    Signal from device/vendor/network admin
 
-9.  Security Considerations
+8.  Security Considerations
 
    SCHC is sensitive to the rules that could be abused to form arbitrary
    long messages or as a form of attack against the C/D and/or F/R
@@ -687,17 +1104,25 @@ Internet-Draft              SCHC Architecture               October 2023
    distributed in a fashion that is protected against tempering, e.g.,
    encrypted and signed.
 
-10.  IANA Consideration
+9.  IANA Consideration
 
    This document has no request to IANA
 
-11.  Acknowledgements
+10.  Acknowledgements
 
-   The authors would like to thank (in alphabetic order):
+   The authors would like to thank (in alphabetic order): Laurent
+   Toutain
 
-12.  References
+11.  References
 
-12.1.  Normative References
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 20]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
+
+11.1.  Normative References
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
@@ -718,52 +1143,65 @@ Internet-Draft              SCHC Architecture               October 2023
               DOI 10.17487/RFC8724, April 2020,
               <https://www.rfc-editor.org/rfc/rfc8724>.
 
-
-
-
-
-
-
-
-Pelov, et al.             Expires 5 April 2024                 [Page 13]
-
-Internet-Draft              SCHC Architecture               October 2023
-
-
    [rfc8824]  Minaburo, A., Toutain, L., and R. Andreasen, "Static
               Context Header Compression (SCHC) for the Constrained
               Application Protocol (CoAP)", RFC 8824,
               DOI 10.17487/RFC8824, June 2021,
               <https://www.rfc-editor.org/rfc/rfc8824>.
 
-12.2.  Informative References
+11.2.  Informative References
 
    [I-D.ietf-6lo-schc-15dot4]
               Gomez, C. and A. Minaburo, "Transmission of SCHC-
               compressed packets over IEEE 802.15.4 networks", Work in
-              Progress, Internet-Draft, draft-ietf-6lo-schc-15dot4-03,
-              30 September 2023, <https://tools.ietf.org/html/draft-
-              ietf-6lo-schc-15dot4-03>.
+              Progress, Internet-Draft, draft-ietf-6lo-schc-15dot4-05,
+              28 February 2024, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-6lo-schc-15dot4-05>.
 
    [I-D.ietf-core-comi]
               Veillette, M., Van der Stok, P., Pelov, A., Bierman, A.,
               and C. Bormann, "CoAP Management Interface (CORECONF)",
-              Work in Progress, Internet-Draft, draft-ietf-core-comi-16,
-              4 September 2023,
-              <https://tools.ietf.org/html/draft-ietf-core-comi-16>.
+              Work in Progress, Internet-Draft, draft-ietf-core-comi-17,
+              4 March 2024, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-core-comi-17>.
+
+
+
+
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 21]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
 
    [I-D.ietf-intarea-schc-protocol-numbers]
               Moskowitz, R., Card, S. W., Wiethuechter, A., and P.
               Thubert, "Protocol Numbers for SCHC", Work in Progress,
               Internet-Draft, draft-ietf-intarea-schc-protocol-numbers-
-              00, 10 April 2023, <https://tools.ietf.org/html/draft-
-              ietf-intarea-schc-protocol-numbers-00>.
+              02, 8 April 2024, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-intarea-schc-protocol-numbers-02>.
 
-   [I-D.thubert-schc-over-ppp]
+   [I-D.ietf-schc-access-control]
+              Minaburo, A., Toutain, L., and I. Martinez, "SCHC Access
+              Control", Work in Progress, Internet-Draft, draft-ietf-
+              schc-access-control-00, 13 December 2023,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
+              access-control-00>.
+
+   [I-D.ietf-schc-over-ppp]
               Thubert, P., "SCHC over PPP", Work in Progress, Internet-
-              Draft, draft-thubert-schc-over-ppp-00, 29 March 2023,
-              <https://tools.ietf.org/html/draft-thubert-schc-over-ppp-
-              00>.
+              Draft, draft-ietf-schc-over-ppp-00, 25 July 2023,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
+              over-ppp-00>.
+
+   [rfc2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
 
    [rfc2516]  Mamakos, L., Lidl, K., Evarts, J., Carrel, D., Simone, D.,
               and R. Wheeler, "A Method for Transmitting PPP Over
@@ -775,22 +1213,6 @@ Internet-Draft              SCHC Architecture               October 2023
               (NETCONF)", RFC 6241, DOI 10.17487/RFC6241, June 2011,
               <https://www.rfc-editor.org/rfc/rfc6241>.
 
-
-
-
-
-
-
-Pelov, et al.             Expires 5 April 2024                 [Page 14]
-
-Internet-Draft              SCHC Architecture               October 2023
-
-
-   [RFC7252]  Shelby, Z., Hartke, K., and C. Bormann, "The Constrained
-              Application Protocol (CoAP)", RFC 7252,
-              DOI 10.17487/RFC7252, June 2014,
-              <https://www.rfc-editor.org/rfc/rfc7252>.
-
    [rfc7950]  Bjorklund, M., Ed., "The YANG 1.1 Data Modeling Language",
               RFC 7950, DOI 10.17487/RFC7950, August 2016,
               <https://www.rfc-editor.org/rfc/rfc7950>.
@@ -799,9 +1221,18 @@ Internet-Draft              SCHC Architecture               October 2023
               Protocol", RFC 8040, DOI 10.17487/RFC8040, January 2017,
               <https://www.rfc-editor.org/rfc/rfc8040>.
 
-   [rfc8141]  Saint-Andre, P. and J. Klensin, "Uniform Resource Names
-              (URNs)", RFC 8141, DOI 10.17487/RFC8141, April 2017,
-              <https://www.rfc-editor.org/rfc/rfc8141>.
+   [rfc8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 22]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
 
    [rfc8200]  Deering, S. and R. Hinden, "Internet Protocol, Version 6
               (IPv6) Specification", STD 86, RFC 8200,
@@ -822,25 +1253,10 @@ Internet-Draft              SCHC Architecture               October 2023
               DOI 10.17487/RFC8520, March 2019,
               <https://www.rfc-editor.org/rfc/rfc8520>.
 
-   [RFC8613]  Selander, G., Mattsson, J., Palombini, F., and L. Seitz,
-              "Object Security for Constrained RESTful Environments
-              (OSCORE)", RFC 8613, DOI 10.17487/RFC8613, July 2019,
-              <https://www.rfc-editor.org/rfc/rfc8613>.
-
    [RFC8949]  Bormann, C. and P. Hoffman, "Concise Binary Object
               Representation (CBOR)", STD 94, RFC 8949,
               DOI 10.17487/RFC8949, December 2020,
               <https://www.rfc-editor.org/rfc/rfc8949>.
-
-
-
-
-
-
-Pelov, et al.             Expires 5 April 2024                 [Page 15]
-
-Internet-Draft              SCHC Architecture               October 2023
-
 
    [RFC8993]  Behringer, M., Ed., Carpenter, B., Eckert, T., Ciavaglia,
               L., and J. Nobre, "A Reference Model for Autonomic
@@ -857,40 +1273,72 @@ Internet-Draft              SCHC Architecture               October 2023
               DOI 10.17487/RFC9363, March 2023,
               <https://www.rfc-editor.org/rfc/rfc9363>.
 
-   [rfc9442]  Z├║├▒iga, J., Gomez, C., Aguilar, S., Toutain, L.,
-              C├®spedes, S., Wistuba, D., and J. Boite, "Static Context
-              Header Compression (SCHC) over Sigfox Low-Power Wide Area
-              Network (LPWAN)", RFC 9442, DOI 10.17487/RFC9442, July
-              2023, <https://www.rfc-editor.org/rfc/rfc9442>.
+   [rfc9442]  Zúñiga, J., Gomez, C., Aguilar, S., Toutain, L., Céspedes,
+              S., Wistuba, D., and J. Boite, "Static Context Header
+              Compression (SCHC) over Sigfox Low-Power Wide Area Network
+              (LPWAN)", RFC 9442, DOI 10.17487/RFC9442, July 2023,
+              <https://www.rfc-editor.org/rfc/rfc9442>.
 
 Authors' Addresses
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 23]
+
+Internet-Draft              SCHC Architecture                 April 2024
+
 
    Alexander Pelov
    IMT Atlantique
    rue de la Chataigneraie
    35576 Cesson-Sevigne Cedex
    France
-
    Email: alexander.pelov@imt-atlantique.fr
 
 
    Pascal Thubert
    06330 Roquefort les Pins
    France
-
    Email: pascal.thubert@gmail.com
 
 
    Ana Minaburo
    Consultant
-   rue de Rennes
    35510 Cesson-Sevigne Cedex
    France
-
    Email: anaminaburo@gmail.com
 
 
 
 
 
-Pelov, et al.             Expires 5 April 2024                 [Page 16]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Pelov, et al.            Expires 11 October 2024               [Page 24]
