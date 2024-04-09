@@ -107,24 +107,67 @@ installed to enable reliable and scalable operations.
 # Building Blocks
 This section specifies the principal blocks defined for building and using the SCHC architecture in any network topology and protocol.
 
-## SCHC layer
-SCHC Layer is a building block composed at least of a SCHC Packet Instance as described in the {{rfc8724}}. A SCHC Header Instance may be added, it controls the SCHC Layer. The SCHC Header Instance is used with different SCHC Packets Instances if they are defined in the same SCHC Layer.
+## SCHC Stratum (plural: strata)
 
-Note that a SCHC Layer is different from an ISO layer {{Fig-SCHCSESSION}}.
+A SCHC Stratum is composed of a compressed SCHC Header (which may be fully implicit and thus elided) and a SCHC-compressed data that is used to uncompress a section of the packet. 
+
+A SCHC-compressed packet contains at least one stratum that is subject to compression and decompression by an associated SCHC Instance. The packet may be composed of multiple nested strata, where a given stratum is in fact the payload of the nesting stratum.
+
+The SCHC stratum data is wrapped between an uncompressed header and a payload. The SCHC operation swaps the stratum data with the uncompressed section obtained from the SCHC packet residue. 
+
+The uncompressed header may be the result of a previous SCHC expansion. The payload may contain one or more other strata.
+
+A SCHC stratum may carry the compressed PDU of one or more IP layers or sublayers, e.g., IP only, IP+UDP, CoAP, or OSCORE {{rfc8824}}.
+
+The end points that handle the compression of a given stratum might differ for the same packet, meaning that the payload of a given stratum might be compressed/uncompressed by a different entity, possibly in a different node. It results that the degree of compression (the number of strata) for a given packet may vary as the packet progresses through the layers inside a node and then through the network.
+
+## Discriminator
+
+The key to determine how to decompress a SCHC header in a stratum is called a Discriminator. 
+
+The Discriminator is typically extrinsic to the stratum data. 
+
+It may be found in the packet context, e.g., the ID of the interface, VLAN, SSID, or PPP session on which the packet is received
 
 
-## SCHC Header Instance
-The SCHC Header Instance manages the SCHC Headers and provides the information and the selection of a SCHC Packet Instance.
-SCHC Header is mandatory and can be free of charge for very constrained networks such as LPWAN. It allows the recognition of SCHC as the next header and can give the protocol that SCHC has compressed.
-{{Fig-SCHCSESSION}} shows the SCHC layer that needs to be introduced in the Architecture when SCHC is used to compress different protocols together or independently as {{rfc8824}} has described for CoAP. Notice that the parenthesis in the figure indicates a SCHC compression.
-
-A discriminator identifies the SCHC Instances, which can be:
-
-* A source and destination addresses of the packet carrying SCHC packets
+It may also be received in the packet, natively or uncompressed from a nesting stratum, e.g.:
+* A source and destination MAC or IP addresses of the packet carrying SCHC packets
 * A source and destination port number of the transport layer carrying SCHC packets
+* A next header field
 * An MPLS label
 * A TLS Association
 * Any other kind of connection id.
+
+The Discriminator enables to determine the SCHC Instance that is used to decompress the SCHC header, called a SCHC Header Instance. 
+
+Once uncompressed, the SCHC Header enables to determine the SCHC Instance, called a SCHC Packet Instance, that is used to restore the packet data that is compressed in the stratum. 
+
+
+<!--
+A SCHC Layer is a building block composed at least of a SCHC Packet Instance as described in the {{rfc8724}}. A SCHC Header Instance may be added, it controls the SCHC Layer. The SCHC Header Instance is used with different SCHC Packets Instances if they are defined in the same SCHC Layer.
+
+Note that a SCHC Layer is different from an ISO layer {{Fig-SCHCSESSION}}. 
+-->
+
+
+## SCHC Header Instance
+
+The SCHC Header Instance manages the SCHC Headers and provides the information and the selection of a SCHC Packet Instance.
+
+The rules for that Instance might be such that all the fields in the SCHC Header are well-known, in which case the header is fully elided in the stratum data and recreated from the rules.
+
+The rules might also leverage intrinsic data that is found in-line in the stratum data, in which case the first bits of the stratum data are effectively residue to the compression of the SCHC Header. 
+Finally, the rules may leverage extrinsic data as the Discriminator does.
+
+<!--
+A SCHC Header is mandatory in a stratum and can be free of charge for very constrained networks such as LPWAN. It allows the recognition of SCHC as the next header and can give the protocol that SCHC has compressed.
+-->
+
+{{Fig-SCHCSESSION}} illustrates the case where a given stratum may compress multiple protocols sessions, each corresponding to a different SCHC Packet Instance.
+
+<!--
+shows the SCHC strata that needs to be introduced in the Architecture when SCHC is used to compress different protocols together or independently as {{rfc8824}} has described for CoAP. Notice that the parenthesis in the figure indicates a SCHC compression.
+-->
 
 
 ~~~~
@@ -150,11 +193,11 @@ Each Packet Instance contains its own Set of Rules,
 but share the same SCHC Header.  
 
 ~~~~
-{: #Fig-SCHCSESSION title='SCHC Session Layer'}
+{: #Fig-SCHCSESSION title='SCHC Instances for a stratum'}
 
 ### SCHC Header
 
-SCHC Header carries information to allow the SCHC layer to work correctly. For example, it selects the correct Instance and checks the validity of the datagram.
+SCHC Header carries information to allow the SCHC strata to work correctly. For example, it selects the correct Instance and checks the validity of the datagram.
 There IS NOT always a RuleID if there is only one Rule for the SCHC Header, whose length is 0. The SCHC Header format is not fixed, and the SoR MUST have one or more Rules describing the formats. SCHC Header contains different fields.
 For Instance, when the SCHC header may identify the next protocol in the stack, the format of the SCHC header takes the format as {{Fig-SCHCHDR}} shows.
 
@@ -194,7 +237,7 @@ In this example the Rule defines:
 ## SCHC Packet Instance {#Instances}
 SCHC Packet Instance is characterized by a particular SoR common with the corresponding distant entity.
 The {{rfc8724}} defines a protocol operation between a pair of peers.
-In a SCHC layer, several SCHC Instances may contain different SoR.
+In a SCHC strata, several SCHC Instances may contain different SoR.
 
 When the SCHC Device is a highly constrained unit, there is typically only one
 Instance for that Device, and all the traffic from and to the device is
@@ -416,7 +459,7 @@ The goal of the architectural document is to orchestrate the different protocols
 defined by the LPWAN and SCHC working groups to design an operational and interoperable
 framework for allowing IP application over constrained networks.
 
-The {{Fig-SCHCArchi}} shows the protocol stack and the corresponding SCHC layers enabling the compression of the different protocol headers.
+The {{Fig-SCHCArchi}} shows the protocol stack and the corresponding SCHC stratas enabling the compression of the different protocol headers.
 The SCHC header eases the introduction of intermediary host in the end-to-end communication transparently.
 All the SCHC headers are compressed and in some cases are elided, for example for LPWAN networks. The layers using encryption does not have a SCHC header in the middle because they are the same entity.
 {{Fig-SCHCArchiEx}} shows an example of an IP/UDP/CoAP in an LPWAN network.
@@ -441,24 +484,24 @@ Network Layer Protocol . . . . . . . . . . . . . . . NLP
 Where: {} Optional; [] Encrypted; () Compressed.
 
 ~~~~
-{: #Fig-SCHCArchi title='SCHC Architecture'}
+{: #Fig-SCHCArchi title='SCHC Architecture'} 
 
-In {{Fig-SCHCArchi}}, each line represents a layer, parentheses surround a compressed header, and if it is optional, it has curly brackets.
-All the SCHC layers are compressed.
-Square brackets represent the encrypted data; if the encryption is optional, curly brackets precede the square brackets.
+In {{Fig-SCHCArchi}},  each line represents a layer, parentheses surround a
+   compressed header, and if it is optional, it has curly brackets.  All
+   the SCHC layers are compressed.  Square brackets represent the
+   encrypted data; if the encryption is optional, curly brackets precede
+   the square brackets.
 
+<!--
 Intermediary Routers or gateways may know only one layer's SoR and forward the rest of the compressed packet to the next hub.
+-->
+
+
+{{Fig-SCHCArchiEx}} represents the stack of SCHC instances that operate over 3 strata, one for OSCORE, one for CoAP, and one for IP and UDP. 
 
 ~~~~
-
-Example for an LPWAN network receiving a IP/UDP/CoAP using OSCORE:
-
-   +--------------CoAP OSCORE & PAYLOAD----------------------+
-A  .                                                         .
-P  |----------------------(OSCORE)---------------------------|
-P  |                                                         |    
-   |                                                         |      
-   +-----------------------CoAP(OSCORE)----------------------+
+      
+   +--------------------------OSCORE-------------------------+
    | +-----------------+                 +-----------------+ |
    | |       ^         |                 |       ^         | |
    | |  C/D  !  M ___  |                 |       !  M ___  | |
@@ -467,45 +510,60 @@ C  | |       !   [___] |                 |       !   [___] | |
 H  | |       !         |                 |       !         | |
 C  | |      F/R        |                 |      F/R        | |
    | +------ins_id1----+-----ins_idi-----+------ins_idn----+ |         
-   | |                   C/D  !                            | |
-   | |             (RuleID)(CoAP)(OSCORE)             ___  | |
+   | |                   C/D  !  (OSCORE)             ___  | |
    | |                        +--------------------->[SoR] | |    
-   | |                       F/R               M     [___] | |
-   +--IP:A->B/UDP:Dest=SCHC(SCHC HDR)(RuleID)(CoAP)(OSCORE)--+
-U  |         ^                                               |         
-D  |         |                                               |
-P  |         |                                               |
-   +---------------------------------------------------------+
-I  |         |                                               |
-P  |         |                                               |
-   +--IP:A->B/UDP:Dest=SCHC;(SCHC HDR)(RuleID)(CoAP)(OSCORE)-+
+   | |                       F/R               M     [___] | | 
+   +------- Discriminator: IP:A->B/UDP, prot = OSCORE--------+
+                    
+         
+          IP/UDP,port=CoAP  CoAP  ( ) (OSCORE)  
+             ^                _____^     ^
+             |               /           |
+             |      (SCHC Header)( SCHC-compressed data)
+          |          
+   +-------- | ---------------CoAP---------------------------+
    | +-----------------+                 +-----------------+ |
    | |       ^         |                 |       ^         | |
    | |  C/D  !  M ___  |                 |       !  M ___  | |
 S  | |       +-->[SoR] |       ...       |       +-->[SoR] | |
 C  | |       !   [___] |                 |       !   [___] | |
-H  | | RuleID(IP/UDP)  |                 |       !         | |
-C  | |   (SCHC HEADER) |                 |       !         | |
-   | |  (RuleID)(CoAP))|                 |       !         | |
-   | |       ! (OSCORE)|                 |       !         | |
-   | |      F/R        |                 |      F/R        | |
+H  | |       !         |                 |       !         | |
+C  | |      F/R        |                 |      F/R        | |
    | +------ins_id1----+-----ins_idi-----+------ins_idn----+ |         
-   | |                   C/D  !                            | |
-   | |                  (SCHC Packet)                      | |
-   | |                        |                       ___  | |
+   | |                   C/D  !  (CoAP)               ___  | |
    | |                        +--------------------->[SoR] | |    
    | |                       F/R               M     [___] | |
-   +-+-----------Discriminator Implicit--------------------+-+
+   +------- Discriminator: IP:A->B/UDP port=SCHC  -----------+
+                    
+               
+          IP/UDP   ( ) (CoAP)   PAYLOAD2 
+             ^      ^     ^_____________
+             |      |                   \
+             |      +-(SCHC Header)( SCHC-compressed data)
+          |          
+   +-------- | --------------IP/UDP--------------------------+
+   | +------ | --------+                 +-----------------+ |
+   | |       |         |                 |       ^         | |
+   | |  C/D  !  M ___  |                 |       !  M ___  | |
+S  | |       +-->[SoR] |       ...       |       +-->[SoR] | |
+C  | |       !   [___] |                 |       !   [___] | |
+H  | |       !         |                 |       !         | |
+C  | |      F/R        |                 |      F/R        | |
+   | +------ins_id1----+-----ins_idi-----+------ins_idn----+ |         
+   | |                   C/D  !  (IP/UDP)                  | |
+   | |                        +--------------------->[SoR] | |    
+   | |                       F/R               M     [___] | |
+   +-+-----------Discriminator: interface ID        -------+-+
 N      ______________^  
 E     /
-T    | ()(RuleID(IP/UDP)(SCHC_HEADER)RuleID(COAP)(OSCORE))PAYLOAD
-W    | ^ ^---------+       
-     | |            \
-     +-(SCHC Header)(SCHC Packet)
+T    |    ( ) (IP/UDP)    PAYLOAD1
+W    |     ^    ^_______
+     |     |            \
+     +-(SCHC Header)( SCHC-compressed data)
 
 
 ~~~~
-{: #Fig-SCHCArchiEx title='SCHC Architecture Example'}
+{: #Fig-SCHCArchiEx title='SCHC Strata Example'}
 
 
 
