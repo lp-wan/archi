@@ -98,7 +98,7 @@ installed to enable reliable and scalable operations.
 * Rule. A description of the header fields to performs compression/decompression, fragmentation/reassembly, SCHC Instances and CORECONF_Management.
 * SCHC Entities. A host (Device, Application and Network Gateway) involved in the SCHC process.
 * SCHC Instance. The different stages of SCHC in a host. Each instance will have its Set of Rules (SoR), based on the profile, the protocols, the device, the behaviour and a Set of Variables (SoV).
-* SCHC Session. This layer provides the management of SCHC instances, the SoR of each instance and the dialog between hosts to keep the SCHC synchronization.
+* SCHC Session. Provides the management of SCHC instances, the SoR of each instance and the dialog between hosts to keep the SCHC synchronization.
 * SoR (Set of rules). Group of Rules used in a SCHC Instance. The set of rules contains Rules for different nature as compression, no compression, fragmentation, SCHC Instances and CORECONF management.
 * SoV (Set of Variables). External information that needs to be known to identify the correct protocol, the session id, and the flow when there is one.
 * Core SCHC. SCHC entity located upstream in the Network Gateway.
@@ -422,7 +422,7 @@ of the IP and UDP headers may be operated by a network SCHC instance whereas the
 end-to-end compression of the application payload happens between the Device and
 the application. The compression of the application payload may be split in two
 instances to deal with the encrypted portion of the application PDU. Fragmentation
-applies before LPWAN transportation layer.
+applies before LPWAN transmission layer.
 
 ~~~~
 
@@ -486,9 +486,9 @@ Where: {} Optional; [] Encrypted; () Compressed.
 ~~~~
 {: #Fig-SCHCArchi title='SCHC Architecture'} 
 
-In {{Fig-SCHCArchi}},  each line represents a layer, parentheses surround a
+In {{Fig-SCHCArchi}},  each line represents a layer or a stratum, parentheses surround a
    compressed header, and if it is optional, it has curly brackets.  All
-   the SCHC layers are compressed.  Square brackets represent the
+   the SCHC strata are compressed.  Square brackets represent the
    encrypted data; if the encryption is optional, curly brackets precede
    the square brackets.
 
@@ -606,7 +606,7 @@ It was designed by default to work on native MAC frames with LPWAN technologies 
 
 To operate SCHC over Ethernet, IPv6, and UDP, the definition of, respectively, an Ethertype, an IP Protocol Number, and a UDP Port Number are necessary, more in {{-PN_and_Ethertype}}. In either case, there's a need for a SCHC header that is sufficient to identify the SCHC peers (endpoints) and their role (device vs. app), as well as the session between those peers that the packet pertains to.
 
-In either of the above cases, the expectation is that the SCHC header is transferred in a compressed form. This implies that the rules to uncompress the header are well known and separate from the rules that are used to uncompress the SCHC payload. The expectation is that for each layer, the format of the SCHC header and the compression rules are well known, with enough information to identify the session at that layer, but there is no expectation that they are the same across layers.
+In either of the above cases, the expectation is that the SCHC header is transferred in a compressed form. This implies that the rules to uncompress the header are well known and separate from the rules that are used to uncompress the SCHC payload. The expectation is that for each stratum, the format of the SCHC header and the compression rules are well known, with enough information to identify the session at that stratum, but there is no expectation that they are the same across strata.
 
 
 ### SCHC over PPP

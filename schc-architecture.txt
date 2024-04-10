@@ -5,10 +5,10 @@
 SCHC Working Group                                              A. Pelov
 Internet-Draft                                            IMT Atlantique
 Intended status: Informational                                P. Thubert
-Expires: 11 October 2024                                                
+Expires: 12 October 2024                                                
                                                              A. Minaburo
                                                               Consultant
-                                                            9 April 2024
+                                                           10 April 2024
 
 
          Static Context Header Compression (SCHC) Architecture
@@ -33,7 +33,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 11 October 2024.
+   This Internet-Draft will expire on 12 October 2024.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Pelov, et al.            Expires 11 October 2024                [Page 1]
+Pelov, et al.            Expires 12 October 2024                [Page 1]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Pelov, et al.            Expires 11 October 2024                [Page 2]
+Pelov, et al.            Expires 12 October 2024                [Page 2]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -159,13 +159,13 @@ Internet-Draft              SCHC Architecture                 April 2024
       the protocols, the device, the behaviour and a Set of Variables
       (SoV).
 
-   *  SCHC Session.  This layer provides the management of SCHC
-      instances, the SoR of each instance and the dialog between hosts
-      to keep the SCHC synchronization.
+   *  SCHC Session.  Provides the management of SCHC instances, the SoR
+      of each instance and the dialog between hosts to keep the SCHC
+      synchronization.
 
 
 
-Pelov, et al.            Expires 11 October 2024                [Page 3]
+Pelov, et al.            Expires 12 October 2024                [Page 3]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -221,7 +221,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024                [Page 4]
+Pelov, et al.            Expires 12 October 2024                [Page 4]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -277,7 +277,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024                [Page 5]
+Pelov, et al.            Expires 12 October 2024                [Page 5]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -333,7 +333,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024                [Page 6]
+Pelov, et al.            Expires 12 October 2024                [Page 6]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -389,7 +389,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024                [Page 7]
+Pelov, et al.            Expires 12 October 2024                [Page 7]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -445,7 +445,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024                [Page 8]
+Pelov, et al.            Expires 12 October 2024                [Page 8]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -501,7 +501,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024                [Page 9]
+Pelov, et al.            Expires 12 October 2024                [Page 9]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -557,7 +557,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 10]
+Pelov, et al.            Expires 12 October 2024               [Page 10]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -613,7 +613,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 11]
+Pelov, et al.            Expires 12 October 2024               [Page 11]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -657,7 +657,7 @@ Internet-Draft              SCHC Architecture                 April 2024
    compression of the application payload happens between the Device and
    the application.  The compression of the application payload may be
    split in two instances to deal with the encrypted portion of the
-   application PDU.  Fragmentation applies before LPWAN transportation
+   application PDU.  Fragmentation applies before LPWAN transmission
    layer.
 
 
@@ -669,7 +669,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 12]
+Pelov, et al.            Expires 12 October 2024               [Page 12]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -725,7 +725,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 13]
+Pelov, et al.            Expires 12 October 2024               [Page 13]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -748,11 +748,11 @@ Internet-Draft              SCHC Architecture                 April 2024
 
                         Figure 8: SCHC Architecture
 
-   In Figure 8, each line represents a layer, parentheses surround a
-   compressed header, and if it is optional, it has curly brackets.  All
-   the SCHC layers are compressed.  Square brackets represent the
-   encrypted data; if the encryption is optional, curly brackets precede
-   the square brackets.
+   In Figure 8, each line represents a layer or a stratum, parentheses
+   surround a compressed header, and if it is optional, it has curly
+   brackets.  All the SCHC strata are compressed.  Square brackets
+   represent the encrypted data; if the encryption is optional, curly
+   brackets precede the square brackets.
 
    Figure 9 represents the stack of SCHC instances that operate over 3
    strata, one for OSCORE, one for CoAP, and one for IP and UDP.
@@ -781,7 +781,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 14]
+Pelov, et al.            Expires 12 October 2024               [Page 14]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -837,7 +837,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 15]
+Pelov, et al.            Expires 12 October 2024               [Page 15]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -893,7 +893,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 16]
+Pelov, et al.            Expires 12 October 2024               [Page 16]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -902,10 +902,10 @@ Internet-Draft              SCHC Architecture                 April 2024
    is transferred in a compressed form.  This implies that the rules to
    uncompress the header are well known and separate from the rules that
    are used to uncompress the SCHC payload.  The expectation is that for
-   each layer, the format of the SCHC header and the compression rules
+   each stratum, the format of the SCHC header and the compression rules
    are well known, with enough information to identify the session at
-   that layer, but there is no expectation that they are the same across
-   layers.
+   that stratum, but there is no expectation that they are the same
+   across strata.
 
 6.1.1.  SCHC over PPP
 
@@ -949,7 +949,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 17]
+Pelov, et al.            Expires 12 October 2024               [Page 17]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -1005,7 +1005,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 18]
+Pelov, et al.            Expires 12 October 2024               [Page 18]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -1061,7 +1061,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 19]
+Pelov, et al.            Expires 12 October 2024               [Page 19]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -1117,7 +1117,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 20]
+Pelov, et al.            Expires 12 October 2024               [Page 20]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -1173,7 +1173,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 21]
+Pelov, et al.            Expires 12 October 2024               [Page 21]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -1229,7 +1229,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 22]
+Pelov, et al.            Expires 12 October 2024               [Page 22]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -1285,7 +1285,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 23]
+Pelov, et al.            Expires 12 October 2024               [Page 23]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -1341,7 +1341,7 @@ Internet-Draft              SCHC Architecture                 April 2024
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 24]
+Pelov, et al.            Expires 12 October 2024               [Page 24]
 
 Internet-Draft              SCHC Architecture                 April 2024
 
@@ -1397,4 +1397,4 @@ Authors' Addresses
 
 
 
-Pelov, et al.            Expires 11 October 2024               [Page 25]
+Pelov, et al.            Expires 12 October 2024               [Page 25]
