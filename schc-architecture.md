@@ -97,7 +97,7 @@ installed to enable reliable and scalable operations.
 * F/R. Fragmentation and Reassembly.
 * Rule. A description of the header fields to performs compression/decompression, fragmentation/reassembly, SCHC Instances and CORECONF_Management.
 * SCHC Entities. A host (Device, Application and Network Gateway) involved in the SCHC process.
-* SCHC Instance. The different stages of SCHC in a host. Each instance will have its Set of Rules (SoR), based on the profile, the protocols, the device, the behaviour and a Set of Variables (SoV).
+* SCHC Instance. An instantiation of SCHC on a host. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
 * SCHC Session. Provides the management of SCHC instances, the SoR of each instance and the dialog between hosts to keep the SCHC synchronization.
 * SoR (Set of rules). Group of Rules used in a SCHC Instance. The set of rules contains Rules for different nature as compression, no compression, fragmentation, SCHC Instances and CORECONF management.
 * SoV (Set of Variables). External information that needs to be known to identify the correct protocol, the session id, and the flow when there is one.
