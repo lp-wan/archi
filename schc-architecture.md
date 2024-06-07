@@ -95,11 +95,11 @@ installed to enable reliable and scalable operations.
 * Context. All the information related to the Rules for SCHC Header, Non-Compression, C/D and F/R and CORECONF_Management.
 * FID. Field Identifiers, describing the name of the field in a protocol header.
 * F/R. Fragmentation and Reassembly.
-* Rule. A description of the header fields to performs compression/decompression, fragmentation/reassembly, SCHC Instances and CORECONF_Management.
+* SCHC Rule (or Rule). A formal description of how a SCHC Instance should process a packet. It contains the specific operations to perform on each of its header fields, e.g. perform compression/decompression, fragmentation/reassembly, management or other.
 * SCHC Entities. A host (Device, Application and Network Gateway) involved in the SCHC process.
 * SCHC Instance. An instantiation of SCHC on a host. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
 * SCHC Session. An active association between two or more SCHC end-points, which allows them to communicate and ensure synchronization, management, error handling and communication services.
-* SoR (Set of rules). Group of Rules used in a SCHC Instance. The set of rules contains Rules for different nature as compression, no compression, fragmentation, SCHC Instances and CORECONF management.
+* SoR (Set of Rules). A set of SCHC Rules. The SoR may contain Rules of different nature, such as compression, fragmentation, or management. A SoR may be used by one or more SCHC Instances.
 * SoV (Set of Variables). External information that needs to be known to identify the correct protocol, the session id, and the flow when there is one.
 * Core SCHC. SCHC entity located upstream in the Network Gateway.
 * Device SCHC. SCHC entity located downstream.
