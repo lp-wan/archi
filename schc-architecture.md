@@ -132,14 +132,16 @@ A SCHC stratum may carry the compressed PDU of one or more IP layers or sublayer
 
 ## Discriminator
 
-The key to determine how to decompress a SCHC header in a stratum is called a Discriminator. 
+The key to determine how to decompress the SCHC header of a SCHC stratum is called a Discriminator. 
 
-The Discriminator is typically extrinsic to the stratum data. 
+The Discriminator is typically not included in the stratum data. 
+?? what is the stratum data? schc header + compressed payload ?
 
-It may be found in the packet context, e.g., the ID of the interface, VLAN, SSID, or PPP session on which the packet is received
+
+It may be found in the packet context, e.g., the ID of the interface, VLAN, SSID, or PPP session on which the packet is received.
 
 
-It may also be received in the packet, natively or uncompressed from a nesting stratum, e.g.:
+It may also be contained in the packet, natively or uncompressed from a nesting stratum, e.g.:
 * A source and destination MAC or IP addresses of the packet carrying SCHC packets
 * A source and destination port number of the transport layer carrying SCHC packets
 * A next header field
@@ -147,7 +149,7 @@ It may also be received in the packet, natively or uncompressed from a nesting s
 * A TLS Association
 * Any other kind of connection id.
 
-The Discriminator enables to determine the SCHC Instance that is used to decompress the SCHC header, called a SCHC Header Instance. 
+The Discriminator determines the SCHC Instance that is used to decompress the SCHC header. This is called a SCHC Header Instance. 
 
 Once uncompressed, the SCHC Header enables to determine the SCHC Instance, called a SCHC Packet Instance, that is used to restore the packet data that is compressed in the stratum. 
 
