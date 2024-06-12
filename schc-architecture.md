@@ -466,7 +466,7 @@ The goal of the architectural document is to orchestrate the different protocols
 defined by the LPWAN and SCHC working groups to design an operational and interoperable
 framework for allowing IP application over constrained networks.
 
-The {{Fig-SCHCArchi}} shows the protocol stack and the corresponding SCHC stratas enabling the compression of the different protocol headers.
+The {{Fig-SCHCArchi}} shows the protocol stack and the corresponding SCHC strata enabling the compression of the different protocol headers.
 The SCHC header eases the introduction of intermediary host in the end-to-end communication transparently.
 All the SCHC headers are compressed and in some cases are elided, for example for LPWAN networks. The layers using encryption does not have a SCHC header in the middle because they are the same end-point.
 {{Fig-SCHCArchiEx}} shows an example of an IP/UDP/CoAP in an LPWAN network.
