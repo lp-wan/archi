@@ -163,6 +163,8 @@ Note that a SCHC Layer is different from an ISO layer {{Fig-SCHCSESSION}}.
 
 ## SCHC Header Instance
 
+?? I really find the whole section difficult to understand.
+
 The SCHC Header Instance manages the SCHC Headers and provides the information and the selection of a SCHC Packet Instance.
 
 The rules for that Instance might be such that all the fields in the SCHC Header are well-known, in which case the header is fully elided in the stratum data and recreated from the rules.
