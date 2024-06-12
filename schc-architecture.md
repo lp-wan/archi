@@ -92,10 +92,11 @@ installed to enable reliable and scalable operations.
 # Terminology
 
 * C/D. Compression and Decompression.
-* Context. All the information related to the Rules for SCHC Header, Non-Compression, C/D and F/R and CORECONF_Management.
+* SCHC Context. All information related to the Rules for SCHC Header, Non-Compression, C/D and F/R and Management.
 * FID. Field Identifiers, describing the name of the field in a protocol header.
 * F/R. Fragmentation and Reassembly.
 * SCHC Rule (or Rule). A formal description of how a SCHC Instance should process a packet. It contains the specific operations to perform on each of its header fields, e.g. perform compression/decompression, fragmentation/reassembly, management or other.
+* SCHC Profile. SCHC offers variations in the way it is operated, with a large number of parameters that need to be set. Some of these parameters are technology-specific. A Profile indicates a particular setting of all these parameters.
 * SCHC Ent-point. A host (Device, Application and Network Gateway) involved in the SCHC process. A SCHC end-point can have multiple SCHC Instances.
 * SCHC Instance. An instantiation of SCHC on a host. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
 * SCHC Session. An active association between two or more SCHC end-points, which allows them to communicate and ensure synchronization, management, error handling and communication services.
