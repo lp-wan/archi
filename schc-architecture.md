@@ -248,6 +248,9 @@ In this example the Rule defines:
 
 
 ## SCHC Packet Instance {#Instances}
+?? I don't understand the difference between SCHC Packet Instance and SCHC Instance.
+?? Also, frequently SCHC Instance is said to have its own SoR, but no mention for SoV.
+
 SCHC Packet Instance is characterized by a particular SoR common with the corresponding distant end-point.
 The {{rfc8724}} defines a protocol operation between a pair of peers.
 As a reminder, every SCHC Instance may use it's own SoR.
