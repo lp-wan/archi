@@ -242,7 +242,7 @@ RuleID
 
 In this example the Rule defines:
 
-* A SessionID is 10 bits length and it is used to identify the SoR used for this instance of SCHC.
+* A SessionID is 10 bits length and it is used to identify the SCHC Instance.
 * A Protocol ID in 1-byte length giving the value send in the layer below the SCHC packet to identify the uncompressed protocol stack.
 * And A CRC. The CRC field is 8 bits length and covers the SCHC header and the SCHC packet from error. When it is elided by the compression, the layer-4 checksum MUST be replaced by another validation sequence.
 
@@ -250,19 +250,18 @@ In this example the Rule defines:
 ## SCHC Packet Instance {#Instances}
 SCHC Packet Instance is characterized by a particular SoR common with the corresponding distant end-point.
 The {{rfc8724}} defines a protocol operation between a pair of peers.
-In a SCHC strata, several SCHC Instances may contain different SoR.
+As a reminder, every SCHC Instance may use it's own SoR.
 
-When the SCHC Device is a highly constrained unit, there is typically only one
-Instance for that Device, and all the traffic from and to the device is
-exchanged with the same Network Gateway. All the traffic can thus be implicitly
-associated with the single Instance that the device supports, and the Device
-does not need to manipulate the concept. For that reason, SCHC avoids to signal
-explicitly the Instance identification in its data packets.
+When the Device SCHC is a highly constrained unit, there is typically only one
+SCHC Instance for that end-point, and all traffic from and to the end-point is
+goes to/from the same Core SCHC. All traffic can thus be implicitly
+associated with the single SCHC Instance that the device supports. 
+For that reason, it is not necessary to identify explicitly the SCHC Instance.
 
-The Network Gateway, on the other hand, maintains multiple Instances, one per
-SCHC Device. The Instance is derived from the lower layer, typically the source
+The Core SCHC, on the other hand, may maintain multiple SCHC Instances, one per
+Device SCHC. The SCHC Instance is derived from the lower layer, typically the source
 of an incoming SCHC packet as a discriminator in the {{Fig-SCHCSESSION}}.
-The Instance is used in particular to select the set of rules that apply to the SCHC Device, and the
+The Instance is used in particular to select the set of rules and set of variables that apply to the SCHC Device, and the
 current state of their exchange, e.g., timers and previous fragments.
 
 
