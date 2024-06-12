@@ -101,8 +101,8 @@ installed to enable reliable and scalable operations.
 * SCHC Session. An active association between two or more SCHC end-points, which allows them to communicate and ensure synchronization, management, error handling and communication services.
 * SoR (Set of Rules). A set of SCHC Rules. The SoR may contain Rules of different nature, such as compression, fragmentation, or management. A SoR may be used by one or more SCHC Instances.
 * SoV (Set of Variables). External information that needs to be known to identify the correct protocol, the session id, and the flow when there is one.
-* Core SCHC. SCHC end-point located upstream in the Network Gateway.
-* Device SCHC. SCHC end-point located downstream.
+* Core SCHC. SCHC end-point located upstream. In an IoT deployment with star topology, that would be an end-point part of the infrastructure. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Core SCHC in the specific context may need to be defined.
+* Device SCHC. SCHC end-point located downstream. In an IoT deployment with star topology, that would be the IoT device. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Device SCHC in the specific context may need to be defined.
 
 # Building Blocks
 This section specifies the principal blocks defined for building and using the SCHC architecture in any network topology and protocol.
