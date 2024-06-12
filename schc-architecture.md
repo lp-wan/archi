@@ -96,13 +96,13 @@ installed to enable reliable and scalable operations.
 * FID. Field Identifiers, describing the name of the field in a protocol header.
 * F/R. Fragmentation and Reassembly.
 * SCHC Rule (or Rule). A formal description of how a SCHC Instance should process a packet. It contains the specific operations to perform on each of its header fields, e.g. perform compression/decompression, fragmentation/reassembly, management or other.
-* SCHC Entities. A host (Device, Application and Network Gateway) involved in the SCHC process.
+* SCHC Ent-point. A host (Device, Application and Network Gateway) involved in the SCHC process. A SCHC end-point can have multiple SCHC Instances.
 * SCHC Instance. An instantiation of SCHC on a host. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
 * SCHC Session. An active association between two or more SCHC end-points, which allows them to communicate and ensure synchronization, management, error handling and communication services.
 * SoR (Set of Rules). A set of SCHC Rules. The SoR may contain Rules of different nature, such as compression, fragmentation, or management. A SoR may be used by one or more SCHC Instances.
 * SoV (Set of Variables). External information that needs to be known to identify the correct protocol, the session id, and the flow when there is one.
-* Core SCHC. SCHC entity located upstream in the Network Gateway.
-* Device SCHC. SCHC entity located downstream.
+* Core SCHC. SCHC end-point located upstream in the Network Gateway.
+* Device SCHC. SCHC end-point located downstream.
 
 # Building Blocks
 This section specifies the principal blocks defined for building and using the SCHC architecture in any network topology and protocol.
@@ -119,7 +119,7 @@ The uncompressed header may be the result of a previous SCHC expansion. The payl
 
 A SCHC stratum may carry the compressed PDU of one or more IP layers or sublayers, e.g., IP only, IP+UDP, CoAP, or OSCORE {{rfc8824}}.
 
-The end points that handle the compression of a given stratum might differ for the same packet, meaning that the payload of a given stratum might be compressed/uncompressed by a different entity, possibly in a different node. It results that the degree of compression (the number of strata) for a given packet may vary as the packet progresses through the layers inside a node and then through the network.
+The end points that handle the compression of a given stratum might differ for the same packet, meaning that the payload of a given stratum might be compressed/uncompressed by a different end-point, possibly in a different node. It results that the degree of compression (the number of strata) for a given packet may vary as the packet progresses through the layers inside a node and then through the network.
 
 ## Discriminator
 
@@ -235,7 +235,7 @@ In this example the Rule defines:
 
 
 ## SCHC Packet Instance {#Instances}
-SCHC Packet Instance is characterized by a particular SoR common with the corresponding distant entity.
+SCHC Packet Instance is characterized by a particular SoR common with the corresponding distant end-point.
 The {{rfc8724}} defines a protocol operation between a pair of peers.
 In a SCHC strata, several SCHC Instances may contain different SoR.
 
@@ -332,7 +332,7 @@ ToDo
 
 
 ## SCHC Management
-RFC9363 writes that only the management can be done by the two entities of the instance, and other SoR cannot be manipulated.
+RFC9363 writes that only the management can be done by the two end-points of the instance, and other SoR cannot be manipulated.
 
 Management rules are explicitly define in the SoR, see {{Fig-SCHCManagement}}. They are compression Rules for CORECONF messages to get or modify the SoR of the instance. The management can be limited with the {{-SCHCAC}} access definition.
 
@@ -461,7 +461,7 @@ framework for allowing IP application over constrained networks.
 
 The {{Fig-SCHCArchi}} shows the protocol stack and the corresponding SCHC stratas enabling the compression of the different protocol headers.
 The SCHC header eases the introduction of intermediary host in the end-to-end communication transparently.
-All the SCHC headers are compressed and in some cases are elided, for example for LPWAN networks. The layers using encryption does not have a SCHC header in the middle because they are the same entity.
+All the SCHC headers are compressed and in some cases are elided, for example for LPWAN networks. The layers using encryption does not have a SCHC header in the middle because they are the same end-point.
 {{Fig-SCHCArchiEx}} shows an example of an IP/UDP/CoAP in an LPWAN network.
 
 
