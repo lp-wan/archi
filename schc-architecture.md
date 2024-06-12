@@ -114,13 +114,21 @@ A SCHC Stratum is composed of a compressed SCHC Header (which may be fully impli
 
 A SCHC-compressed packet contains at least one stratum that is subject to compression and decompression by an associated SCHC Instance. The packet may be composed of multiple nested strata, where a given stratum is in fact the payload of the nesting stratum.
 
-The SCHC stratum data is wrapped between an uncompressed header and a payload. The SCHC operation swaps the stratum data with the uncompressed section obtained from the SCHC packet residue. 
+?? I don't really undestand this: The SCHC Stratum data is located after an uncompressed header and a payload. 
+?? If the SCHC stratum is nested, then this will not be the case. Also, maybe the payload will be empty.
+?? I'm not sure what's the purpose of that sentence.
+
+The SCHC operation swaps the stratum data with the uncompressed section obtained from the SCHC packet residue. 
 
 The uncompressed header may be the result of a previous SCHC expansion. The payload may contain one or more other strata.
 
 A SCHC stratum may carry the compressed PDU of one or more IP layers or sublayers, e.g., IP only, IP+UDP, CoAP, or OSCORE {{rfc8824}}.
 
-The end points that handle the compression of a given stratum might differ for the same packet, meaning that the payload of a given stratum might be compressed/uncompressed by a different end-point, possibly in a different node. It results that the degree of compression (the number of strata) for a given packet may vary as the packet progresses through the layers inside a node and then through the network.
+?? not sure what is the info that is conveyed here:
+?? The end points that handle the compression of a given stratum might differ for the same packet, meaning that the payload of a given ?? stratum might be compressed/uncompressed by a different layer, possibly in a different end-point. It results that the degree of compression (the number of strata) for a given packet may vary as the packet progresses through the layers inside a node and then through the network.
+?? Is it that the strata of a packet can be processed at different end-points? (devices) 
+?? Is it that they can be processed in different pieces of software?
+?? In different layers?
 
 ## Discriminator
 
