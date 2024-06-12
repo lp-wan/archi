@@ -96,7 +96,7 @@ installed to enable reliable and scalable operations.
 * FID. Field Identifiers, describing the name of the field in a protocol header.
 * F/R. Fragmentation and Reassembly.
 * SCHC Rule (or Rule). A formal description of how a SCHC Instance should process a packet. It contains the specific operations to perform on each of its header fields, e.g. perform compression/decompression, fragmentation/reassembly, management or other.
-* SCHC Profile. SCHC offers variations in the way it is operated, with a large number of parameters that need to be set. Some of these parameters are technology-specific. A Profile indicates a particular setting of all these parameters.
+* SCHC Profile. SCHC offers variations in the way it is operated, with a large number of parameters that need to be set. Some of these parameters are technology-specific. A Profile indicates a particular setting of all these parameters. As an example, {{rfc9011}} provides the SCHC fragmentation profile for LoRaWAN networks.
 * SCHC Ent-point. A host (Device, Application and Network Gateway) involved in the SCHC process. A SCHC end-point can have multiple SCHC Instances.
 * SCHC Instance. An instantiation of SCHC on a host. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
 * SCHC Session. An active association between two or more SCHC end-points (? or Instances ?), which allows them to communicate and ensure synchronization, management, error handling and communication services.
@@ -293,14 +293,6 @@ CORECONF_Management Compressed Packet:
 ~~~~
 {: #Fig-SCHCPacket title='SCHC Packet'}
 
-## SCHC Profiles
-A SCHC profile is the specification to adapt the use of SCHC with the necessities of the technology to which it is applied.
-In the case of star topologies and because LPWAN technologies {{-Overview}} have strict yet distinct constraints, e.g., in terms of maximum frame size, throughput, and directionality, also a SCHC instance and the fragmentation model with the parameters' values for its use.
-
-Appendix D. "SCHC Parameters" of {{rfc8724}} lists the information that an LPWAN
-technology-specific document must provide to profile SCHC fragmentation for that technology.
-
-As an example, {{rfc9011}} provides the SCHC fragmentation profile for LoRaWAN networks.
 
 
 
