@@ -92,44 +92,24 @@ installed to enable reliable and scalable operations.
 # Terminology
 
 * C/D. Compression and Decompression.
-* SCHC Context. All information related to the Rules for SCHC Header, Non-Compression, C/D and F/R and Management.
+* SCHC Context. The Set of Rules. All information related to the Rules for SCHC Header, Non-Compression, C/D and F/R and Management. 
 * FID. Field Identifiers, describing the name of the field in a protocol header.
 * F/R. Fragmentation and Reassembly.
 * SCHC Rule (or Rule). A formal description of how a SCHC Instance should process a packet. It contains the specific operations to perform on each of its header fields, e.g. perform compression/decompression, fragmentation/reassembly, management or other.
 * SCHC Profile. SCHC offers variations in the way it is operated, with a large number of parameters that need to be set. Some of these parameters are technology-specific. A Profile indicates a particular setting of all these parameters. As an example, {{rfc9011}} provides the SCHC fragmentation profile for LoRaWAN networks.
-* SCHC Ent-point. A host (Device, Application and Network Gateway) involved in the SCHC process. A SCHC end-point can have multiple SCHC Instances.
-* SCHC Instance. An instantiation of SCHC on a host. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
-* SCHC Session. An active association between two or more SCHC end-points (? or Instances ?), which allows them to communicate and ensure synchronization, management, error handling and communication services.
-* SoR (Set of Rules). A set of SCHC Rules. The SoR may contain Rules of different nature, such as compression, fragmentation, or management. A SoR may be used by one or more SCHC Instances.
-* SoV (Set of Variables). External information that needs to be known to identify the correct protocol, the session id, and the flow when there is one.
-* Core SCHC. SCHC end-point located upstream. In an IoT deployment with star topology, that would be an end-point part of the infrastructure. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Core SCHC in the specific context may need to be defined.
-* Device SCHC. SCHC end-point located downstream. In an IoT deployment with star topology, that would be the IoT device. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Device SCHC in the specific context may need to be defined.
+* SCHC Node. A host (Device, Application and Network Gateway) involved in the SCHC process. A SCHC Node can have multiple SCHC Instances.
+* SCHC Instance. An instantiation of SCHC on a SCHC Node. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
+* SCHC Ent-point. The part of a SCHC Instance running on a given SCHC Node.
+* SoR (Set of Rules). Same as SCHC Context. A set of SCHC Rules. The SoR may contain Rules of different nature, such as compression, fragmentation, or management. A SoR may be used by one or more SCHC Instances.
+* SoV (Set of Variables). Information not in the SoR, that is necessary for the operation of a SCHC Instance. Examples include: timers, local variables, information to be known to identify the correct protocol, the session id, and the flow when there is one.
+* Core SCHC. SCHC Node located upstream. In an IoT deployment with star topology, that would be an end-point part of the infrastructure. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Core SCHC in the specific context may need to be defined.
+* Device SCHC. SCHC Node located downstream. In an IoT deployment with star topology, that would be the IoT device. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Device SCHC in the specific context may need to be defined.
 
 # Building Blocks
 This section specifies the principal blocks defined for building and using the SCHC architecture in any network topology and protocol.
 
-## SCHC Stratum (plural: strata)
 
-A SCHC Stratum is composed of a compressed SCHC Header (which may be fully implicit and thus elided) and a SCHC-compressed data that is used to uncompress a section of the packet. 
-
-A SCHC-compressed packet contains at least one stratum that is subject to compression and decompression by an associated SCHC Instance. The packet may be composed of multiple nested strata, where a given stratum is in fact the payload of the nesting stratum.
-
-?? I don't really undestand this: The SCHC Stratum data is located after an uncompressed header and a payload. 
-?? If the SCHC stratum is nested, then this will not be the case. Also, maybe the payload will be empty.
-?? I'm not sure what's the purpose of that sentence.
-
-The SCHC operation swaps the stratum data with the uncompressed section obtained from the SCHC packet residue. 
-
-The uncompressed header may be the result of a previous SCHC expansion. The payload may contain one or more other strata.
-
-A SCHC stratum may carry the compressed PDU of one or more IP layers or sublayers, e.g., IP only, IP+UDP, CoAP, or OSCORE {{rfc8824}}.
-
-?? not sure what is the info that is conveyed here:
-?? The end points that handle the compression of a given stratum might differ for the same packet, meaning that the payload of a given ?? stratum might be compressed/uncompressed by a different layer, possibly in a different end-point. It results that the degree of compression (the number of strata) for a given packet may vary as the packet progresses through the layers inside a node and then through the network.
-?? Is it that the strata of a packet can be processed at different end-points? (devices) 
-?? Is it that they can be processed in different pieces of software?
-?? In different layers?
-
+<!--
 ## Discriminator
 
 The key to determine how to decompress the SCHC header of a SCHC stratum is called a Discriminator. 
@@ -152,6 +132,7 @@ It may also be contained in the packet, natively or uncompressed from a nesting 
 The Discriminator determines the SCHC Instance that is used to decompress the SCHC header. This is called a SCHC Header Instance. 
 
 Once uncompressed, the SCHC Header enables to determine the SCHC Instance, called a SCHC Packet Instance, that is used to restore the packet data that is compressed in the stratum. 
+-->
 
 
 <!--
@@ -160,58 +141,146 @@ A SCHC Layer is a building block composed at least of a SCHC Packet Instance as 
 Note that a SCHC Layer is different from an ISO layer {{Fig-SCHCSESSION}}. 
 -->
 
+## Communication with SCHC with a Single Instance
 
-## SCHC Header Instance
+This is the most widely-spread use-case, typical for LPWAN networks. 
 
-?? I really find the whole section difficult to understand.
-
-The SCHC Header Instance manages the SCHC Headers and provides the information and the selection of a SCHC Packet Instance.
-
-The rules for that Instance might be such that all the fields in the SCHC Header are well-known, in which case the header is fully elided in the stratum data and recreated from the rules.
-
-The rules might also leverage intrinsic data that is found in-line in the stratum data, in which case the first bits of the stratum data are effectively residue to the compression of the SCHC Header. 
-Finally, the rules may leverage extrinsic data as the Discriminator does.
-
-<!--
-A SCHC Header is mandatory in a stratum and can be free of charge for very constrained networks such as LPWAN. It allows the recognition of SCHC as the next header and can give the protocol that SCHC has compressed.
--->
-
-{{Fig-SCHCSESSION}} illustrates the case where a given stratum may compress multiple protocols sessions, each corresponding to a different SCHC Packet Instance.
-
-<!--
-shows the SCHC strata that needs to be introduced in the Architecture when SCHC is used to compress different protocols together or independently as {{rfc8824}} has described for CoAP. Notice that the parenthesis in the figure indicates a SCHC compression.
--->
 
 
 ~~~~
+   ....................                    ....................  
+  .                    .                  .                    .
++----------------------------------------------------------------+
+| .                    . *SCHC Instance*  .                    . |
+| .                    .                  .                    . |
+| . +----------------+ .                  . +----------------+ . |
+| . | SCHC End-Point |<-------------------->| SCHC End-Point | . |
+| . |                | .                  . |                | . |
+| . | +-----------+  | .                  . | +-----------+  | . |
+| . | | Rule Mngr |  | .                  . | | Rule Mngr |  | . |
+| . | +-----------+  | .                  . | +-----------+  | . |
+| . | |Context/SoR|  | .                  . | |Context/SoR|  | . |
+| . | +-----------+  | .                  . | +-----------+  | . |
+| . | |    SoV    |  | .                  . | |    SoV    |  | . |
+| . | +-----------+  | .                  . | +-----------+  | . |
+| . +----------------+ .                  . +----------------+ . |
+| .                    .                  .                    . |
++----------------------------------------------------------------+
+  .                    .                  .                    .
+  .      SCHC Node     .                  .      SCHC Node     .
+   ....................                    ....................
 
-+---------------+---------------+---------------+  
-| SCHC Packet   | SCHC Packet   | SCHC Packet   | S
-| Instance ___  | Instance ___  | Instance ___  | C
-|         [SoR] |         [SoR] |         [SoR] | H
-|         [___] |         [___] |         [___] | C
-|               |               |               |  
-|               |               |               | L
-+----inst_id1---+----inst_id2---+----inst_id3---+ A
-.            SCHC Header Instance         ___   . Y
-.                                        [SoR]  . E
-.                                        [___]  . R
-+...............................................+
-               _____________^        
-              /                    
-            /
-           +-- Discriminator: (SCHC HEADER)(SCHC PACKET)    
 
-Each Packet Instance contains its own Set of Rules,
-but share the same SCHC Header.  
+A SCHC Instance between two SCHC End-points, each residing on a separate SCHC Node.
+The Context/SoR on both SCHC End-point should be the same.
+The Rule Managers are optional.
+
 
 ~~~~
-{: #Fig-SCHCSESSION title='SCHC Instances for a stratum'}
+{: #Fig-SCHCSESSION title='A single SCHC Instance.'}
 
 ### SCHC Header
 
-SCHC Header carries information to allow the SCHC strata to work correctly. For example, it selects the correct Instance and checks the validity of the datagram.
-There IS NOT always a RuleID if there is only one Rule for the SCHC Header, whose length is 0. The SCHC Header format is not fixed, and the SoR MUST have one or more Rules describing the formats. SCHC Header contains different fields.
+The SCHC Header is the header of the SCHC protocol.
+There are two SCHC Header types:
+* SCHC Compressed Header
+* SCHC Fragment Header
+
+There are three subtypes of the SCHC Compressed Header:
+* Data: SCHC Compressed Header for 
+* Management: 
+* Service: 
+
+Question: can we see the Management as a subset of service?
+
+~~~~
+
+
+|<-          SCHC Header                       >|
++-----------+-----------------------------------+----------+---------------------+
+|  RuleID   | SCHC Header Data                  | Payload  | Padding (as needed) |
++-----------+-----------------------------------+----------+---------------------+
+|  R bits   | S bits                            |
++-----------+-----------------------------------+
+
+SCHC Header Format. The SCHC Header are all bits going over the wire used by SCHC.
+The SCHC Context determines the sizes of R and S, and the flavor of the header.
+Both R and S can be 0.
+It is possible to have RuleIDs with different sizes R on the same SCHC Instance, altough that requires careful RuleID numbering.
+The size S of the SCHC Header Data depends on the RuleID and can vary significantly from one RuleID to another.
+S may vary from packet to packet, as some fields may be compressed with variable lenght CDA. 
+
+
+
+|<-          SCHC Compressed Header           >|
++-----------+-----------------+----------------+----------+----------+-----------+
+|  RuleID   | Service Residue | Residue        | Payload  | Padding (as needed)  |
++-----------+-----------------+----------------+----------+----------+-----------+
+|  R bits   | S-T bits        |  T bits        |
++-----------+-----------------+----------------+
+            |<-      SCHC Header Data         >|
+
+
+|<-          SCHC Fragment Header             >|
++-----------+-----------------+----------------+----------+----------+----------+
+|  RuleID   | Service Residue | DTag + more    | Payload  | Padding (as needed) |
++-----------+-----------------+----------------+----------+----------+----------+
+|  R bits   | S-T bits        |  T bits        |
++-----------+-----------------+----------------+
+            |<-      SCHC Header Data         >|
+
+
+The Service Residue is the residue of the Virtual Service Header, compressed with SCHC.
+In the vast majority of cases the Service Residue is elided.
+
+
+Note: This is the equivalent of chaining to SCHC Insances, one for the Service Header, and another for the Compress/Frag.
+
+SCHC Header Format. The SCHC Header are all bits going over the wire.
+The sizes of the fields (L, M, N) depend on the SCHC Context.
+In most cases the Service Header Residue is entirely elided (M = 0). 
+
+
+
+
+|<-          SCHC Compressed Header           >|
++-----------+----------------------------------+----------+----------+-----------+
+|  RuleID   | Residue                          | Payload  | Padding (as needed)  |
++-----------+----------------------------------+----------+----------+-----------+
+|  R bits   | S bits                           |
++-----------+----------------------------------+
+            |<-      SCHC Header Data         >|
+
+
+|<-          SCHC Fragment Header             >|
++-----------+----------------------------------+----------+----------+----------+
+|  RuleID   | DTag + more                      | Payload  | Padding (as needed) |
++-----------+----------------------------------+----------+----------+----------+
+|  R bits   | S bits                           |
++-----------+----------------------------------+
+            |<-      SCHC Header Data         >|
+
+
+
+~~~~
+{: #Fig-SCHCHDR title='The SCHC Header Format'}
+
+
+
+
+RFC8724 defines the operation of SCHC and the way RuleID and the Packet Residue (called Residue) are determined.
+
+In more complex situations, SCHC may require meta-data to operate. This meta-data may include:
+* SCHC Packet 
+* A source and destination MAC or IP addresses of the packet carrying SCHC packets
+* A source and destination port number of the transport layer carrying SCHC packets
+* A next header field
+* An MPLS label
+* A TLS Association
+* Any other kind of connection id.
+
+
+
 For Instance, when the SCHC header may identify the next protocol in the stack, the format of the SCHC header takes the format as {{Fig-SCHCHDR}} shows.
 
 ~~~~
