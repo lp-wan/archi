@@ -249,7 +249,6 @@ In most cases the Service Header Residue is entirely elided (M = 0).
 +-----------+----------------------------------+----------+----------+-----------+
 |  R bits   | S bits                           |
 +-----------+----------------------------------+
-            |<-      SCHC Header Data         >|
 
 
 |<-          SCHC Fragment Header             >|
@@ -258,7 +257,6 @@ In most cases the Service Header Residue is entirely elided (M = 0).
 +-----------+----------------------------------+----------+----------+----------+
 |  R bits   | S bits                           |
 +-----------+----------------------------------+
-            |<-      SCHC Header Data         >|
 
 
 
