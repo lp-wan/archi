@@ -100,6 +100,7 @@ installed to enable reliable and scalable operations.
 * SCHC Ent-point. A host (Device, Application and Network Gateway) involved in the SCHC process. A SCHC end-point can have multiple SCHC Instances.
 * SCHC Instance. An instantiation of SCHC on a host. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
 * SCHC Session. An active association between two or more SCHC end-points (? or Instances ?), which allows them to communicate and ensure synchronization, management, error handling and communication services.
+* SCHC Stratum. A set of Protocol Layers on which a SCHC Instance is operating. Example: if the SCHC Instance A operates on the IP/UDP/CoAP layers, then the layers IP/UDP/CoAP represent the SCHC Stratum of this instance. 
 * SoR (Set of Rules). A set of SCHC Rules. The SoR may contain Rules of different nature, such as compression, fragmentation, or management. A SoR may be used by one or more SCHC Instances.
 * SoV (Set of Variables). External information that needs to be known to identify the correct protocol, the session id, and the flow when there is one.
 * Core SCHC. SCHC end-point located upstream. In an IoT deployment with star topology, that would be an end-point part of the infrastructure. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Core SCHC in the specific context may need to be defined.
