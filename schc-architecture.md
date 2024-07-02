@@ -100,7 +100,15 @@ installed to enable reliable and scalable operations.
 * SCHC Ent-point. A host (Device, Application and Network Gateway) involved in the SCHC process. A SCHC end-point can have multiple SCHC Instances.
 * SCHC Instance. An instantiation of SCHC on a host. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
 * SCHC Session. An active association between two or more SCHC end-points (? or Instances ?), which allows them to communicate and ensure synchronization, management, error handling and communication services.
-* SCHC Stratum. A set of Protocol Layers on which a SCHC Instance is operating. Example: if the SCHC Instance A operates on the IP/UDP/CoAP layers, then the layers IP/UDP/CoAP represent the SCHC Stratum of this instance. 
+* SCHC Stratum. A set of protocol layers on which a SCHC Instance operates. Example: if the SCHC Instance A operates on the IP/UDP/CoAP layers, then the layers IP/UDP/CoAP represent the SCHC Stratum for that instance. 
+* SCHC Stratum Header. A virtual protocol header that is utilized for the operation of an SCHC Instance to its SCHC Stratum. It is virtual in the sense that it is never sent over the wire as-is - SCHC Compression is applied and the SCHC Stratum Residue is sent.
+* SCHC Stratum Residue. The remaining data after applying SCHC Compression to the SCHC Stratum Header. It represents the bits that get sent over the wire. Note that in a majority of cases, the SCHC Compression elides all bits.
+* SCHC Null Stratum Residue. SCHC Stratum Residue of size 0 bits (e.g. the entire SCHC Stratum Header was elided during the SCHC Compression).
+* SCHC Default Stratum Header. The SCHC Stratum Header corresponding to the SCHC Null Stratum Residue. There can be only one SCHC Default Stratum Header.
+* SCHC Packet. The packet resulting from the application of SCHC Compression to a network packet. It includes the SCHC-compressed data and any necessary metadata for decompression.
+* SCHC Fragment. The packet resulting from the application of SCHC Fragmentation to a network packet. It includes the SCHC-fragmented data and any necessary metadata for reassembly.
+* SCHC Transmission Unit (STU). A common term for both "SCHC Packet" and "SCHC Fragment". It is the packet resulting from the application of SCHC Compression or Fragmentation to a network packet. It includes the SCHC-compressed and/or SCHC-fragmented data and any necessary metadata for decompression and/or reassembly. 
+* SCHC Discriminator. A piece of information indicating which SCHC Instance should process a given SCHC Transmission Unit (STU).
 * SoR (Set of Rules). A set of SCHC Rules. The SoR may contain Rules of different nature, such as compression, fragmentation, or management. A SoR may be used by one or more SCHC Instances.
 * SoV (Set of Variables). External information that needs to be known to identify the correct protocol, the session id, and the flow when there is one.
 * Core SCHC. SCHC end-point located upstream. In an IoT deployment with star topology, that would be an end-point part of the infrastructure. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Core SCHC in the specific context may need to be defined.
@@ -110,6 +118,37 @@ installed to enable reliable and scalable operations.
 This section specifies the principal blocks defined for building and using the SCHC architecture in any network topology and protocol.
 
 ## SCHC Stratum (plural: strata)
+
+
+~~~~
++-------------------------------------+
+|      IP/UDP/CoAP SCHC Stratum       |
+| +-------------------------------+   |
+| | Protocol Layer 3 (e.g.  CoAP) |   |
+| +-------------------------------+   |
+| | Protocol Layer 2 (e.g.  UDP)  |   |
+| +-------------------------------+   |
+| | Protocol Layer 1 (e.g.  IP)   |   |
+| +-------------------------------+   |
++-------------------------------------+
+
+~~~~
+{: #fig-stratum title='The IP/UDP/CoAP SCHC Stratum.'}
+
+
+~~~~
++-------------------------------------+
+|      CoAP/OSCORE SCHC Stratum       |
+| +-------------------------------+   |
+| | Protocol Layer 2 (e.g. OSCORE)|   |
+| +-------------------------------+   |
+| | Protocol Layer 1 (e.g. CoAP)  |   |
+| +-------------------------------+   |
++-------------------------------------+
+
+~~~~
+{: #fig-stratum title='The IP/UDP/CoAP SCHC Stratum.'}
+
 
 A SCHC Stratum is composed of a compressed SCHC Header (which may be fully implicit and thus elided) and a SCHC-compressed data that is used to uncompress a section of the packet. 
 
