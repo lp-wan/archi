@@ -92,14 +92,19 @@ installed to enable reliable and scalable operations.
 # Terminology
 
 * C/D. Compression and Decompression.
-* SCHC Context. All information related to the Rules for SCHC Header, Non-Compression, C/D and F/R and Management.
+* SCHC Context. The Set of Rules. All information related to the Rules for SCHC Header, Non-Compression, C/D and F/R and Management. 
 * FID. Field Identifiers, describing the name of the field in a protocol header.
 * F/R. Fragmentation and Reassembly.
 * SCHC Rule (or Rule). A formal description of how a SCHC Instance should process a packet. It contains the specific operations to perform on each of its header fields, e.g. perform compression/decompression, fragmentation/reassembly, management or other.
 * SCHC Profile. SCHC offers variations in the way it is operated, with a large number of parameters that need to be set. Some of these parameters are technology-specific. A Profile indicates a particular setting of all these parameters. As an example, {{rfc9011}} provides the SCHC fragmentation profile for LoRaWAN networks.
-* SCHC Ent-point. A host (Device, Application and Network Gateway) involved in the SCHC process. A SCHC end-point can have multiple SCHC Instances.
-* SCHC Instance. An instantiation of SCHC on a host. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
-* SCHC Session. An active association between two or more SCHC end-points (? or Instances ?), which allows them to communicate and ensure synchronization, management, error handling and communication services.
+* SCHC Node. A host (Device, Application and Network Gateway) involved in the SCHC process. A SCHC Node can have multiple SCHC Instances.
+
+* SCHC Ent-point or SCHC Instance End-point. The part of a SCHC Instance operating on a specific SCHC Node.
+* SCHC Instance. The instantiation of SCHC, typically over a network. The SCHC Instance implies all participating SCHC End-points share a commong Set of Rules (SoR) and the neccessary corresponding Set of Variables (SoV). 
+
+* SCHC Instance (alternative). An instantiation of SCHC on a SCHC Node. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
+
+* SCHC Session. To be removed?
 * SCHC Stratum. A set of protocol layers on which a SCHC Instance operates. Example: if the SCHC Instance A operates on the IP/UDP/CoAP layers, then the layers IP/UDP/CoAP represent the SCHC Stratum for that instance. 
 * SCHC Stratum Header. A virtual protocol header that is utilized for the operation of an SCHC Instance to its SCHC Stratum. It is virtual in the sense that it is never sent over the wire as-is - SCHC Compression is applied and the SCHC Stratum Residue is sent.
 * SCHC Stratum Residue. The remaining data after applying SCHC Compression to the SCHC Stratum Header. It represents the bits that get sent over the wire. Note that in a majority of cases, the SCHC Compression elides all bits.
@@ -109,10 +114,11 @@ installed to enable reliable and scalable operations.
 * SCHC Fragment. The packet resulting from the application of SCHC Fragmentation to a network packet. It includes the SCHC-fragmented data and any necessary metadata for reassembly.
 * SCHC Transmission Unit (STU). A common term for both "SCHC Packet" and "SCHC Fragment". It is the packet resulting from the application of SCHC Compression or Fragmentation to a network packet. It includes the SCHC-compressed and/or SCHC-fragmented data and any necessary metadata for decompression and/or reassembly. 
 * SCHC Discriminator. A piece of information indicating which SCHC Instance should process a given SCHC Transmission Unit (STU).
-* SoR (Set of Rules). A set of SCHC Rules. The SoR may contain Rules of different nature, such as compression, fragmentation, or management. A SoR may be used by one or more SCHC Instances.
-* SoV (Set of Variables). External information that needs to be known to identify the correct protocol, the session id, and the flow when there is one.
-* Core SCHC. SCHC end-point located upstream. In an IoT deployment with star topology, that would be an end-point part of the infrastructure. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Core SCHC in the specific context may need to be defined.
-* Device SCHC. SCHC end-point located downstream. In an IoT deployment with star topology, that would be the IoT device. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Device SCHC in the specific context may need to be defined.
+* SoR (Set of Rules). Synonymous with SCHC Context. It includes all rules for compression, fragmentation, and management for one or more SCHC Instances.
+* SoV (Set of Variables). Information not in the SoR, that is necessary for the operation of a SCHC Instance. Examples include: timers, local variables, information to be known to identify the correct protocol, the session id, and the flow when there is one.
+* Core SCHC. SCHC Node located upstream. In an IoT deployment with star topology, that would be an end-point part of the infrastructure. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Core SCHC in the specific context may need to be defined.
+* Device SCHC. SCHC Node located downstream. In an IoT deployment with star topology, that would be the IoT device. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Device SCHC in the specific context may need to be defined.
+
 
 # Building Blocks
 This section specifies the principal blocks defined for building and using the SCHC architecture in any network topology and protocol.
