@@ -92,45 +92,102 @@ installed to enable reliable and scalable operations.
 # Terminology
 
 * C/D. Compression and Decompression.
-* Context. All the information related to the Rules for SCHC Header, Non-Compression, C/D and F/R and CORECONF_Management.
+* SCHC Context. The Set of Rules. All information related to the Rules for SCHC Header, Non-Compression, C/D and F/R and Management. 
 * FID. Field Identifiers, describing the name of the field in a protocol header.
 * F/R. Fragmentation and Reassembly.
-* Rule. A description of the header fields to performs compression/decompression, fragmentation/reassembly, SCHC Instances and CORECONF_Management.
-* SCHC Entities. A host (Device, Application and Network Gateway) involved in the SCHC process.
-* SCHC Instance. The different stages of SCHC in a host. Each instance will have its Set of Rules (SoR), based on the profile, the protocols, the device, the behaviour and a Set of Variables (SoV).
-* SCHC Session. Provides the management of SCHC instances, the SoR of each instance and the dialog between hosts to keep the SCHC synchronization.
-* SoR (Set of rules). Group of Rules used in a SCHC Instance. The set of rules contains Rules for different nature as compression, no compression, fragmentation, SCHC Instances and CORECONF management.
-* SoV (Set of Variables). External information that needs to be known to identify the correct protocol, the session id, and the flow when there is one.
-* Core SCHC. SCHC entity located upstream in the Network Gateway.
-* Device SCHC. SCHC entity located downstream.
+* SCHC Rule (or Rule). A formal description of how a SCHC Instance should process a packet. It contains the specific operations to perform on each of its header fields, e.g. perform compression/decompression, fragmentation/reassembly, management or other.
+* SCHC Profile. SCHC offers variations in the way it is operated, with a large number of parameters that need to be set. Some of these parameters are technology-specific. A Profile indicates a particular setting of all these parameters. As an example, {{rfc9011}} provides the SCHC fragmentation profile for LoRaWAN networks.
+* SCHC Node. A host (Device, Application and Network Gateway) involved in the SCHC process. A SCHC Node can have multiple SCHC Instances.
+
+* SCHC Ent-point or SCHC Instance End-point. The part of a SCHC Instance operating on a specific SCHC Node.
+* SCHC Instance. The instantiation of SCHC, typically over a network. The SCHC Instance implies all participating SCHC End-points share a commong Set of Rules (SoR) and the neccessary corresponding Set of Variables (SoV). 
+
+* SCHC Instance (alternative). An instantiation of SCHC on a SCHC Node. Each instance has its own Set of Rules (SoR) and Set of Variables (SoV). 
+
+* SCHC Session. To be removed?
+* SCHC Stratum. A set of protocol layers on which a SCHC Instance operates. Example: if the SCHC Instance A operates on the IP/UDP/CoAP layers, then the layers IP/UDP/CoAP represent the SCHC Stratum for that instance. 
+* SCHC Stratum Header. A virtual protocol header that is utilized for the operation of an SCHC Instance to its SCHC Stratum. It is virtual in the sense that it is never sent over the wire as-is - SCHC Compression is applied and the SCHC Stratum Residue is sent.
+* SCHC Stratum Residue. The remaining data after applying SCHC Compression to the SCHC Stratum Header. It represents the bits that get sent over the wire. Note that in a majority of cases, the SCHC Compression elides all bits.
+* SCHC Null Stratum Residue. SCHC Stratum Residue of size 0 bits (e.g. the entire SCHC Stratum Header was elided during the SCHC Compression).
+* SCHC Default Stratum Header. The SCHC Stratum Header corresponding to the SCHC Null Stratum Residue. There can be only one SCHC Default Stratum Header.
+* SCHC Packet. The packet resulting from the application of SCHC Compression to a network packet. It includes the SCHC-compressed data and any necessary metadata for decompression.
+* SCHC Fragment. The packet resulting from the application of SCHC Fragmentation to a network packet. It includes the SCHC-fragmented data and any necessary metadata for reassembly.
+* SCHC Transmission Unit (STU). A common term for both "SCHC Packet" and "SCHC Fragment". It is the packet resulting from the application of SCHC Compression or Fragmentation to a network packet. It includes the SCHC-compressed and/or SCHC-fragmented data and any necessary metadata for decompression and/or reassembly. 
+* SCHC Discriminator. A piece of information indicating which SCHC Instance should process a given SCHC Transmission Unit (STU).
+* SoR (Set of Rules). Synonymous with SCHC Context. It includes all rules for compression, fragmentation, and management for one or more SCHC Instances.
+* SoV (Set of Variables). Information not in the SoR, that is necessary for the operation of a SCHC Instance. Examples include: timers, local variables, information to be known to identify the correct protocol, the session id, and the flow when there is one.
+* Core SCHC. SCHC Node located upstream. In an IoT deployment with star topology, that would be an end-point part of the infrastructure. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Core SCHC in the specific context may need to be defined.
+* Device SCHC. SCHC Node located downstream. In an IoT deployment with star topology, that would be the IoT device. In a different setting (e.g. mesh network), the specific interpretation of what exacitly is the Device SCHC in the specific context may need to be defined.
+
 
 # Building Blocks
 This section specifies the principal blocks defined for building and using the SCHC architecture in any network topology and protocol.
 
 ## SCHC Stratum (plural: strata)
 
+
+~~~~
++-------------------------------------+
+|      IP/UDP/CoAP SCHC Stratum       |
+| +-------------------------------+   |
+| | Protocol Layer 3 (e.g.  CoAP) |   |
+| +-------------------------------+   |
+| | Protocol Layer 2 (e.g.  UDP)  |   |
+| +-------------------------------+   |
+| | Protocol Layer 1 (e.g.  IP)   |   |
+| +-------------------------------+   |
++-------------------------------------+
+
+~~~~
+{: #fig-stratum title='The IP/UDP/CoAP SCHC Stratum.'}
+
+
+~~~~
++-------------------------------------+
+|      CoAP/OSCORE SCHC Stratum       |
+| +-------------------------------+   |
+| | Protocol Layer 2 (e.g. OSCORE)|   |
+| +-------------------------------+   |
+| | Protocol Layer 1 (e.g. CoAP)  |   |
+| +-------------------------------+   |
++-------------------------------------+
+
+~~~~
+{: #fig-stratum title='The IP/UDP/CoAP SCHC Stratum.'}
+
+
 A SCHC Stratum is composed of a compressed SCHC Header (which may be fully implicit and thus elided) and a SCHC-compressed data that is used to uncompress a section of the packet. 
 
 A SCHC-compressed packet contains at least one stratum that is subject to compression and decompression by an associated SCHC Instance. The packet may be composed of multiple nested strata, where a given stratum is in fact the payload of the nesting stratum.
 
-The SCHC stratum data is wrapped between an uncompressed header and a payload. The SCHC operation swaps the stratum data with the uncompressed section obtained from the SCHC packet residue. 
+?? I don't really undestand this: The SCHC Stratum data is located after an uncompressed header and a payload. 
+?? If the SCHC stratum is nested, then this will not be the case. Also, maybe the payload will be empty.
+?? I'm not sure what's the purpose of that sentence.
+
+The SCHC operation swaps the stratum data with the uncompressed section obtained from the SCHC packet residue. 
 
 The uncompressed header may be the result of a previous SCHC expansion. The payload may contain one or more other strata.
 
 A SCHC stratum may carry the compressed PDU of one or more IP layers or sublayers, e.g., IP only, IP+UDP, CoAP, or OSCORE {{rfc8824}}.
 
-The end points that handle the compression of a given stratum might differ for the same packet, meaning that the payload of a given stratum might be compressed/uncompressed by a different entity, possibly in a different node. It results that the degree of compression (the number of strata) for a given packet may vary as the packet progresses through the layers inside a node and then through the network.
+?? not sure what is the info that is conveyed here:
+?? The end points that handle the compression of a given stratum might differ for the same packet, meaning that the payload of a given ?? stratum might be compressed/uncompressed by a different layer, possibly in a different end-point. It results that the degree of compression (the number of strata) for a given packet may vary as the packet progresses through the layers inside a node and then through the network.
+?? Is it that the strata of a packet can be processed at different end-points? (devices) 
+?? Is it that they can be processed in different pieces of software?
+?? In different layers?
 
 ## Discriminator
 
-The key to determine how to decompress a SCHC header in a stratum is called a Discriminator. 
+The key to determine how to decompress the SCHC header of a SCHC stratum is called a Discriminator. 
 
-The Discriminator is typically extrinsic to the stratum data. 
+The Discriminator is typically not included in the stratum data. 
+?? what is the stratum data? schc header + compressed payload ?
 
-It may be found in the packet context, e.g., the ID of the interface, VLAN, SSID, or PPP session on which the packet is received
+
+It may be found in the packet context, e.g., the ID of the interface, VLAN, SSID, or PPP session on which the packet is received.
 
 
-It may also be received in the packet, natively or uncompressed from a nesting stratum, e.g.:
+It may also be contained in the packet, natively or uncompressed from a nesting stratum, e.g.:
 * A source and destination MAC or IP addresses of the packet carrying SCHC packets
 * A source and destination port number of the transport layer carrying SCHC packets
 * A next header field
@@ -138,7 +195,7 @@ It may also be received in the packet, natively or uncompressed from a nesting s
 * A TLS Association
 * Any other kind of connection id.
 
-The Discriminator enables to determine the SCHC Instance that is used to decompress the SCHC header, called a SCHC Header Instance. 
+The Discriminator determines the SCHC Instance that is used to decompress the SCHC header. This is called a SCHC Header Instance. 
 
 Once uncompressed, the SCHC Header enables to determine the SCHC Instance, called a SCHC Packet Instance, that is used to restore the packet data that is compressed in the stratum. 
 
@@ -151,6 +208,8 @@ Note that a SCHC Layer is different from an ISO layer {{Fig-SCHCSESSION}}.
 
 
 ## SCHC Header Instance
+
+?? I really find the whole section difficult to understand.
 
 The SCHC Header Instance manages the SCHC Headers and provides the information and the selection of a SCHC Packet Instance.
 
@@ -229,33 +288,35 @@ RuleID
 
 In this example the Rule defines:
 
-* A SessionID is 10 bits length and it is used to identify the SoR used for this instance of SCHC.
+* A SessionID is 10 bits length and it is used to identify the SCHC Instance.
 * A Protocol ID in 1-byte length giving the value send in the layer below the SCHC packet to identify the uncompressed protocol stack.
 * And A CRC. The CRC field is 8 bits length and covers the SCHC header and the SCHC packet from error. When it is elided by the compression, the layer-4 checksum MUST be replaced by another validation sequence.
 
 
 ## SCHC Packet Instance {#Instances}
-SCHC Packet Instance is characterized by a particular SoR common with the corresponding distant entity.
+?? I don't understand the difference between SCHC Packet Instance and SCHC Instance.
+?? Also, frequently SCHC Instance is said to have its own SoR, but no mention for SoV.
+
+SCHC Packet Instance is characterized by a particular SoR common with the corresponding distant end-point.
 The {{rfc8724}} defines a protocol operation between a pair of peers.
-In a SCHC strata, several SCHC Instances may contain different SoR.
+As a reminder, every SCHC Instance may use it's own SoR.
 
-When the SCHC Device is a highly constrained unit, there is typically only one
-Instance for that Device, and all the traffic from and to the device is
-exchanged with the same Network Gateway. All the traffic can thus be implicitly
-associated with the single Instance that the device supports, and the Device
-does not need to manipulate the concept. For that reason, SCHC avoids to signal
-explicitly the Instance identification in its data packets.
+When the Device SCHC is a highly constrained unit, there is typically only one
+SCHC Instance for that end-point, and all traffic from and to the end-point is
+goes to/from the same Core SCHC. All traffic can thus be implicitly
+associated with the single SCHC Instance that the device supports. 
+For that reason, it is not necessary to identify explicitly the SCHC Instance.
 
-The Network Gateway, on the other hand, maintains multiple Instances, one per
-SCHC Device. The Instance is derived from the lower layer, typically the source
+The Core SCHC, on the other hand, may maintain multiple SCHC Instances, one per
+Device SCHC. The SCHC Instance is derived from the lower layer, typically the source
 of an incoming SCHC packet as a discriminator in the {{Fig-SCHCSESSION}}.
-The Instance is used in particular to select the set of rules that apply to the SCHC Device, and the
+The Instance is used in particular to select the set of rules and set of variables that apply to the SCHC Device, and the
 current state of their exchange, e.g., timers and previous fragments.
 
 
 ### SCHC Packet
-The SCHC Packet is composed of a RuleID follows by the content described in the Rule.
-The content may be a C/D packet, a F/R packet, a CORECONF_Management or a Non Compressed packet.
+The SCHC Packet is composed of a RuleID followed by the content described in the Rule.
+The content may be a C/D packet, a F/R packet, or a Management.
 As defined in the {{rfc8724}}, the SCHC packet for C/D is composed of the Compressed Header followed by the payload from the original packet.
 {{Fig-SCHCPacket}} shows the compressed header format that is composed of the RuledID and a Compressed Residue, which is the output of compressing a packet header with a Rule.
 
@@ -281,14 +342,6 @@ CORECONF_Management Compressed Packet:
 ~~~~
 {: #Fig-SCHCPacket title='SCHC Packet'}
 
-## SCHC Profiles
-A SCHC profile is the specification to adapt the use of SCHC with the necessities of the technology to which it is applied.
-In the case of star topologies and because LPWAN technologies {{-Overview}} have strict yet distinct constraints, e.g., in terms of maximum frame size, throughput, and directionality, also a SCHC instance and the fragmentation model with the parameters' values for its use.
-
-Appendix D. "SCHC Parameters" of {{rfc8724}} lists the information that an LPWAN
-technology-specific document must provide to profile SCHC fragmentation for that technology.
-
-As an example, {{rfc9011}} provides the SCHC fragmentation profile for LoRaWAN networks.
 
 
 
@@ -332,7 +385,7 @@ ToDo
 
 
 ## SCHC Management
-RFC9363 writes that only the management can be done by the two entities of the instance, and other SoR cannot be manipulated.
+RFC9363 writes that only the management can be done by the two end-points of the instance, and other SoR cannot be manipulated.
 
 Management rules are explicitly define in the SoR, see {{Fig-SCHCManagement}}. They are compression Rules for CORECONF messages to get or modify the SoR of the instance. The management can be limited with the {{-SCHCAC}} access definition.
 
@@ -459,9 +512,9 @@ The goal of the architectural document is to orchestrate the different protocols
 defined by the LPWAN and SCHC working groups to design an operational and interoperable
 framework for allowing IP application over constrained networks.
 
-The {{Fig-SCHCArchi}} shows the protocol stack and the corresponding SCHC stratas enabling the compression of the different protocol headers.
+The {{Fig-SCHCArchi}} shows the protocol stack and the corresponding SCHC strata enabling the compression of the different protocol headers.
 The SCHC header eases the introduction of intermediary host in the end-to-end communication transparently.
-All the SCHC headers are compressed and in some cases are elided, for example for LPWAN networks. The layers using encryption does not have a SCHC header in the middle because they are the same entity.
+All the SCHC headers are compressed and in some cases are elided, for example for LPWAN networks. The layers using encryption does not have a SCHC header in the middle because they are the same end-point.
 {{Fig-SCHCArchiEx}} shows an example of an IP/UDP/CoAP in an LPWAN network.
 
 
