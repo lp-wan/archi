@@ -117,10 +117,11 @@ installed to enable reliable and scalable operations.
       instance will have its Set of Rules (SoR), based on the profile,
       the protocols, the device, the behaviour and a Set of Variables
       (SoV). There are 2 SCHC Instances involved per SCHC stratum, one 
-      for the SCHC header and for the SCHC-compressed data.    
+      for the SCHC header and one for the SCHC payload, i.e., the 
+      SCHC-compressed data.
 
    *  SCHC Session.  The association of SCHC Instances in two or more
-      peer nodes operating SCHC to commun icate using a common SoR and a
+      peer nodes operating SCHC to communicate using a common SoR and a
       matching SoV.
 
    *  SCHC Session Manager.  Provides the management of SCHC
@@ -136,6 +137,10 @@ installed to enable reliable and scalable operations.
    *  SoV (Set of Variables).  External information that needs to be
       known to identify the correct protocol, the session id, and the
       flow when there is one.
+      
+   *  SCHC Stratum.  A SCHC Stratum is the SCHC analoguous to a 
+      classical layer in the IP architecture, but its operation may 
+      cover multiple IP layers or only a subset of a layer.
 
 # Building Blocks
 This section specifies the principal blocks defined for building and using the SCHC architecture in any network topology and protocol.
@@ -144,7 +149,7 @@ This section specifies the principal blocks defined for building and using the S
 
 A SCHC Stratum is the SCHC analoguous to a classical layer in the IP architecture, but its operation may cover multiple IP layers or only a subset of a layer, e.g., IP only, IP+UDP, CoAP, or OSCORE {{rfc8824}}. The term stratum is thus used to avoid confusion with traditional layers. Also, SCHC Strata are not stacked, though they can be nested.
 
-The SCHC Stratum data in a datagram is composed of a SCHC Header (which may be compressed to the point that it is fully implicit and thus elided), a SCHC-compressed data (that is used to uncompress a section of the SCHC datagram), and user payload that is unaffected by the SCHC Stratum.
+The SCHC Stratum data in a datagram is composed of a SCHC Header (which may be compressed to the point that it is fully implicit and thus elided), a SCHC payload (that is used to uncompress a section of the SCHC datagram), and user payload that is unaffected by the SCHC Stratum. The SCHC Stratum operation requires 2 Instances, one for the SCHC Header and one for the SCHC-compressed data.
 
 A SCHC compressed packet may contain multiple stratum data, to be handled by sequential (nested) SCHC Strata, where the inner (nested) Stratum operates within the payload of the outter (nesting) Stratum.
 

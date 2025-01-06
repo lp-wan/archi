@@ -69,35 +69,35 @@ Table of Contents
      4.3.  SCHC Header Instance  . . . . . . . . . . . . . . . . . .   6
        4.3.1.  SCHC Header . . . . . . . . . . . . . . . . . . . . .   7
      4.4.  SCHC Payload Instance . . . . . . . . . . . . . . . . . .   8
-       4.4.1.  SCHC Packet . . . . . . . . . . . . . . . . . . . . .   8
-     4.5.  SCHC Profiles . . . . . . . . . . . . . . . . . . . . . .   9
-     4.6.  SCHC Operation  . . . . . . . . . . . . . . . . . . . . .   9
-       4.6.1.  SCHC Rules  . . . . . . . . . . . . . . . . . . . . .  10
-       4.6.2.  SoR identification  . . . . . . . . . . . . . . . . .  10
-     4.7.  SCHC Management . . . . . . . . . . . . . . . . . . . . .  10
-     4.8.  SCHC Session Manager  . . . . . . . . . . . . . . . . . .  11
-       4.8.1.  SCHC Data Model . . . . . . . . . . . . . . . . . . .  11
-   5.  SCHC Architecture . . . . . . . . . . . . . . . . . . . . . .  13
-   6.  The Static Context Header Compression . . . . . . . . . . . .  16
-     6.1.  SCHC over Network Technologies  . . . . . . . . . . . . .  17
+       4.4.1.  SCHC Packet . . . . . . . . . . . . . . . . . . . . .   9
+     4.5.  SCHC Profiles . . . . . . . . . . . . . . . . . . . . . .  10
+     4.6.  SCHC Operation  . . . . . . . . . . . . . . . . . . . . .  10
+       4.6.1.  SCHC Rules  . . . . . . . . . . . . . . . . . . . . .  11
+       4.6.2.  SoR identification  . . . . . . . . . . . . . . . . .  11
+     4.7.  SCHC Management . . . . . . . . . . . . . . . . . . . . .  11
+     4.8.  SCHC Session Manager  . . . . . . . . . . . . . . . . . .  12
+       4.8.1.  SCHC Data Model . . . . . . . . . . . . . . . . . . .  12
+   5.  SCHC Architecture . . . . . . . . . . . . . . . . . . . . . .  14
+   6.  The Static Context Header Compression . . . . . . . . . . . .  17
+     6.1.  SCHC over Network Technologies  . . . . . . . . . . . . .  18
        6.1.1.  SCHC over PPP . . . . . . . . . . . . . . . . . . . .  18
        6.1.2.  SCHC over Ethernet  . . . . . . . . . . . . . . . . .  19
        6.1.3.  SCHC over IPv6  . . . . . . . . . . . . . . . . . . .  19
        6.1.4.  SCHC over UDP . . . . . . . . . . . . . . . . . . . .  20
-   7.  SCHC Endpoints for LPWAN Networks . . . . . . . . . . . . . .  20
+   7.  SCHC Endpoints for LPWAN Networks . . . . . . . . . . . . . .  21
      7.1.  SCHC Device Lifecycle . . . . . . . . . . . . . . . . . .  21
        7.1.1.  Device Development  . . . . . . . . . . . . . . . . .  21
-       7.1.2.  Rules Publication . . . . . . . . . . . . . . . . . .  21
+       7.1.2.  Rules Publication . . . . . . . . . . . . . . . . . .  22
        7.1.3.  SCHC Device Deployment  . . . . . . . . . . . . . . .  22
-       7.1.4.  SCHC Device Maintenance . . . . . . . . . . . . . . .  22
-       7.1.5.  SCHC Device Decommissionning  . . . . . . . . . . . .  22
-   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  22
-   9.  IANA Consideration  . . . . . . . . . . . . . . . . . . . . .  22
+       7.1.4.  SCHC Device Maintenance . . . . . . . . . . . . . . .  23
+       7.1.5.  SCHC Device Decommissionning  . . . . . . . . . . . .  23
+   8.  Security Considerations . . . . . . . . . . . . . . . . . . .  23
+   9.  IANA Consideration  . . . . . . . . . . . . . . . . . . . . .  23
    10. Acknowledgements  . . . . . . . . . . . . . . . . . . . . . .  23
    11. References  . . . . . . . . . . . . . . . . . . . . . . . . .  23
      11.1.  Normative References . . . . . . . . . . . . . . . . . .  23
-     11.2.  Informative References . . . . . . . . . . . . . . . . .  23
-   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  25
+     11.2.  Informative References . . . . . . . . . . . . . . . . .  24
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  26
 
 1.  Introduction
 
@@ -174,10 +174,11 @@ Internet-Draft              SCHC Architecture               January 2025
       instance will have its Set of Rules (SoR), based on the profile,
       the protocols, the device, the behaviour and a Set of Variables
       (SoV).  There are 2 SCHC Instances involved per SCHC stratum, one
-      for the SCHC header and for the SCHC-compressed data.
+      for the SCHC header and one for the SCHC payload, i.e., the SCHC-
+      compressed data.
 
    *  SCHC Session.  The association of SCHC Instances in two or more
-      peer nodes operating SCHC to commun icate using a common SoR and a
+      peer nodes operating SCHC to communicate using a common SoR and a
       matching SoV.
 
    *  SCHC Session Manager.  Provides the management of SCHC Instances,
@@ -194,6 +195,10 @@ Internet-Draft              SCHC Architecture               January 2025
       known to identify the correct protocol, the session id, and the
       flow when there is one.
 
+   *  SCHC Stratum.  A SCHC Stratum is the SCHC analoguous to a
+      classical layer in the IP architecture, but its operation may
+      cover multiple IP layers or only a subset of a layer.
+
 4.  Building Blocks
 
    This section specifies the principal blocks defined for building and
@@ -208,15 +213,10 @@ Internet-Draft              SCHC Architecture               January 2025
    traditional layers.  Also, SCHC Strata are not stacked, though they
    can be nested.
 
-   The SCHC Stratum data in a datagram is composed of a SCHC Header
-   (which may be compressed to the point that it is fully implicit and
-   thus elided), a SCHC-compressed data (that is used to uncompress a
-   section of the SCHC datagram), and user payload that is unaffected by
-   the SCHC Stratum.
 
-   A SCHC compressed packet may contain multiple stratum data, to be
-   handled by sequential (nested) SCHC Strata, where the inner (nested)
-   Stratum operates within the payload of the outter (nesting) Stratum.
+
+
+
 
 
 
@@ -225,6 +225,17 @@ Pelov, et al.             Expires 10 July 2025                  [Page 4]
 
 Internet-Draft              SCHC Architecture               January 2025
 
+
+   The SCHC Stratum data in a datagram is composed of a SCHC Header
+   (which may be compressed to the point that it is fully implicit and
+   thus elided), a SCHC payload (that is used to uncompress a section of
+   the SCHC datagram), and user payload that is unaffected by the SCHC
+   Stratum.  The SCHC Stratum operation requires 2 Instances, one for
+   the SCHC Header and one for the SCHC-compressed data.
+
+   A SCHC compressed packet may contain multiple stratum data, to be
+   handled by sequential (nested) SCHC Strata, where the inner (nested)
+   Stratum operates within the payload of the outter (nesting) Stratum.
 
    A SCHC Stratum is instantiated in participating nodes as a SCHC
    Instance, and SCHC Instances in communicating nodes are associated to
@@ -262,6 +273,15 @@ Internet-Draft              SCHC Architecture               January 2025
    *  A source and destination MAC or IP addresses of the packet
       carrying SCHC packets
 
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                  [Page 5]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
    *  A source and destination port number of the transport layer
       carrying SCHC packets
 
@@ -272,15 +292,6 @@ Internet-Draft              SCHC Architecture               January 2025
    *  A TLS Association
 
    *  Any other kind of connection id.
-
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                  [Page 5]
-
-Internet-Draft              SCHC Architecture               January 2025
-
 
    The Discriminator enables to determine the SCHC Instance that is used
    to decompress the SCHC header, called a SCHC Header Instance.
@@ -308,6 +319,25 @@ Internet-Draft              SCHC Architecture               January 2025
    multiple protocols sessions, each corresponding to a different SCHC
    Payload Instance.
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                  [Page 6]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
    +---------------+---------------+---------------+
    | SCHC Packet   | SCHC Packet   | SCHC Packet   | S
    | Instance ___  | Instance ___  | Instance ___  | C
@@ -330,14 +360,6 @@ Internet-Draft              SCHC Architecture               January 2025
 
                    Figure 1: SCHC Instances for a stratum
 
-
-
-
-Pelov, et al.             Expires 10 July 2025                  [Page 6]
-
-Internet-Draft              SCHC Architecture               January 2025
-
-
 4.3.1.  SCHC Header
 
    SCHC Header carries information to allow the SCHC strata to work
@@ -349,6 +371,28 @@ Internet-Draft              SCHC Architecture               January 2025
    Instance, when the SCHC header may identify the next protocol in the
    stack, the format of the SCHC header takes the format as Figure 2
    shows.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                  [Page 7]
+
+Internet-Draft              SCHC Architecture               January 2025
+
 
    Non-compressed SCHC Header Format:
    +- - - - - - +- - - - - - -+- - -+
@@ -385,21 +429,26 @@ Internet-Draft              SCHC Architecture               January 2025
       compression, the layer-4 checksum MUST be replaced by another
       validation sequence.
 
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                  [Page 7]
-
-Internet-Draft              SCHC Architecture               January 2025
-
-
 4.4.  SCHC Payload Instance
 
    SCHC Payload Instance is characterized by a particular SoR common
    with the corresponding distant entity.  The [rfc8724] defines a
    protocol operation between a pair of peers.  In a SCHC strata,
    several SCHC Instances may contain different SoR.
+
+
+
+
+
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                  [Page 8]
+
+Internet-Draft              SCHC Architecture               January 2025
+
 
    When the SCHC Device is a highly constrained unit, there is typically
    only one Instance for that Device, and all the traffic from and to
@@ -427,29 +476,6 @@ Internet-Draft              SCHC Architecture               January 2025
    RuledID and a Compressed Residue, which is the output of compressing
    a packet header with a Rule.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                  [Page 8]
-
-Internet-Draft              SCHC Architecture               January 2025
-
-
    C/D Compressed Packet:
 
    +------------+----------------------+
@@ -469,6 +495,16 @@ Internet-Draft              SCHC Architecture               January 2025
    +------------+----------------------+
 
                            Figure 3: SCHC Packet
+
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                  [Page 9]
+
+Internet-Draft              SCHC Architecture               January 2025
+
 
 4.5.  SCHC Profiles
 
@@ -498,14 +534,6 @@ Internet-Draft              SCHC Architecture               January 2025
    determined from extrinsic properties, and is not advertised in the
    protocol.
 
-
-
-
-Pelov, et al.             Expires 10 July 2025                  [Page 9]
-
-Internet-Draft              SCHC Architecture               January 2025
-
-
    Nevertheless, SCHC is very generic and its applicability is not
    limited to star-oriented deployments and/or to use cases where
    applications are very static and the state provisioned in advance.
@@ -522,6 +550,17 @@ Internet-Draft              SCHC Architecture               January 2025
    proper SCHC operation, it is required that the method used ensures
    that both ends are aware of their role, and then again this
    determination is based on extrinsic properties.
+
+
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 10]
+
+Internet-Draft              SCHC Architecture               January 2025
+
 
 4.6.1.  SCHC Rules
 
@@ -555,13 +594,6 @@ Internet-Draft              SCHC Architecture               January 2025
    SoR of the instance.  The management can be limited with the
    [I-D.ietf-schc-access-control] access definition.
 
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 10]
-
-Internet-Draft              SCHC Architecture               January 2025
-
-
    +-----------------+                 +-----------------+
    |       ^         |                 |       ^         |
    |  C/D  !  M ___  |                 |       !  M ___  |
@@ -576,6 +608,15 @@ Internet-Draft              SCHC Architecture               January 2025
    +.................. Discriminator ....................+
 
                         Figure 4: Inband Management
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 11]
+
+Internet-Draft              SCHC Architecture               January 2025
+
 
 4.8.  SCHC Session Manager
 
@@ -603,21 +644,6 @@ Internet-Draft              SCHC Architecture               January 2025
    and CORECONF_Management and SCHC Instances Rules present in both end
    and that both ends are provisioned with the same SoR.
 
-
-
-
-
-
-
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 11]
-
-Internet-Draft              SCHC Architecture               January 2025
-
-
            -----                                  -----
           [ SoR ]                                [ SoR ]
            -----                                  -----
@@ -640,6 +666,14 @@ Internet-Draft              SCHC Architecture               January 2025
    enables the use of several protocols for rule management, such as
    NETCONF[RFC6241], RESTCONF[RFC8040], and
    CORECONF[I-D.ietf-core-comi].  NETCONF uses SSH, RESTCONF uses HTTPS,
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 12]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
    and CORECONF uses CoAP(s) as their respective transport layer
    protocols.  The data is represented in XML under NETCONF, in
    JSON[RFC8259] under RESTCONF and in CBOR[RFC8949] under CORECONF.
@@ -666,14 +700,6 @@ Internet-Draft              SCHC Architecture               January 2025
    The RM is an Application using the Internet to exchange information,
    therefore:
 
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 12]
-
-Internet-Draft              SCHC Architecture               January 2025
-
-
    *  for the network-level SCHC, the communication does not require
       routing.  Each of the end-points having an RM and both RMs can be
       viewed on the same link, therefore wellknown Link Local addresses
@@ -688,6 +714,21 @@ Internet-Draft              SCHC Architecture               January 2025
    for instace, the [I-D.ietf-schc-over-ppp] proposes a solution.  The
    RM traffic may be itself compressed by SCHC: if CORECONF protocol is
    used, [rfc8824] can be applied.
+
+
+
+
+
+
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 13]
+
+Internet-Draft              SCHC Architecture               January 2025
+
 
 5.  SCHC Architecture
 
@@ -708,27 +749,6 @@ Internet-Draft              SCHC Architecture               January 2025
    split in two instances to deal with the encrypted portion of the
    application PDU.  Fragmentation applies before LPWAN transmission
    layer.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 13]
-
-Internet-Draft              SCHC Architecture               January 2025
-
 
             (Device)            (NGW)                           (App)
 
@@ -757,6 +777,15 @@ Internet-Draft              SCHC Architecture               January 2025
 
            Figure 7: Different SCHC Instances in a global system
 
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 14]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
    This document defines a generic architecture for SCHC that can be
    used at any of these levels.  The goal of the architectural document
    is to orchestrate the different protocols and data model defined by
@@ -772,19 +801,6 @@ Internet-Draft              SCHC Architecture               January 2025
    networks.  The layers using encryption does not have a SCHC header in
    the middle because they are the same entity.  Figure 9 shows an
    example of an IP/UDP/CoAP in an LPWAN network.
-
-
-
-
-
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 14]
-
-Internet-Draft              SCHC Architecture               January 2025
-
 
    DEV                                 NGW              APP
 
@@ -814,6 +830,18 @@ Internet-Draft              SCHC Architecture               January 2025
    strata, one for OSCORE, one for CoAP, and one for IP and UDP.
 
 
+
+
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 15]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
       +--------------------------OSCORE-------------------------+
       | +-----------------+                 +-----------------+ |
       | |       ^         |                 |       ^         | |
@@ -834,14 +862,6 @@ Internet-Draft              SCHC Architecture               January 2025
                 |               /           |
                 |      (SCHC Header)( SCHC-compressed data)
              |
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 15]
-
-Internet-Draft              SCHC Architecture               January 2025
-
-
       +-------- | ---------------CoAP---------------------------+
       | +-----------------+                 +-----------------+ |
       | |       ^         |                 |       ^         | |
@@ -870,6 +890,14 @@ Internet-Draft              SCHC Architecture               January 2025
    C  | |       !   [___] |                 |       !   [___] | |
    H  | |       !         |                 |       !         | |
    C  | |      F/R        |                 |      F/R        | |
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 16]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
       | +------ins_id1----+-----ins_idi-----+------ins_idn----+ |
       | |                   C/D  !  (IP/UDP)                  | |
       | |                        +--------------------->[SoR] | |
@@ -890,13 +918,6 @@ Internet-Draft              SCHC Architecture               January 2025
    description that must match on the compressor and decompressor side.
    This description comprises a set of Compression/Decompression (C/D)
    rules.
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 16]
-
-Internet-Draft              SCHC Architecture               January 2025
-
 
    The SCHC Parser analyzes incoming packets and creates a list of
    fields that it matches against the compression rules.  The rule that
@@ -925,6 +946,14 @@ Internet-Draft              SCHC Architecture               January 2025
    The ruleID allows to determine if it is a compression or
    fragmentation rule or any other type of Rule.
 
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 17]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
 6.1.  SCHC over Network Technologies
 
    SCHC can be used in multiple environments and multiple protocols.  It
@@ -939,20 +968,6 @@ Internet-Draft              SCHC Architecture               January 2025
    need for a SCHC header that is sufficient to identify the SCHC peers
    (endpoints) and their role (device vs. app), as well as the session
    between those peers that the packet pertains to.
-
-
-
-
-
-
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 17]
-
-Internet-Draft              SCHC Architecture               January 2025
-
 
    In either of the above cases, the expectation is that the SCHC header
    is transferred in a compressed form.  This implies that the rules to
@@ -982,6 +997,19 @@ Internet-Draft              SCHC Architecture               January 2025
    CORECONF messages Rules, ensuring that the peers use the exact same
    set of rules.
 
+
+
+
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 18]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
        +----------+  Wi-Fi /   +----------+                ....
        |    IP    |  Ethernet  |    IP    |            ..          )
        |   Host   +-----/------+  Router  +----------(   Internet   )
@@ -998,17 +1026,6 @@ Internet-Draft              SCHC Architecture               January 2025
    within the PPP connection.  As discussed in Section 7, the Uplink
    direction is from the node that initiated the PPP connection to the
    node that accepted it.
-
-
-
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 18]
-
-Internet-Draft              SCHC Architecture               January 2025
-
 
 6.1.2.  SCHC over Ethernet
 
@@ -1038,6 +1055,17 @@ Internet-Draft              SCHC Architecture               January 2025
    The SCHC Header between IPv6 and the ULP is not needed because of the
    Next Header field on the IPv6 header format.
 
+
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 19]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
                                 |---- SCHC Packet -----|
     +-------------+-------------+---------+------------+
     | IPv6 Header | SCHC Header | Rule ID | Compressed |
@@ -1055,16 +1083,6 @@ Internet-Draft              SCHC Architecture               January 2025
    endpoint information can be elided and deduced from the IP header.
    If there is only one session, it can be elided as well, otherwise a
    rule and residue are needed to extract the session ID.
-
-
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 19]
-
-Internet-Draft              SCHC Architecture               January 2025
-
 
 6.1.4.  SCHC over UDP
 
@@ -1093,6 +1111,17 @@ Internet-Draft              SCHC Architecture               January 2025
    the SCHC over UDP case, the SCHC header can be fully elided, but the
    packet must carry the overhead of a full UDP header.
 
+
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 20]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
 7.  SCHC Endpoints for LPWAN Networks
 
    Section 3 of [rfc8724] depicts a typical network architecture for an
@@ -1114,14 +1143,6 @@ Internet-Draft              SCHC Architecture               January 2025
    same path from/to a central point.  In that model, highly constrained
    Devices (Dev) exchange information with LPWAN Application Servers
    (App) through a central Network Gateway (NGW), which can be powered
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 20]
-
-Internet-Draft              SCHC Architecture               January 2025
-
-
    and is typically a lot less constrained than the Devices.  Because
    Devices embed built-in applications, the traffic flows to be
    compressed are known in advance and the location of the C/D and F/R
@@ -1147,6 +1168,16 @@ Internet-Draft              SCHC Architecture               January 2025
        that both ends are compiled with the generated structures and
        linked with generated code that represents the rule operation.
 
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 21]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
    2.  In the device model, the rules are generated separately.  Only
        the device-side code is linked with generated code.  The Rules
        are published separately to be used by a generic SCHC engine that
@@ -1170,13 +1201,6 @@ Internet-Draft              SCHC Architecture               January 2025
    the SoR are published to a reachable repository and versionned
    (minor, major).  Each SoR should have its own Uniform Resource Names
    (URN) [RFC8141] and a version.
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 21]
-
-Internet-Draft              SCHC Architecture               January 2025
-
 
    The SoR should be authenticated to ensure that it is genuine, or
    obtained from a trusted app store.  A corrupted SoR may be used for
@@ -1202,6 +1226,14 @@ Internet-Draft              SCHC Architecture               January 2025
    a node that fetched a SoR may inform the other end that it is reacy
    from transmission.
 
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 22]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
 7.1.4.  SCHC Device Maintenance
 
    URN update without device update (bug fix) FUOTA => new URN =>
@@ -1223,16 +1255,6 @@ Internet-Draft              SCHC Architecture               January 2025
 9.  IANA Consideration
 
    This document has no request to IANA
-
-
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 22]
-
-Internet-Draft              SCHC Architecture               January 2025
-
 
 10.  Acknowledgements
 
@@ -1256,6 +1278,18 @@ Internet-Draft              SCHC Architecture               January 2025
               2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
               May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
 
+
+
+
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 23]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
    [rfc8724]  Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and JC.
               Zuniga, "SCHC: Generic Framework for Static Context Header
               Compression and Fragmentation", RFC 8724,
@@ -1276,19 +1310,6 @@ Internet-Draft              SCHC Architecture               January 2025
               Progress, Internet-Draft, draft-ietf-6lo-schc-15dot4-07, 2
               October 2024, <https://datatracker.ietf.org/doc/html/
               draft-ietf-6lo-schc-15dot4-07>.
-
-
-
-
-
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 23]
-
-Internet-Draft              SCHC Architecture               January 2025
-
 
    [I-D.ietf-core-comi]
               Veillette, M., Van der Stok, P., Pelov, A., Bierman, A.,
@@ -1317,6 +1338,14 @@ Internet-Draft              SCHC Architecture               January 2025
               <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
               over-ppp-00>.
 
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 24]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
    [rfc2516]  Mamakos, L., Lidl, K., Evarts, J., Carrel, D., Simone, D.,
               and R. Wheeler, "A Method for Transmitting PPP Over
               Ethernet (PPPoE)", RFC 2516, DOI 10.17487/RFC2516,
@@ -1334,17 +1363,6 @@ Internet-Draft              SCHC Architecture               January 2025
    [RFC8040]  Bierman, A., Bjorklund, M., and K. Watsen, "RESTCONF
               Protocol", RFC 8040, DOI 10.17487/RFC8040, January 2017,
               <https://www.rfc-editor.org/rfc/rfc8040>.
-
-
-
-
-
-
-
-Pelov, et al.             Expires 10 July 2025                 [Page 24]
-
-Internet-Draft              SCHC Architecture               January 2025
-
 
    [RFC8259]  Bray, T., Ed., "The JavaScript Object Notation (JSON) Data
               Interchange Format", STD 90, RFC 8259,
@@ -1375,6 +1393,15 @@ Internet-Draft              SCHC Architecture               January 2025
               RFC 9011, DOI 10.17487/RFC9011, April 2021,
               <https://www.rfc-editor.org/rfc/rfc9011>.
 
+
+
+
+
+Pelov, et al.             Expires 10 July 2025                 [Page 25]
+
+Internet-Draft              SCHC Architecture               January 2025
+
+
    [rfc9363]  Minaburo, A. and L. Toutain, "A YANG Data Model for Static
               Context Header Compression (SCHC)", RFC 9363,
               DOI 10.17487/RFC9363, March 2023,
@@ -1396,12 +1423,6 @@ Authors' Addresses
    Email: alexander.pelov@imt-atlantique.fr
 
 
-
-Pelov, et al.             Expires 10 July 2025                 [Page 25]
-
-Internet-Draft              SCHC Architecture               January 2025
-
-
    Pascal Thubert
    06330 Roquefort les Pins
    France
@@ -1413,27 +1434,6 @@ Internet-Draft              SCHC Architecture               January 2025
    35510 Cesson-Sevigne Cedex
    France
    Email: anaminaburo@gmail.com
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
