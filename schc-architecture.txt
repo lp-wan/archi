@@ -12,7 +12,7 @@ Expires: 15 July 2025
 
 
          Static Context Header Compression (SCHC) Architecture
-                    draft-ietf-schc-architecture-02
+                     draft-ietf-schc-architecture-0
 
 Abstract
 
@@ -732,15 +732,14 @@ Internet-Draft              SCHC Architecture               January 2025
 
 5.  SCHC Architecture
 
-   As described in [rfc8824], SCHC feasibility enables combining several
-   SCHC Instances.  The [rfc8724] states that a SCHC Instance needs the
-   rules to process C/D and F/R before the session starts and that the
-   SoR of the instance control layer cannot be modified.  However, the
-   rules may be updated in certain instances to improve the performance
-   of C/D, F/R, or CORECONF_Management.  The
-   [I-D.ietf-schc-access-control] defines the possible modifications and
-   who can modify, update, create and delete Rules or part of them in
-   the instances' SoR.
+   As described in [rfc8824], SCHC combining several SCHC Instances.
+   The [rfc8724] states that a SCHC Instance needs the rules to process
+   C/D and F/R before the session starts and that the SoR of the
+   instance control layer cannot be modified.  However, the rules may be
+   updated in certain instances to improve the performance of C/D, F/R,
+   or CORECONF_Management.  The [I-D.ietf-schc-access-control] defines
+   the possible modifications and who can modify, update, create and
+   delete Rules or part of them in the instances' SoR.
 
    As represented in Figure 7, the compression of the IP and UDP headers
    may be operated by a network SCHC Instance whereas the end-to-end
@@ -776,6 +775,7 @@ Internet-Draft              SCHC Architecture               January 2025
                 ((((LPWAN))))             ------   Internet  ------
 
            Figure 7: Different SCHC Instances in a global system
+
 
 
 

@@ -2,7 +2,7 @@
 
 stand_alone: true
 ipr: trust200902
-docname: draft-ietf-schc-architecture-02
+docname: draft-ietf-schc-architecture-0
 cat: info
 submissionType: IETF
 
@@ -482,7 +482,7 @@ The RM traffic may be itself compressed by SCHC: if CORECONF protocol is used, {
 
 # SCHC Architecture
 
-As described in {{rfc8824}}, SCHC feasibility enables combining several SCHC Instances.
+As described in {{rfc8824}}, SCHC  combining several SCHC Instances.
 The {{rfc8724}} states that a SCHC Instance needs the rules to process C/D and F/R before the session starts and that the SoR of the instance control layer cannot be modified. However, the rules may be updated in certain instances to improve the performance of C/D, F/R, or CORECONF_Management. The {{-SCHCAC}} defines the possible modifications and who can modify, update, create and delete Rules or part of them in the instances' SoR.
 
 
