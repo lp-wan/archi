@@ -307,8 +307,8 @@ The Instance is used in particular to select the set of rules that apply to the 
 current state of their exchange, e.g., timers and previous fragments.
 
 
-### SCHC Packet
-The SCHC Packet is composed of a RuleID follows by the content described in the Rule.
+### SCHC Payload
+When compressed, the SCHC Payload is composed of a RuleID followed by the content described in the Rule.
 The content may be a C/D packet, a F/R packet, a CORECONF_Management or a Non Compressed packet.
 As defined in the {{rfc8724}}, the SCHC packet for C/D is composed of the Compressed Header followed by the payload from the original packet.
 {{Fig-SCHCPacket}} shows the compressed header format that is composed of the RuledID and a Compressed Residue, which is the output of compressing a packet header with a Rule.

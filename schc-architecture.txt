@@ -5,10 +5,10 @@
 SCHC Working Group                                              A. Pelov
 Internet-Draft                                            IMT Atlantique
 Intended status: Informational                                P. Thubert
-Expires: 10 July 2025                                                   
+Expires: 15 July 2025                                                   
                                                              A. Minaburo
                                                               Consultant
-                                                          6 January 2025
+                                                         11 January 2025
 
 
          Static Context Header Compression (SCHC) Architecture
@@ -33,7 +33,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 10 July 2025.
+   This Internet-Draft will expire on 15 July 2025.
 
 Copyright Notice
 
@@ -53,7 +53,7 @@ Copyright Notice
 
 
 
-Pelov, et al.             Expires 10 July 2025                  [Page 1]
+Pelov, et al.             Expires 15 July 2025                  [Page 1]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -69,7 +69,7 @@ Table of Contents
      4.3.  SCHC Header Instance  . . . . . . . . . . . . . . . . . .   6
        4.3.1.  SCHC Header . . . . . . . . . . . . . . . . . . . . .   7
      4.4.  SCHC Payload Instance . . . . . . . . . . . . . . . . . .   8
-       4.4.1.  SCHC Packet . . . . . . . . . . . . . . . . . . . . .   9
+       4.4.1.  SCHC Payload  . . . . . . . . . . . . . . . . . . . .   9
      4.5.  SCHC Profiles . . . . . . . . . . . . . . . . . . . . . .  10
      4.6.  SCHC Operation  . . . . . . . . . . . . . . . . . . . . .  10
        4.6.1.  SCHC Rules  . . . . . . . . . . . . . . . . . . . . .  11
@@ -109,7 +109,7 @@ Table of Contents
 
 
 
-Pelov, et al.             Expires 10 July 2025                  [Page 2]
+Pelov, et al.             Expires 15 July 2025                  [Page 2]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -165,7 +165,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                  [Page 3]
+Pelov, et al.             Expires 15 July 2025                  [Page 3]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -221,7 +221,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                  [Page 4]
+Pelov, et al.             Expires 15 July 2025                  [Page 4]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -277,7 +277,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                  [Page 5]
+Pelov, et al.             Expires 15 July 2025                  [Page 5]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -333,7 +333,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                  [Page 6]
+Pelov, et al.             Expires 15 July 2025                  [Page 6]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -389,7 +389,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                  [Page 7]
+Pelov, et al.             Expires 15 July 2025                  [Page 7]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -445,7 +445,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                  [Page 8]
+Pelov, et al.             Expires 15 July 2025                  [Page 8]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -465,12 +465,12 @@ Internet-Draft              SCHC Architecture               January 2025
    of rules that apply to the SCHC Device, and the current state of
    their exchange, e.g., timers and previous fragments.
 
-4.4.1.  SCHC Packet
+4.4.1.  SCHC Payload
 
-   The SCHC Packet is composed of a RuleID follows by the content
-   described in the Rule.  The content may be a C/D packet, a F/R
-   packet, a CORECONF_Management or a Non Compressed packet.  As defined
-   in the [rfc8724], the SCHC packet for C/D is composed of the
+   When compressed, the SCHC Payload is composed of a RuleID followed by
+   the content described in the Rule.  The content may be a C/D packet,
+   a F/R packet, a CORECONF_Management or a Non Compressed packet.  As
+   defined in the [rfc8724], the SCHC packet for C/D is composed of the
    Compressed Header followed by the payload from the original packet.
    Figure 3 shows the compressed header format that is composed of the
    RuledID and a Compressed Residue, which is the output of compressing
@@ -501,7 +501,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                  [Page 9]
+Pelov, et al.             Expires 15 July 2025                  [Page 9]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -557,7 +557,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 10]
+Pelov, et al.             Expires 15 July 2025                 [Page 10]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -613,7 +613,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 11]
+Pelov, et al.             Expires 15 July 2025                 [Page 11]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -669,7 +669,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 12]
+Pelov, et al.             Expires 15 July 2025                 [Page 12]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -725,7 +725,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 13]
+Pelov, et al.             Expires 15 July 2025                 [Page 13]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -781,7 +781,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 14]
+Pelov, et al.             Expires 15 July 2025                 [Page 14]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -837,7 +837,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 15]
+Pelov, et al.             Expires 15 July 2025                 [Page 15]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -893,7 +893,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 16]
+Pelov, et al.             Expires 15 July 2025                 [Page 16]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -949,7 +949,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 17]
+Pelov, et al.             Expires 15 July 2025                 [Page 17]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -1005,7 +1005,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 18]
+Pelov, et al.             Expires 15 July 2025                 [Page 18]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -1061,7 +1061,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 19]
+Pelov, et al.             Expires 15 July 2025                 [Page 19]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -1117,7 +1117,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 20]
+Pelov, et al.             Expires 15 July 2025                 [Page 20]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -1173,7 +1173,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 21]
+Pelov, et al.             Expires 15 July 2025                 [Page 21]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -1229,7 +1229,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 22]
+Pelov, et al.             Expires 15 July 2025                 [Page 22]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -1285,7 +1285,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 23]
+Pelov, et al.             Expires 15 July 2025                 [Page 23]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -1341,7 +1341,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 24]
+Pelov, et al.             Expires 15 July 2025                 [Page 24]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -1397,7 +1397,7 @@ Internet-Draft              SCHC Architecture               January 2025
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 25]
+Pelov, et al.             Expires 15 July 2025                 [Page 25]
 
 Internet-Draft              SCHC Architecture               January 2025
 
@@ -1453,4 +1453,4 @@ Authors' Addresses
 
 
 
-Pelov, et al.             Expires 10 July 2025                 [Page 26]
+Pelov, et al.             Expires 15 July 2025                 [Page 26]
