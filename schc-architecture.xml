@@ -50,7 +50,7 @@
       </address>
     </author>
 
-    <date year="2025" month="January" day="11"/>
+    <date year="2025" month="February" day="06"/>
 
     <area>Internet</area>
     <workgroup>SCHC Working Group</workgroup>
@@ -117,33 +117,32 @@ Header, Non-Compression, C/D and F/R and CORECONF_Management.</t>
 protocol header.</t>
   <t>F/R.  Fragmentation and Reassembly.</t>
   <t>Rule.  A description of the header fields to performs compression/
-decompression, fragmentation/reassembly, SCHC Instances and
+decompression, fragmentation/reassembly, SCHC end points and
 CORECONF_Management.</t>
-  <t>SCHC Core (end point).  The SCHC end point located upstream, e.g.,
-in a Network Gateway.</t>
+  <t>SCHC Gateway (end point).  The SCHC end point located upstream, e.g.,
+in a Network Core Software.</t>
   <t>SCHC Device (end point).  The SCHC end point located downstream,
 e.g., in a constrained physical device.</t>
   <t>SCHC end point.  An entity (e.g., Device, Application and Network 
-Gateway) involved in the SCHC process.</t>
-  <t>SCHC Instance.  The different stages of SCHC in a host.  Each
-instance will have its Set of Rules (SoR), based on the profile,
+Gateway) involved in the SCHC process. Each SCHC end point
+will have its Set of Rules (SoR), based on the profile,
 the protocols, the device, the behaviour and a Set of Variables
-(SoV). There are 2 SCHC Instances involved per SCHC stratum, one 
-for the SCHC header and one for the SCHC payload, i.e., the 
-SCHC-compressed data.</t>
-  <t>SCHC Session.  The association of SCHC Instances in two or more
+(SoV).</t>
+  <t>SCHC Instance.  The session between SCHC end points in two or more
 peer nodes operating SCHC to communicate using a common SoR and a
-matching SoV.</t>
-  <t>SCHC Session Manager.  Provides the management of SCHC
-Instances, the SoR of each Instance and the dialog between hosts
+matching SoV. There are 2 SCHC Instances or more involved per SCHC stratum,
+one for the SCHC Stratum Header and one or more for the SCHC payload, i.e., the 
+SCHC-compressed data.</t>
+  <t>SCHC Instance Manager.  Provides the management of SCHC
+end points, the SoR of each end point and the dialog between hosts
 to keep the SCHC synchronization, and the establishment of SCHC
-sessions with peer nodes.</t>
-  <t>SoR (Set of rules).  Group of Rules used in a SCHC Instance.  The
+Instances with peer nodes.</t>
+  <t>SoR (Set of rules).  Group of Rules used in a SCHC end point.  The
 set of rules contains Rules for different nature as compression,
-no compression, fragmentation, SCHC Instances and CORECONF
+no compression, fragmentation, SCHC end points and CORECONF
 management.</t>
   <t>SoV (Set of Variables).  External information that needs to be
-known to identify the correct protocol, the session id, and the
+known to identify the correct protocol, the SCHC Instance id, and the
 flow when there is one.</t>
   <t>SCHC Stratum.  A SCHC Stratum is the SCHC analoguous to a 
 classical layer in the IP architecture, but its operation may 
@@ -158,7 +157,7 @@ cover multiple IP layers or only a subset of a layer.</t>
 
 <t>A SCHC Stratum is the SCHC analoguous to a classical layer in the IP architecture, but its operation may cover multiple IP layers or only a subset of a layer, e.g., IP only, IP+UDP, CoAP, or OSCORE <xref target="rfc8824"/>. The term stratum is thus used to avoid confusion with traditional layers. Also, SCHC Strata are not stacked, though they can be nested.</t>
 
-<t>The SCHC Stratum data in a datagram is composed of a SCHC Header (which may be compressed to the point that it is fully implicit and thus elided), a SCHC payload (that is used to uncompress a section of the SCHC datagram), and user payload that is unaffected by the SCHC Stratum. The SCHC Stratum operation requires 2 Instances, one for the SCHC Header and one for the SCHC payload.</t>
+<t>The SCHC Stratum data in a datagram is composed of a SCHC Stratum Header (which may be compressed to the point that it is fully implicit and thus elided), a SCHC payload (that is used to uncompress a section of the SCHC datagram), and user payload that is unaffected by the SCHC Stratum. The SCHC Stratum operation requires at least 2 end points, one for the SCHC Stratum Header and one or more for the SCHC payload.</t>
 
 <t>A SCHC compressed packet may contain multiple stratum data, to be handled by sequential (nested) SCHC Strata, where the inner (nested) Stratum operates within the payload of the outter (nesting) Stratum.</t>
 
@@ -166,23 +165,23 @@ cover multiple IP layers or only a subset of a layer.</t>
 The SCHC operation concatenates fragments and swaps the stratum data with the uncompressed payload obtained from the SCHC packet residue. 
 -->
 
-<t>A SCHC Stratum is instantiated in participating nodes as a pair of SCHC Instances, and matching SCHC Instances in communicating nodes are associated to form a SCHC session. 
-A SCHC Instance may be Point to point (P2P), or Point to Multipoint. 
-A P2MP SCHC Instance is unidirectional, meaning that all the SCHC datagrams are generated by the same node. 
-A P2P SCHC Instance may be unidirectional or bidirectional, symmetrical (between peers) or asymetrical (between a device and an application).</t>
+<t>A SCHC Stratum is instantiated in participating nodes as a pair of SCHC end points, and matching SCHC end points in communicating nodes are associated to form a SCHC end point. 
+A SCHC end point may be Point to point (P2P), or Point to Multipoint. 
+A P2MP SCHC end point is unidirectional, meaning that all the SCHC datagrams are generated by the same node. 
+A P2P SCHC end point may be unidirectional or bidirectional, symmetrical (between peers) or asymetrical (between a device and an application).</t>
 
-<t>A SCHC Instance operates datagram fragmentation and/or data compression and decompression, and maintains the state and timers associated with the Stratum operation over the consecutive packets or fragments.</t>
+<t>A SCHC end point operates datagram fragmentation and/or data compression and decompression, and maintains the state and timers associated with the Stratum operation over the consecutive packets or fragments.</t>
 
 <t>The SCHC end points that handle the compression for nested Strata might differ for the same packet, meaning that the payload of a given Stratum might be compressed/uncompressed by a different entity, possibly in a different node. It results that the degree of compression (the number of Strata) for a given packet may vary as the packet progresses through the layers inside a node and then through the network.</t>
 
 </section>
 <section anchor="discriminator"><name>Discriminator</name>
 
-<t>The key to determine how to decompress a SCHC header in a stratum is called a Discriminator.</t>
+<t>The key to determine how to decompress a SCHC Stratum Header in a stratum is called a Discriminator.</t>
 
 <t>The Discriminator is typically extrinsic to the stratum data.</t>
 
-<t>It may be found in the packet context, e.g., the ID of the interface, VLAN, SSID, or PPP session on which the packet is received.</t>
+<t>It may be found in the packet context, e.g., the ID of the interface, VLAN, SSID, or PPP SCHC Instance on which the packet is received.</t>
 
 <t>It may also be received in the packet, natively or uncompressed from a nesting stratum, e.g.:</t>
 
@@ -197,77 +196,77 @@ carrying SCHC packets</t>
   <t>Any other kind of connection id.</t>
 </list></t>
 
-<t>The Discriminator enables to determine the SCHC Instance that is used to decompress the SCHC header, called a SCHC Header Instance.</t>
+<t>The Discriminator enables to determine the SCHC end point that is used to decompress the SCHC Stratum Header, called a SCHC Stratum Header end point.</t>
 
-<t>Once uncompressed, the SCHC Header enables to determine the SCHC Instance, called a SCHC Payload Instance, that is used to restore the packet data that is compressed in the stratum.</t>
+<t>Once uncompressed, the SCHC Stratum Header enables to determine the SCHC end point, called a SCHC Payload end point, that is used to restore the packet data that is compressed in the stratum.</t>
 
 <!--
-A SCHC Layer is a building block composed at least of a SCHC Payload Instance as described in the {{rfc8724}}. A SCHC Header Instance may be added, it controls the SCHC Layer. The SCHC Header Instance is used with different SCHC Packets Instances if they are defined in the same SCHC Layer.
+A SCHC Layer is a building block composed at least of a SCHC Payload end point as described in the {{rfc8724}}. A SCHC Stratum Header end point may be added, it controls the SCHC Layer. The SCHC Stratum Header end point is used with different SCHC Packets end points if they are defined in the same SCHC Layer.
 
-Note that a SCHC Layer is different from an ISO layer {{Fig-SCHCSESSION}}. 
+Note that a SCHC Layer is different from an ISO layer {{Fig-SCHCInstance}}. 
 -->
 
 </section>
-<section anchor="schc-header-instance"><name>SCHC Header Instance</name>
+<section anchor="schc-stratum-header-end-point"><name>SCHC Stratum Header end point</name>
 
-<t>The SCHC Header Instance manages the SCHC Headers and provides the information and the selection of a SCHC Payload Instance.</t>
+<t>The SCHC Stratum Header end point manages the SCHC Stratum Headers and provides the information and the selection of a SCHC Payload end point.</t>
 
-<t>The rules for that Instance might be such that all the fields in the SCHC Header are well-known, in which case the header is fully elided in the stratum data and recreated from the rules.</t>
+<t>The rules for that end point might be such that all the fields in the SCHC Stratum Header are well-known, in which case the header is fully elided in the stratum data and recreated from the rules.</t>
 
-<t>The rules might also leverage intrinsic data that is found in-line in the stratum data, in which case the first bits of the stratum data are effectively residue to the compression of the SCHC Header. 
+<t>The rules might also leverage intrinsic data that is found in-line in the stratum data, in which case the first bits of the stratum data are effectively residue to the compression of the SCHC Stratum Header. 
 Finally, the rules may leverage extrinsic data as the Discriminator does.</t>
 
 <!--
-A SCHC Header is mandatory in a stratum and can be free of charge for very constrained networks such as LPWAN. It allows the recognition of SCHC as the next header and can give the protocol that SCHC has compressed.
+A SCHC Stratum Header is mandatory in a stratum and can be free of charge for very constrained networks such as LPWAN. It allows the recognition of SCHC as the next header and can give the protocol that SCHC has compressed.
 -->
 
-<t><xref target="Fig-SCHCSESSION"/> illustrates the case where a given stratum may compress multiple protocols sessions, each corresponding to a different SCHC Payload Instance.</t>
+<t><xref target="Fig-SCHCInstance"/> illustrates the case where a given stratum may compress multiple protocols SCHC Instances, each corresponding to a different SCHC Payload end point.</t>
 
 <!--
 shows the SCHC strata that needs to be introduced in the Architecture when SCHC is used to compress different protocols together or independently as {{rfc8824}} has described for CoAP. Notice that the parenthesis in the figure indicates a SCHC compression.
 -->
 
-<figure title="SCHC Instances for a stratum" anchor="Fig-SCHCSESSION"><artwork><![CDATA[
-+---------------+---------------+---------------+  
-| SCHC Packet   | SCHC Packet   | SCHC Packet   | S
-| Instance ___  | Instance ___  | Instance ___  | C
-|         [SoR] |         [SoR] |         [SoR] | H
-|         [___] |         [___] |         [___] | C
-|               |               |               |  
-|               |               |               | L
-+----inst_id1---+----inst_id2---+----inst_id3---+ A
-.            SCHC Header Instance         ___   . Y
-.                                        [SoR]  . E
-.                                        [___]  . R
-+...............................................+
+<figure title="SCHC end points for a stratum" anchor="Fig-SCHCInstance"><artwork><![CDATA[
++---------------+---------------+---------------+ S 
+| SCHC Payload  | SCHC Payload  | SCHC Payload  | C
+| end point___  | end point___  | end point___  | H
+|         [SoR] |         [SoR] |         [SoR] | C
+|         [___] |         [___] |         [___] | 
+|               |               |               | S 
+|               |               |               | T
++----inst_id1---+----inst_id2---+----inst_id3---+ R
+.              SCHC Stratum end point     ___   . A
+.                                        [SoR]  . T
+.                                        [___]  . U
++...............................................+ M
                _____________^        
               /                    
             /
-           +-- Discriminator: (SCHC HEADER)(SCHC PACKET)    
+           +-- Discriminator: (SCHC Stratum Header)(SCHC PAYLOAD)    
 
-Each Packet Instance contains its own Set of Rules,
-but share the same SCHC Header.  
+Each SCHC Payload End point uses its own Set of Rules,
+but share the same SCHC Stratum Header.  
 
 ]]></artwork></figure>
 
-<section anchor="schc-header"><name>SCHC Header</name>
+<section anchor="schc-stratum-header"><name>SCHC Stratum Header</name>
 
-<t>SCHC Header carries information taht is required for the SCHC strata operation. For example, it selects the correct Instance and checks the validity of the datagram.
-There IS NOT always a RuleID if there is only one Rule for the SCHC Header, whose length is 0. The SCHC Header format is not fixed, and the SoR MUST have one or more Rules describing the formats. SCHC Header contains different fields.
-For Instance, when the SCHC header may identify the next protocol in the stack, the format of the SCHC header takes the format as <xref target="Fig-SCHCHDR"/> shows.</t>
+<t>The SCHC Stratum Header carries information that is required for the SCHC strata operation. For example, it selects the correct end point and checks the validity of the datagram.
+There IS NOT always a RuleID if there is only one Rule for the SCHC Stratum Header, whose length is 0. The SCHC Stratum Header format is not fixed, and the SoR MUST have one or more Rules describing the formats. SCHC Stratum Header contains different fields.
+For end point, when the SCHC Stratum Header may identify the next protocol in the stack, the format of the SCHC Stratum Header takes the format as <xref target="Fig-SCHCHDR"/> shows.</t>
 
-<figure title="Example of SCHC Header Format and the corresponding Rule" anchor="Fig-SCHCHDR"><artwork><![CDATA[
-Non-compressed SCHC Header Format:
+<figure title="Example of SCHC Stratum Header Format and the corresponding Rule" anchor="Fig-SCHCHDR"><artwork><![CDATA[
+Non-compressed SCHC Stratum Header Format:
 +- - - - - - +- - - - - - -+- - -+
-| Session ID | Protocol ID | CRC |
+| SCHC Instance ID | Protocol ID | CRC |
 +- - - - - - +- - - - - - -+- - -+
 
-SCHC Header Compressed:
+SCHC Stratum Header Compressed:
 +- - - - -+- - - - - - - - - - +
 | Rule ID | Compressed Residue |
 +- - - - -+- - - - - - - - - - +
 
-Rule uses to compressed the SCHC Header:
+Rule uses to compressed the SCHC Stratum Header:
 RuleID
 +------------+--+---+--+-----+------+-----------+
 |     FID    |FL|POS|DI| TV  |  MO  |     CDA   |
@@ -283,29 +282,29 @@ RuleID
 <t>In this example the Rule defines:</t>
 
 <t><list style="symbols">
-  <t>A SessionID is 10 bits length and it is used to identify the SoR used for this instance of SCHC.</t>
+  <t>A SCHC InstanceID is 10 bits length and it is used to identify the SoR used for this end point of SCHC.</t>
   <t>A Protocol ID in 1-byte length giving the value send in the layer below the SCHC packet to identify the uncompressed protocol stack.</t>
-  <t>And A CRC. The CRC field is 8 bits length and covers the SCHC header and the SCHC packet from error. When it is elided by the compression, the layer-4 checksum MUST be replaced by another validation sequence.</t>
+  <t>And A CRC. The CRC field is 8 bits length and covers the SCHC Stratum Header and the SCHC packet from error. When it is elided by the compression, the layer-4 checksum MUST be replaced by another validation sequence.</t>
 </list></t>
 
 </section>
 </section>
-<section anchor="Instances"><name>SCHC Payload Instance</name>
-<t>SCHC Payload Instance is characterized by a particular SoR common with the corresponding distant entity.
+<section anchor="end_points"><name>SCHC Payload end point</name>
+<t>SCHC Payload end point is characterized by a particular SoR common with the corresponding distant end point.
 The <xref target="rfc8724"/> defines a protocol operation between a pair of peers.
-In a SCHC strata, several SCHC Instances may contain different SoR.</t>
+In a SCHC strata, several SCHC end points may contain different SoR.</t>
 
 <t>When the SCHC Device is a highly constrained unit, there is typically only one
-Instance for that Device, and all the traffic from and to the device is
+end point for that Device, and all the traffic from and to the device is
 exchanged with the same Network Gateway. All the traffic can thus be implicitly
-associated with the single Instance that the device supports, and the Device
+associated with the single end point that the device supports, and the Device
 does not need to manipulate the concept. For that reason, SCHC avoids to signal
-explicitly the Instance identification in its data packets.</t>
+explicitly the end point identification in its data packets.</t>
 
-<t>The Network Gateway, on the other hand, maintains multiple Instances, one per
-SCHC Device. The Instance is derived from the lower layer, typically the source
-of an incoming SCHC packet as a discriminator in the <xref target="Fig-SCHCSESSION"/>.
-The Instance is used in particular to select the set of rules that apply to the SCHC Device, and the
+<t>The Network Gateway, on the other hand, maintains multiple end points, one per
+SCHC Device. The end point is derived from the lower layer, typically the source
+of an incoming SCHC packet as a discriminator in the <xref target="Fig-SCHCInstance"/>.
+The end point is used in particular to select the set of rules that apply to the SCHC Device, and the
 current state of their exchange, e.g., timers and previous fragments.</t>
 
 <section anchor="schc-payload"><name>SCHC Payload</name>
@@ -339,7 +338,7 @@ CORECONF_Management Compressed Packet:
 </section>
 <section anchor="schc-profiles"><name>SCHC Profiles</name>
 <t>A SCHC profile is the specification to adapt the use of SCHC with the necessities of the technology to which it is applied.
-In the case of star topologies and because LPWAN technologies <xref target="rfc8376"/> have strict yet distinct constraints, e.g., in terms of maximum frame size, throughput, and directionality, also a SCHC Instance and the fragmentation model with the parameters' values for its use.</t>
+In the case of star topologies and because LPWAN technologies <xref target="rfc8376"/> have strict yet distinct constraints, e.g., in terms of maximum frame size, throughput, and directionality, also a SCHC end point and the fragmentation model with the parameters' values for its use.</t>
 
 <t>Appendix D. "SCHC Parameters" of <xref target="rfc8724"/> lists the information that an LPWAN
 technology-specific document must provide to profile SCHC fragmentation for that technology.</t>
@@ -360,12 +359,12 @@ protocol.</t>
 <t>Nevertheless, SCHC is very generic and its applicability is not limited to
 star-oriented deployments and/or to use cases where applications are very static
 and the state provisioned in advance.
-In particular, a peer-to-peer (P2P) SCHC Instance (see <xref target="Instances"/>) may be set
+In particular, a peer-to-peer (P2P) SCHC end point (see <xref target="end_points"/>) may be set
 up between peers of equivalent capabilities, and the link direction cannot be
 inferred, either from the network topology nor from the device capability.</t>
 
 <t>In that case, by convention, the device that initiates the connection that
-sustains the SCHC Instance is considered as being Downlink, i.e. it plays the
+sustains the SCHC end point is considered as being Downlink, i.e. it plays the
 role of the Dev in <xref target="rfc8724"/>.</t>
 
 <t>This convention can be reversed, e.g., by configuration,
@@ -374,9 +373,9 @@ both ends are aware of their role, and then again this determination is based
 on extrinsic properties.</t>
 
 <section anchor="schc-rules"><name>SCHC Rules</name>
-<t>SCHC Rules are a description of the header protocols fields, into a list of Field Descriptors. The <xref target="rfc8724"/> gives the format of the Rule description for C/D, F/R and non-compression. In the same manner the SCHC Header and SCHc CORECONF_Management will use the <xref target="rfc8724"/> field descriptors to compress the format information.</t>
+<t>SCHC Rules are a description of the header protocols fields, into a list of Field Descriptors. The <xref target="rfc8724"/> gives the format of the Rule description for C/D, F/R and non-compression. In the same manner the SCHC Stratum Header and SCHc CORECONF_Management will use the <xref target="rfc8724"/> field descriptors to compress the format information.</t>
 
-<t>Each type of Rule is identified with a RuleID. There are different types of Rules: C/D, F/R, SCHC Header, CORECONF_Management and No Compression. Notice that each Rule type used an independent range of RuleID to identify its rules.</t>
+<t>Each type of Rule is identified with a RuleID. There are different types of Rules: C/D, F/R, SCHC Stratum Header, CORECONF_Management and No Compression. Notice that each Rule type used an independent range of RuleID to identify its rules.</t>
 
 <t>A Rule does not describe how the compressor parses a packet header. Rules only describe the behavior for each header field.</t>
 
@@ -389,9 +388,9 @@ on extrinsic properties.</t>
 </section>
 </section>
 <section anchor="schc-management"><name>SCHC Management</name>
-<t>RFC9363 writes that only the management can be done by the two entities of the instance, and other SoR cannot be manipulated.</t>
+<t>RFC9363 writes that only the management can be done by the two entities of the end point, and other SoR cannot be manipulated.</t>
 
-<t>Management rules are explicitly define in the SoR, see <xref target="Fig-SCHCManagement"/>. They are compression Rules for CORECONF messages to get or modify the SoR of the instance. The management can be limited with the <xref target="I-D.ietf-schc-access-control"/> access definition.</t>
+<t>Management rules are explicitly define in the SoR, see <xref target="Fig-SCHCManagement"/>. They are compression Rules for CORECONF messages to get or modify the SoR of the end point. The management can be limited with the <xref target="I-D.ietf-schc-access-control"/> access definition.</t>
 
 <figure title="Inband Management" anchor="Fig-SCHCManagement"><artwork><![CDATA[
 +-----------------+                 +-----------------+
@@ -411,12 +410,12 @@ on extrinsic properties.</t>
 
 ]]></artwork></figure>
 
-</section>
-<section anchor="schc-session-manager"><name>SCHC Session Manager</name>
+<section anchor="schc-instance-manager"><name>SCHC Instance Manager</name>
 
-<t>SCHC Session Manager provides the management of SCHC Instances, the SoR of each Instance and the dialog between hosts to keep the SCHC synchronization, and the establishment of SCHC sessions with peer nodes.</t>
+<t>The SCHC Instance Manager provides the management of SCHC end points, the SoR of each end point and the dialog between hosts to keep the SCHC synchronization, and the establishment of SCHC Instances with peer nodes. 
+Changes that involve the SoR must be transactional, in a way that ensures that the compression and decompression of a packet is done with the same SoR on every end points.</t>
 
-<t>The management of the SCHC Instances includes the capability for the end-points to modify the common SoR, by:</t>
+<t>The management of the SCHC end points includes the capability for the end-points to modify the common SoR, by:</t>
 
 <t><list style="symbols">
   <t>modifyng rules values (such as TV, MO or CDA) in existing rules,</t>
@@ -426,8 +425,9 @@ on extrinsic properties.</t>
 
 <t>The rule management uses the CORECONF interface based on CoAP. The management traffic is carried as SCHC compressed packets tagged to some specific rule IDs.</t>
 
+</section>
 <section anchor="schc-data-model"><name>SCHC Data Model</name>
-<t>A SCHC Instance, summarized in the <xref target="Fig-Glob-Arch1"/>, implies C/D and/or F/R and CORECONF_Management and SCHC Instances Rules present in both end and that both ends are provisioned with the same SoR.</t>
+<t>A SCHC end point, summarized in the <xref target="Fig-Glob-Arch1"/>, implies C/D and/or F/R and CORECONF_Management and SCHC end points Rules present in both end and that both ends are provisioned with the same SoR.</t>
 
 <figure title="Summarized SCHC elements" anchor="Fig-Glob-Arch1"><artwork><![CDATA[
         -----                                  -----
@@ -467,7 +467,7 @@ to that effect, <xref target="rfc9363"/> defines a rule representation using the
 ]]></artwork></figure>
 
 <t>The Rule Manager (RM) is in charge of handling data derived from the YANG Data
-Model and apply changes to the context and SoR of each SCHC Instance <xref target="Fig-RM"/>.</t>
+Model and apply changes to the context and SoR of each SCHC end point <xref target="Fig-RM"/>.</t>
 
 <t>The RM is an Application using the Internet to exchange information, therefore:</t>
 
@@ -484,17 +484,17 @@ The RM traffic may be itself compressed by SCHC: if CORECONF protocol is used, <
 </section>
 <section anchor="schc-architecture"><name>SCHC Architecture</name>
 
-<t>As described in <xref target="rfc8824"/>, SCHC  combining several SCHC Instances.
-The <xref target="rfc8724"/> states that a SCHC Instance needs the rules to process C/D and F/R before the session starts and that the SoR of the instance control layer cannot be modified. However, the rules may be updated in certain instances to improve the performance of C/D, F/R, or CORECONF_Management. The <xref target="I-D.ietf-schc-access-control"/> defines the possible modifications and who can modify, update, create and delete Rules or part of them in the instances' SoR.</t>
+<t>As described in <xref target="rfc8824"/>, SCHC  combining several SCHC end points.
+The <xref target="rfc8724"/> states that a SCHC end point needs the rules to process C/D and F/R before the SCHC Instance starts and that the SoR of the end point control layer cannot be modified. However, the rules may be updated in certain end points to improve the performance of C/D, F/R, or CORECONF_Management. The <xref target="I-D.ietf-schc-access-control"/> defines the possible modifications and who can modify, update, create and delete Rules or part of them in the end points' SoR.</t>
 
 <t>As represented in <xref target="Fig-SCHCCOAP2"/>, the compression
-of the IP and UDP headers may be operated by a network SCHC Instance whereas the
+of the IP and UDP headers may be operated by a network SCHC end point whereas the
 end-to-end compression of the application payload happens between the Device and
 the application. The compression of the application payload may be split in two
-instances to deal with the encrypted portion of the application PDU. Fragmentation
+end points to deal with the encrypted portion of the application PDU. Fragmentation
 applies before LPWAN transmission layer.</t>
 
-<figure title="Different SCHC Instances in a global system" anchor="Fig-SCHCCOAP2"><artwork><![CDATA[
+<figure title="Different SCHC end points in a global system" anchor="Fig-SCHCCOAP2"><artwork><![CDATA[
          (Device)            (NGW)                           (App)
 
          +--------+                                        +--------+
@@ -527,8 +527,8 @@ defined by the LPWAN and SCHC working groups to design an operational and intero
 framework for allowing IP application over constrained networks.</t>
 
 <t>The <xref target="Fig-SCHCArchi"/> shows the protocol stack and the corresponding SCHC stratas enabling the compression of the different protocol headers.
-The SCHC header eases the introduction of intermediary host in the end-to-end communication transparently.
-All the SCHC headers are compressed and in some cases are elided, for example for LPWAN networks. The layers using encryption does not have a SCHC header in the middle because they are the same entity.
+The SCHC Stratum Header eases the introduction of intermediary host in the end-to-end communication transparently.
+All the SCHC Stratum Headers are compressed and in some cases are elided, for example for LPWAN networks. The layers using encryption does not have a SCHC Stratum Header in the middle because they are the same entity.
 <xref target="Fig-SCHCArchiEx"/> shows an example of an IP/UDP/CoAP in an LPWAN network.</t>
 
 <figure title="SCHC Architecture" anchor="Fig-SCHCArchi"><artwork><![CDATA[
@@ -560,7 +560,7 @@ Where: {} Optional; [] Encrypted; () Compressed.
 Intermediary Routers or gateways may know only one layer's SoR and forward the rest of the compressed packet to the next hub.
 -->
 
-<t><xref target="Fig-SCHCArchiEx"/> represents the stack of SCHC Instances that operate over 3 strata, one for OSCORE, one for CoAP, and one for IP and UDP.</t>
+<t><xref target="Fig-SCHCArchiEx"/> represents the stack of SCHC end points that operate over 3 strata, one for OSCORE, one for CoAP, and one for IP and UDP.</t>
 
 <figure title="SCHC Strata Example" anchor="Fig-SCHCArchiEx"><artwork><![CDATA[
       
@@ -582,7 +582,7 @@ C  | |      F/R        |                 |      F/R        | |
           IP/UDP,port=CoAP  CoAP  ( ) (OSCORE)  
              ^                _____^     ^
              |               /           |
-             |      (SCHC Header)( SCHC-compressed data)
+             |      (SCHC Stratum Header)( SCHC-compressed data)
           |          
    +-------- | ---------------CoAP---------------------------+
    | +-----------------+                 +-----------------+ |
@@ -602,7 +602,7 @@ C  | |      F/R        |                 |      F/R        | |
           IP/UDP   ( ) (CoAP)   PAYLOAD2 
              ^      ^     ^_____________
              |      |                   \
-             |      +-(SCHC Header)( SCHC-compressed data)
+             |      +-(SCHC Stratum Header)( SCHC-compressed data)
           |          
    +-------- | --------------IP/UDP--------------------------+
    | +------ | --------+                 +-----------------+ |
@@ -622,7 +622,7 @@ E     /
 T    |    ( ) (IP/UDP)    PAYLOAD1
 W    |     ^    ^_______
      |     |            \
-     +-(SCHC Header)( SCHC-compressed data)
+     +-(SCHC Stratum Header)( SCHC-compressed data)
 
 
 ]]></artwork></figure>
@@ -662,19 +662,19 @@ fragmentation rule or any other type of Rule.</t>
 <t>SCHC can be used in multiple environments and multiple protocols.
 It was designed by default to work on native MAC frames with LPWAN technologies such as LoRaWAN<xref target="rfc9011"/>, IEEE std 802.15.4 <xref target="I-D.ietf-6lo-schc-15dot4"/>, and SigFox<xref target="rfc9442"/>.</t>
 
-<t>To operate SCHC over Ethernet, IPv6, and UDP, the definition of, respectively, an Ethertype, an IP Protocol Number, and a UDP Port Number are necessary, more in <xref target="I-D.ietf-intarea-schc-protocol-numbers"/>. In either case, there's a need for a SCHC header that is sufficient to identify the SCHC peers (endpoints) and their role (device vs. app), as well as the session between those peers that the packet pertains to.</t>
+<t>To operate SCHC over Ethernet, IPv6, and UDP, the definition of, respectively, an Ethertype, an IP Protocol Number, and a UDP Port Number are necessary, more in <xref target="I-D.ietf-intarea-schc-protocol-numbers"/>. In either case, there's a need for a SCHC Stratum Header that is sufficient to identify the SCHC peers (endpoints) and their role (device vs. app), as well as the SCHC Instance between those peers that the packet pertains to.</t>
 
-<t>In either of the above cases, the expectation is that the SCHC header is transferred in a compressed form. This implies that the rules to uncompress the header are well known and separate from the rules that are used to uncompress the SCHC payload. The expectation is that for each stratum, the format of the SCHC header and the compression rules are well known, with enough information to identify the session at that stratum, but there is no expectation that they are the same across strata.</t>
+<t>In either of the above cases, the expectation is that the SCHC Stratum Header is transferred in a compressed form. This implies that the rules to uncompress the header are well known and separate from the rules that are used to uncompress the SCHC payload. The expectation is that for each stratum, the format of the SCHC Stratum Header and the compression rules are well known, with enough information to identify the SCHC Instance at that stratum, but there is no expectation that they are the same across strata.</t>
 
 <section anchor="schc-over-ppp"><name>SCHC over PPP</name>
 
 <t>The LPWAN architecture (<xref target="Fig-LPWANnetarch"/>) generalizes the model to any kind of peers.
-In the case of more capable devices, a SCHC Device may maintain more than one Instance with the same peer, or a set of different peers.
-Since SCHC does not signal the Instance in its packets, the information must be
+In the case of more capable devices, a SCHC Device may maintain more than one end point with the same peer, or a set of different peers.
+Since SCHC does not signal the end point in its packets, the information must be
 derived from a lower layer point to point information.
-For instance, the SCHC Instance control can be associated one-to-one with a tunnel, a TLS session, or a TCP or a PPP connection.</t>
+For end point, the SCHC end point control can be associated one-to-one with a tunnel, a TLS SCHC Instance, or a TCP or a PPP connection.</t>
 
-<t>For instance, <xref target="I-D.ietf-schc-over-ppp"/> describes a type of deployment where
+<t>For end point, <xref target="I-D.ietf-schc-over-ppp"/> describes a type of deployment where
 the C/D and/or F/R operations are performed between peers of equal capabilities
 over a PPP <xref target="rfc2516"/> connection. SCHC over PPP illustrates that with SCHC,
 the protocols that are compressed can be discovered dynamically and the
@@ -690,20 +690,20 @@ rules can be fetched on-demand using CORECONF messages Rules, ensuring that the 
                   over PPP
 ]]></artwork></figure>
 
-<t>In that case, the SCHC Instance is derived from the PPP connection. This
-means that there can be only one Instance per PPP connection, and that all the
-flow and only the flow of that Instance is exchanged within the PPP connection.
+<t>In that case, the SCHC end point is derived from the PPP connection. This
+means that there can be only one end point per PPP connection, and that all the
+flow and only the flow of that end point is exchanged within the PPP connection.
 As discussed in <xref target="EndPoints"/>, the Uplink direction is from the node that
 initiated the PPP connection to the node that accepted it.</t>
 
 </section>
 <section anchor="schc-over-ethernet"><name>SCHC over Ethernet</name>
-<t>Before the SCHC compression takes place, the SCHC header showed in the <xref target="Fig-SCHC_hdr"/>, is virtually inserted before the real protocol header and data that are compressed in the session, e.g. a IPv6 in this figure.</t>
+<t>Before the SCHC compression takes place, the SCHC Stratum Header showed in the <xref target="Fig-SCHC_hdr"/>, is virtually inserted before the real protocol header and data that are compressed in the SCHC Instance, e.g. a IPv6 in this figure.</t>
 
 <figure title="SCHC over Ethernet" anchor="Fig-SCHC_hdr"><artwork><![CDATA[
                                        |---- SCHC PACKET ----|
  +------------------+------------------+---------+-----------+
- | IEEE 802 Header  | SCHC Header      | Rule ID | Compressed|
+ | IEEE 802 Header  | SCHC Stratum Hdr | Rule ID | Compressed|
  | Ethertype = SCHC | Ethertype = IPv6 |         | Residue   |
  +------------------+------------------+---------+-----------+
                      <-
@@ -714,17 +714,17 @@ initiated the PPP connection to the node that accepted it.</t>
 </section>
 <section anchor="schc-over-ipv6"><name>SCHC over IPv6</name>
 <t>In the case of IPv6, the expectation is that the Upper Layer Protocol (ULP) checksum can be elided in the SCHC compression of the ULP,
-because the SCHC header may have its own checksum that protects both the SCHC header and the whole ULP, header and payload.</t>
+because the SCHC Stratum Header may have its own checksum that protects both the SCHC Stratum Header and the whole ULP, header and payload.</t>
 
-<t>The SCHC Header between IPv6 and the ULP is not needed because of the Next Header field on the IPv6 header format.
+<t>The SCHC Stratum Header between IPv6 and the ULP is not needed because of the Next Header field on the IPv6 header format.
 <!--
-[//]: IP has Next Hdr and does not need SCHC header. My question is do we C/D this 2 layer at the same time or not?  
+[//]: IP has Next Hdr and does not need SCHC Stratum Header. My question is do we C/D this 2 layer at the same time or not?  
 --></t>
 
 <figure title="SCHC over IPv6" anchor="Fig-SCHC_hdr1"><artwork><![CDATA[
                              |---- SCHC Packet -----|
  +-------------+-------------+---------+------------+
- | IPv6 Header | SCHC Header | Rule ID | Compressed |
+ | IPv6 Header | SCHC Str Hdr| Rule ID | Compressed |
  |  NH=SCHC    | NH = ULP    |         | Residue    |
  +-------------+-------------+---------+------------+
                 <-
@@ -736,18 +736,18 @@ because the SCHC header may have its own checksum that protects both the SCHC he
 [//]: Update this figure after discussion  
 -->
 
-<t>In the air, both the SCHC header and the ULP are compressed.
-The session endpoints are typically identified by the source and destination IP addresses. If the roles are well-known, then the endpoint information can be elided and deduced from the IP header.
-If there is only one session, it can be elided as well, otherwise a rule and residue are needed to extract the session ID.</t>
+<t>In the air, both the SCHC Stratum Header and the ULP are compressed.
+The SCHC Instance endpoints are typically identified by the source and destination IP addresses. If the roles are well-known, then the endpoint information can be elided and deduced from the IP header.
+If there is only one SCHC Instance, it can be elided as well, otherwise a rule and residue are needed to extract the SCHC Instance ID.</t>
 
 </section>
 <section anchor="schc-over-udp"><name>SCHC over UDP</name>
-<t>When SCHC operates over the Internet, middleboxes may block packets with a next header that is SCHC. To avoid that issue, it would be desirable to prepend a UDP header before the SCHC header as shown in figure <xref target="Fig-SCHC_hdr2"/>.</t>
+<t>When SCHC operates over the Internet, middleboxes may block packets with a next header that is SCHC. To avoid that issue, it would be desirable to prepend a UDP header before the SCHC Stratum Header as shown in figure <xref target="Fig-SCHC_hdr2"/>.</t>
 
 <figure title="SCHC over UDP" anchor="Fig-SCHC_hdr2"><artwork><![CDATA[
                                            |---- SCHC Packet -----|
  +-------------+-------------+-------------+---------+------------+
- | IPv6 Header | UDP Header  | SCHC Header | Rule ID | Compressed |
+ | IPv6 Header | UDP Header  | SCHC Str Hdr| Rule ID | Compressed |
  |  NH=UDP     | Port = SCHC | NH = ULP    |         | Residue    |
  +-------------+-------------+-------------+---------+------------+
                 <-
@@ -756,9 +756,9 @@ If there is only one session, it can be elided as well, otherwise a rule and res
 ~
 ]]></artwork></figure>
 
-<t>In that case, the destination port can indicate SCHC as in an header chain, and the source port can indicate the SCHC session in which case it can be elided in the compressed form of the SCHC header.
-The UDP checksum protects both the SCHC header and the whole ULP, so the SCHC and the ULP checksums can both be elided.
-In other words, in the SCHC over UDP case, the SCHC header can be fully elided, but the packet must carry the overhead of a full UDP header.
+<t>In that case, the destination port can indicate SCHC as in an header chain, and the source port can indicate the SCHC Instance in which case it can be elided in the compressed form of the SCHC Stratum Header.
+The UDP checksum protects both the SCHC Stratum Header and the whole ULP, so the SCHC and the ULP checksums can both be elided.
+In other words, in the SCHC over UDP case, the SCHC Stratum Header can be fully elided, but the packet must carry the overhead of a full UDP header.
 <!--
 [//]: Update this part after discussion. I'm not sure we have discussed in this way.   
 --></t>
@@ -1322,309 +1322,310 @@ protected against tempering, e.g., encrypted and signed.</t>
   </back>
 
 <!-- ##markdown-source:
-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
-5rl4Hf03B8llNMCqAAA=
+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
+nrPX0X8Di8p9HaCtAAA=
 
 -->
 
