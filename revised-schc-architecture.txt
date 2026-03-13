@@ -1,0 +1,448 @@
+
+
+
+
+SCHC Working Group                                              A. Pelov
+Internet-Draft                                            IMT Atlantique
+Intended status: Informational                                P. Thubert
+Expires: 14 September 2026                                              
+                                                             A. Minaburo
+                                                              Consultant
+                                                               Q. Lampin
+                                                                M. Dumay
+                                                                  Orange
+                                                           13 March 2026
+
+
+         Static Context Header Compression (SCHC) Architecture
+                      draft-ietf-schc-architecture
+
+Abstract
+
+   TODO Abstract
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 14 September 2026.
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+
+
+
+
+
+
+
+
+
+
+Pelov, et al.           Expires 14 September 2026               [Page 1]
+
+Internet-Draft              SCHC Architecture                 March 2026
+
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
+   2.  Requirements Language . . . . . . . . . . . . . . . . . . . .   2
+   3.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
+   4.  Architecture Overview . . . . . . . . . . . . . . . . . . . .   4
+   5.  Detailed Components / Building Blocks . . . . . . . . . . . .   4
+   6.  Deployment Models . . . . . . . . . . . . . . . . . . . . . .   4
+   7.  Operational Condiderations  . . . . . . . . . . . . . . . . .   4
+   8.  Security Considerations . . . . . . . . . . . . . . . . . . .   4
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   5
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .   5
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .   5
+     10.2.  Informative References . . . . . . . . . . . . . . . . .   6
+   Appendix A.  Acknowledgments {numbered="false"} . . . . . . . . .   7
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .   7
+
+1.  Introduction
+
+   TODO Introduction and Scope
+
+   State very clearly:
+
+   *  That the architecture is generic and applicable outside of LPWAN.
+
+   *  Which assumptions remain (constrained devices, intermittency,
+      etc.) and which are no longer necessary in richer environments.
+
+   Indicate what this document is not intended to do (e.g., it does not
+   replace RFC 8724, it does not specify new header formats, etc.).
+
+2.  Requirements Language
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+
+
+
+Pelov, et al.           Expires 14 September 2026               [Page 2]
+
+Internet-Draft              SCHC Architecture                 March 2026
+
+
+   Check the use of normative keywords. (ex.: "Since [RFC8724] requires
+   X, an architecture compliant with this document MUST ...") Be very
+   clear about what constitutes a "requirement on implementations"
+   versus a "recommendation on deployments."  Ensure that you do not
+   introduce requirements that would contradict RFC 8724 or existing
+   profiles (SCHC over LoRaWAN, NB-IoT, etc.).
+
+3.  Terminology
+
+   This section defines terminology and abbreviations used in this
+   document.  In the following, terms are assumed to be defined in the
+   context of the SCHC ecosystem, unless specified otherwise, _.e.g_
+   Endpoint refers to a SCHC Endpoint, Instance refers to a SCHC
+   Instance, and so on.
+
+   *SCHC*: A Generic Framework, as defined in [RFC8724], that performs
+   compression/decompression and, optionally, fragmentation/reassembly
+   of protocol headers, based on a Static Context shared between two or
+   more Endpoints.  The SCHC acronym is pronounced like "sheek" in
+   English (or "chic" in French).  Therefore, this document writes "a
+   SCHC Datagram" instead of "an SCHC Datagram".
+
+   *Instance*: A logical component that implements SCHC functionalities,
+   _.e.g_ header compression/decompression, fragmentation/reassembly.
+
+   *Endpoint*: A network entity hosting one or multiple Instances.
+
+   *Rule*: A structured set of header fields and matching conditions
+   used by SCHC to process packets in accordance with specified actions.
+
+   *Set of Rules (SoR)*: A collection of Rule entries that define how
+   specific header fields are processed by an Instance.
+
+   *Context*: A SoR together with metadata, shared by two or more
+   Instances.  Metadata may, for example, refer to a data model or a
+   parser compatible with the SoR rule format.
+
+   *Operating Profile*: A set of local options and parameters.  The
+   content of the Operating Profile may include SCHC Capabilies
+   (compression/decompression, fragmentation/reassembly) and specify how
+   SCHC should behave within a specific Instance.  For example, in the
+   case of a SoR where the Rules are not bidirectional, the Instance
+   must know whether it has the App or Dev role in order to properly
+   apply the Uplink and Downlink direction when processing the Rules.
+
+   *Session*: A communication session between two Instances or more that
+   share a common Context for SCHC operations.
+
+
+
+
+Pelov, et al.           Expires 14 September 2026               [Page 3]
+
+Internet-Draft              SCHC Architecture                 March 2026
+
+
+   *Set of Variables (SoV)*: A collection of run-time parameters and
+   session variables, such as fragmentation-related timers,
+   retransmission counters, state flags, and other per-session values
+   that may change during operation.
+
+   *Domain*: A logical grouping of Instances that share a common set of
+   Contexts for compression and fragmentation operations.
+
+4.  Architecture Overview
+
+   This section provides an overall view (diagrams) and describes the
+   principal entities and their relations (architectural semantics).  It
+   must reference the definitions given in the previous section.
+
+   When a paragraph describes the basic operation of SCHC already
+   covered by RFC 8724, replace it with a brief summary + normative
+   reference rather than re-explaining it.
+
+5.  Detailed Components / Building Blocks
+
+   This section should:
+
+   *  Define the logical components of SCHC (endpoints, profiles,
+      contexts, management entities, etc.).
+
+   *  Describe their responsibilities and relationships.
+
+   *  Remain independent of specific technologies (LPWAN vs PPP vs
+      Ethernet, etc.) - these mappings come later.
+
+   *  Serve as a reference for the other sections (Architecture
+      Overview, Deployment).
+
+6.  Deployment Models
+
+   How SCHC architecture maps onto different technologies.
+
+7.  Operational Condiderations
+
+   Management, SCHC Endpoint lifecycle, Interoperability, etc.
+
+8.  Security Considerations
+
+   For an architecture document, the security section must analyze:
+
+   *  Risks specific to SCHC architecture:
+
+
+
+
+
+Pelov, et al.           Expires 14 September 2026               [Page 4]
+
+Internet-Draft              SCHC Architecture                 March 2026
+
+
+      -  Compromise or corruption of rules (SoR) and impact on the
+         integrity/confidentiality of flows.
+
+      -  Synchronization drift between SoR/SoV and risk of denial of
+         service (dropped or misrouted packets).
+
+      -  Attacks on the Instance Manager (e.g., injection of malicious
+         rules).
+
+      -  Interactions with the security mechanisms of the underlying
+         layers (PPP, Ethernet, IPsec, OSCORE, etc.).
+
+   *  High-level mitigation measures expected in this architecture:
+
+      -  Authentication and authorization of entities that manage rules.
+
+      -  Logging/auditing of SoR changes.
+
+      -  Restoration and rollback of incorrect SCHC profiles.
+
+9.  IANA Considerations
+
+   This document has no IANA actions.
+
+10.  References
+
+10.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+   [RFC8724]  Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and JC.
+              Zuniga, "SCHC: Generic Framework for Static Context Header
+              Compression and Fragmentation", RFC 8724,
+              DOI 10.17487/RFC8724, April 2020,
+              <https://www.rfc-editor.org/rfc/rfc8724>.
+
+   [RFC8824]  Minaburo, A., Toutain, L., and R. Andreasen, "Static
+              Context Header Compression (SCHC) for the Constrained
+              Application Protocol (CoAP)", RFC 8824,
+              DOI 10.17487/RFC8824, June 2021,
+              <https://www.rfc-editor.org/rfc/rfc8824>.
+
+
+
+Pelov, et al.           Expires 14 September 2026               [Page 5]
+
+Internet-Draft              SCHC Architecture                 March 2026
+
+
+10.2.  Informative References
+
+   [I-D.ietf-6lo-schc-15dot4]
+              Gomez, C. and A. Minaburo, "Transmission of SCHC-
+              compressed packets over IEEE 802.15.4 networks", Work in
+              Progress, Internet-Draft, draft-ietf-6lo-schc-15dot4-12,
+              20 February 2026, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-6lo-schc-15dot4-12>.
+
+   [I-D.ietf-core-comi]
+              Veillette, M., Van der Stok, P., Pelov, A., Bierman, A.,
+              and C. Bormann, "CoAP Management Interface (CORECONF)",
+              Work in Progress, Internet-Draft, draft-ietf-core-comi-21,
+              2 March 2026, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-core-comi-21>.
+
+   [I-D.ietf-intarea-schc-protocol-numbers]
+              Moskowitz, R., Card, S. W., Wiethuechter, A., and P.
+              Thubert, "Protocol Numbers for SCHC", Work in Progress,
+              Internet-Draft, draft-ietf-intarea-schc-protocol-numbers-
+              02, 8 April 2024, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-intarea-schc-protocol-numbers-02>.
+
+   [I-D.ietf-schc-access-control]
+              Minaburo, A., Toutain, L., and I. Martinez, "SCHC Access
+              Control", Work in Progress, Internet-Draft, draft-ietf-
+              schc-access-control-00, 13 December 2023,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
+              access-control-00>.
+
+   [I-D.ietf-schc-over-ppp]
+              Thubert, P., "SCHC over PPP", Work in Progress, Internet-
+              Draft, draft-ietf-schc-over-ppp-00, 25 July 2023,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
+              over-ppp-00>.
+
+   [RFC7950]  Bjorklund, M., Ed., "The YANG 1.1 Data Modeling Language",
+              RFC 7950, DOI 10.17487/RFC7950, August 2016,
+              <https://www.rfc-editor.org/rfc/rfc7950>.
+
+   [RFC8376]  Farrell, S., Ed., "Low-Power Wide Area Network (LPWAN)
+              Overview", RFC 8376, DOI 10.17487/RFC8376, May 2018,
+              <https://www.rfc-editor.org/rfc/rfc8376>.
+
+   [RFC9011]  Gimenez, O., Ed. and I. Petrov, Ed., "Static Context
+              Header Compression and Fragmentation (SCHC) over LoRaWAN",
+              RFC 9011, DOI 10.17487/RFC9011, April 2021,
+              <https://www.rfc-editor.org/rfc/rfc9011>.
+
+
+
+Pelov, et al.           Expires 14 September 2026               [Page 6]
+
+Internet-Draft              SCHC Architecture                 March 2026
+
+
+   [RFC9363]  Minaburo, A. and L. Toutain, "A YANG Data Model for Static
+              Context Header Compression (SCHC)", RFC 9363,
+              DOI 10.17487/RFC9363, March 2023,
+              <https://www.rfc-editor.org/rfc/rfc9363>.
+
+   [RFC9442]  Zuniga, J., Gomez, C., Aguilar, S., Toutain, L., Cespedes,
+              S., Wistuba, D., and J. Boite, "Static Context Header
+              Compression (SCHC) over Sigfox Low-Power Wide Area Network
+              (LPWAN)", RFC 9442, DOI 10.17487/RFC9442, July 2023,
+              <https://www.rfc-editor.org/rfc/rfc9442>.
+
+Appendix A.  Acknowledgments {numbered="false"}
+
+   The authors would like to thank (in alphabetic order): Laurent
+   Toutain.
+
+Authors' Addresses
+
+   Alexander Pelov
+   IMT Atlantique
+   rue de la Chataigneraie
+   35576 Cesson-Sevigne Cedex
+   France
+   Email: alexander.pelov@imt-atlantique.fr
+
+
+   Pascal Thubert
+   06330 Roquefort les Pins
+   France
+   Email: pascal.thubert@gmail.com
+
+
+   Ana Minaburo
+   Consultant
+   35510 Cesson-Sevigne Cedex
+   France
+   Email: anaminaburo@gmail.com
+
+
+   Quentin Lampin
+   Orange
+   Orange 3 Massifs - 22 Chemin du Vieux Chene
+   38240 Meylan
+   France
+   Email: quentin.lampin@orange.com
+
+
+
+
+
+
+Pelov, et al.           Expires 14 September 2026               [Page 7]
+
+Internet-Draft              SCHC Architecture                 March 2026
+
+
+   Marion Dumay
+   Orange
+   Orange 3 Massifs - 22 Chemin du Vieux Chene
+   38240 Meylan
+   France
+   Email: marion.dumay@orange.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Pelov, et al.           Expires 14 September 2026               [Page 8]
