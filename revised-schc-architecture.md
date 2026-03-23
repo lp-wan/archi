@@ -193,6 +193,18 @@ When a paragraph describes the basic operation of SCHC already covered by RFC
 ## Overview
 
 <!-- TODO: Overview diagram and text -->
+At its core, SCHC reduces payload overhead by exploiting the predictable nature of network flows. 
+Instead of transmitting full headers, both the sending and receiving Instances store a synchronized, 
+static information of the expected headers (the Context). The sender replaces the known header fields 
+with a highly compressed RuleID (and a residue of any changing fields). 
+The receiver matches this RuleID against its local Context to perfectly reconstruct the original header.
+
+SCHC may operate in multiple environments, from extremely constrained (LPWANs), to highly-capable, with 
+simple or complex topologies.
+
+This document provides an architecture in which both the simple and the complex operations of SCHC
+can be developed. 
+
 
 ## Core components
 
@@ -325,6 +337,14 @@ The following figure illustrates the main components of an Endpoint supporting
 In its simplest form, an Endpoint MAY implement a single Instance with a
   hardwired configuration, as described in {{DRAFT-SCHCLET}}. In this case, the
   Endpoint Manager and Dispatcher components are not required.
+
+To route an incoming SCHC Datagram to the correct Instance, the Dispatcher 
+relies on a Discriminator. In most deployments, this Discriminator is external 
+to the SCHC Datagram, derived entirely from lower-layer context (e.g., a specific PPP link, an IPv6 address, or a UDP port).
+
+If external context is insufficient or unavailable, the Dispatcher MAY rely 
+on the optional SCHC Control Header to convey the internal discriminator. When present, 
+the SCHC Control Header is identified and parsed using its specific RuleID.
 
 
 ### Session
