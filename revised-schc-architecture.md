@@ -73,6 +73,8 @@ informative:
   I-D.ietf-6lo-schc-15dot4: SCHCo15dot4
   I-D.ietf-intarea-schc-protocol-numbers: PN_and_Ethertype
   I-D.ietf-schc-access-control: SCHCAC
+  DRAFT-SCHCLET:
+    =: I-D.ietf-schc-schclet
 
 
 --- abstract
@@ -168,6 +170,8 @@ This section defines terminology and abbreviations used in this   document. In
 **Context Repository**: A logical component that stores and manages the
   Contexts used by its Domain. #TODO: needed?
 
+
+**SCHC Datagram**: The unit exchanged between SCHC Instances. A SCHC Datagram is composed of an optional SCHC Control Header, a SCHC Data Header, and an optional Payload. Both SCHC Packet and SCHC Fragment are types of a SCHC Datagram.
 
 # Architecture 
 
@@ -273,9 +277,9 @@ This component is responsible for fragmenting larger packets into smaller
 
 
 
-#TODO: ORANGE EST LÀ, ORANGINA
-#TODO: ADD CHICKLET
-#TODO: REPRODUCE THE NEXT FIGURE WITHOUT multi-instance features.
+<!-- TODO: ORANGE EST LÀ, ORANGINA -->
+<!-- TODO: ADD CHICKLET -->
+<!-- TODO: REPRODUCE THE NEXT FIGURE WITHOUT multi-instance features. -->
 
 An Endpoint can host multiple Instances, each with its own Context and Profile.
 
@@ -346,9 +350,364 @@ As illustrated in the figure below, the Session is a communication session
 
 ~~~~~~~~
 
+
+# SCHC Datagram Format {#DatagramFormat}
+
+A SCHC Datagram is the unit exchanged between SCHC Instances.
+
+It provides a unified representation for:
+- compressed packets
+- fragmented packets
+
+A SCHC Datagram is composed of:
+
+- a SCHC Control Header
+- a SCHC Data Header
+- an optional Payload
+
+```
++----------------------+----------------------+------------------+
+| SCHC Control Header  | SCHC Data Header     | Payload          |
++----------------------+----------------------+------------------+
+```
+
+
+## Unified Rule Model
+
+Both the SCHC Control Header and the SCHC Data Header are defined and processed using Rules.
+
+Each header follows the same abstract structure:
+
+```
++----------+----------------------+
+|  RuleID  |   Rule Content       |
++----------+----------------------+
+```
+
+Where:
+- RuleID identifies the rule to apply
+- Rule Content is interpreted according to that rule
+
+This applies uniformly to:
+- Control information
+- Compression (C/D)
+- Fragmentation (F/R)
+- Management messages
+
+
+## SCHC Control Header (Optional - Rule-Based)
+
+The SCHC Control Header is a Rule-driven structure used to:
+
+- identify the SCHC Instance
+- select the appropriate Context
+- validate the datagram
+
+Example representations:
+
+Non-compressed:
+```
++------------------+-------------+------+
+| SCHC Instance ID | Protocol ID | CRC  |
++------------------+-------------+------+
+```
+
+Compressed (rule-based):
+```
++----------+----------------------+
+| RuleID   | Compressed Residue   |
++----------+----------------------+
+```
+
+The SCHC Control Header MAY be:
+- explicit
+- partially elided
+- fully implicit
+
+
+## SCHC Data Header (Rule-Based)
+
+The SCHC Data Header carries the output of SCHC processing.
+
+It follows the same rule-based structure:
+
+```
++----------+----------------------+
+|  RuleID  |   Rule Content       |
++----------+----------------------+
+```
+
+
+## Unified Representation of SCHC Operations
+
+### Compression (C/D)
+
+```
++----------+----------------------+
+| RuleID   | Compressed Residue   |
++----------+----------------------+
+```
+
+### Fragmentation (F/R)
+
+```
++----------+----------------------+--------+--...--+--------+
+| RuleID   | Fragmentation Header | Tile_1 |       | Tile_n |
++----------+----------------------+--------+--...--+--------+
+```
+
+-
+## Key Property
+
+A SCHC Datagram is defined generically as:
+
+**RuleID + Rule Content (+ optional Payload)**
+
+From this:
+
+- A SCHC Packet is a SCHC Datagram where Rule Content = Compressed Residue
+- A SCHC Fragment is a SCHC Datagram where Rule Content = Fragmentation Header + Tiles
+
+Both are instances of the same structure and MUST NOT be treated as distinct architectural objects.
+
+-
+## Mapping to SCHC Operations
+
+```
+Original Packet
+      ↓ Compression (C/D)
+Compressed Packet
+      ↓ Optional Fragmentation (F/R)
+SCHC Datagram(s)
+```
+
+- Without fragmentation: one SCHC Datagram
+- With fragmentation: multiple SCHC Datagrams
+
+-
+## Architectural Implications
+
+- The Dispatcher routes SCHC Datagrams
+- Instances process SCHC Datagrams
+- Compression and fragmentation share a single abstraction
+- Control and Data headers are unified under the same Rule model
+
+
+
 # Deployment Models
 
-How SCHC architecture maps onto different technologies.
+This section describes how the SCHC architecture maps onto different
+underlying technologies and protocols.
+
+SCHC can be applied in a variety of environments and over multiple
+protocol layers. Its initial design targeted constrained networks,
+operating directly over MAC frames in LPWAN technologies such as
+LoRaWAN {{RFC9011}}, IEEE Std 802.15.4 {{-SCHCo15dot4}}, and Sigfox
+{{RFC9442}}.
+
+SCHC can also operate over more general-purpose transports such as
+Ethernet, IPv6, or UDP. In such cases, protocol identifiers are required
+to signal the presence of a SCHC Datagram within the underlying layer.
+For example, this may involve the allocation of an Ethertype, an IP
+Protocol Number, or a UDP Port Number, as discussed in
+{{-PN_and_Ethertype}}.
+
+In all deployments, a SCHC Datagram MUST carry sufficient information to:
+
+- identify the SCHC Instances involved,
+- determine their respective roles (e.g., device or application), and
+- associate the datagram with a SCHC Session.
+
+Whenever needed, this information is conveyed by the optional SCHC Control Header, which is
+interpreted using the Rule associated with its RuleID. 
+
+Whenever present, The SCHC Control Header is transmitted
+in a compressed form. This implies that the Rules required to interpret
+the SCHC Control Header are known a priori by the participating
+Endpoints, and are distinct from the Rules used to process the SCHC Data
+Header.
+
+The format and interpretation of the SCHC Control Header are therefore
+deployment-specific and MUST be defined in a way that enables the
+identification of the SCHC Session. Different deployments MAY define
+different Rule sets and formats for this purpose.
+
+
+## SCHC over PPP
+
+The LPWAN architecture ({{Fig-LPWANnetarch}}) generalizes to deployments
+involving peers of similar or heterogeneous capabilities.
+
+In more capable environments, a SCHC Device MAY maintain multiple
+SCHC Endpoints with:
+- the same peer, or
+- different peers.
+
+Since SCHC Datagrams do not explicitly signal the Endpoint, this
+information MUST be derived from lower-layer context, such as a
+point-to-point connection.
+
+In such cases, a SCHC Endpoint can be associated one-to-one with:
+- a tunnel,
+- a TLS session,
+- a TCP connection, or
+- a PPP connection.
+
+{{-SCHCoPPP}} describes a deployment where SCHC compression (C/D)
+and/or fragmentation (F/R) are performed between peers of comparable
+capabilities over a PPP {{?rfc2516}} connection.
+
+SCHC over PPP demonstrates that:
+- the protocols to be compressed MAY be discovered dynamically, and  
+- the Rules MAY be retrieved on demand (e.g., via CORECONF),  
+
+ensuring that both peers operate with a consistent Set of Rules.
+
+~~~~
+    +----------+  Wi-Fi /   +----------+                ....
+    |    IP    |  Ethernet  |    IP    |            ..          )
+    |   Host   +-----/------+  Router  +----------(   Internet   )
+    | SCHC C/D |  Serial    | SCHC C/D |            (         )
+    +----------+            +----------+               ...
+                <-- SCHC -->
+                  over PPP
+~~~~
+{: #Fig-PPPnetarch title="PPP-based SCHC Deployment"}
+
+In this configuration, the SCHC Endpoint is derived from the PPP
+connection. As a result:
+
+- There is exactly one SCHC Endpoint per PPP connection.
+- All traffic within that connection belongs to that Endpoint.
+
+As discussed in {{EndPoints}}, the Uplink direction corresponds to
+traffic sent from the node that initiates the PPP connection toward
+the peer that accepts it.
+
+
+## SCHC over Ethernet
+
+When operating over Ethernet, a SCHC Datagram is encapsulated within
+an Ethernet frame using a dedicated Ethertype.
+
+Conceptually, the Rule used to process the SCHC Datagram is associated
+with the protocol being compressed (e.g., IPv6). The RuleID and Rule
+Content together encode the transformation applied to that protocol.
+
+~~~~
+                    |<----------------- SCHC Datagram ----------------->|
+ +------------------+--------+----------------+-------------+-----------+
+ | IEEE 802 Header  | SCHC   | SCHC           | SCHC        | Compressed|
+ | Ethertype=SCHC   | RuleID | Control Header | Data Header | Residue   |
+ |                  |        | (Next Proto == |             |           |
+ |                  |        |  IPv6, ARP,...)|             |           |
+ +------------------+--------+----------------+-------------+-----------+
+~~~~
+{: #Fig-SCHC_hdr title="SCHC over Ethernet"}
+
+The SCHC Control Header contains the information required
+to identify the correct Instance to process the SCHC Data Header.
+
+In practice, this information MAY be:
+- explicit,
+- compressed, or
+- fully implicit based on the Context.
+
+
+## SCHC over IPv6
+
+When SCHC operates over IPv6, the SCHC Datagram is identified using a
+dedicated IP Protocol Number.
+
+In this configuration:
+
+- The IPv6 Next Header field identifies SCHC.
+- The SCHC Control information MAY be inferred from the IPv6 header
+  (e.g., source/destination addresses) when the Context allows it.
+
+~~~~
+                    |<----------------- SCHC Datagram ----------------->|
+ +------------------+--------+----------------+-------------+-----------+
+ | IPv6 Header      | SCHC   | SCHC           | SCHC        | Compressed|
+ | NH = SCHC        | RuleID | Control Header | Data Header | Residue   |
+ |                  |        | (Next Proto == |             |           |
+ |                  |        |  UDP, QUIC,...)|             |           |
+ +------------------+--------+----------------+-------------+-----------+
+~~~~
+{: #Fig-SCHC_hdr1 title="SCHC over IPv6"}
+
+In this case:
+
+- The SCHC Datagram MAY protect the payload using a checksum carried
+  in the Rule Content.
+- Upper Layer Protocol (ULP) checksums MAY be elided if equivalent
+  protection is provided.
+
+The SCHC Session is typically derived from:
+- IPv6 source and destination addresses.
+
+
+## SCHC over UDP
+
+When SCHC operates over the Internet, some middleboxes may block packets
+that use an unknown IP Protocol Number.
+
+To improve traversal, SCHC Datagrams MAY be encapsulated over UDP.
+
+~~~~
+                    |<----------------- SCHC Datagram ----------------->|
+ +------------------+--------+----------------+-------------+-----------+
+ | UDP Header       | SCHC   | SCHC           | SCHC        | Compressed|
+ | Port=SCHC        | RuleID | Control Header | Data Header | Residue   |
+ |                  |        | (Next Protocol)|             |           |
+ +------------------+--------+----------------+-------------+-----------+
+~~~~
+{: #Fig-SCHC_hdr2 title="SCHC over UDP"}
+
+In this configuration:
+
+- The UDP destination port identifies SCHC.
+- The IP source/destination + UDP source port MAY identify the SCHC Session.
+
+
+## SCHC Endpoints for LPWAN Networks {#EndPoints}
+
+Section 3 of {{RFC8724}} describes a typical LPWAN network architecture,
+derived from {{RFC8376}} and illustrated in {{Fig-LPWANnetarch}}.
+
+~~~~
+ ()   ()   ()       |
+  ()  () () ()     / \       +---------+
+() () () () () () /   \======|    ^    |             +-----------+
+ ()  ()   ()     |           | <--|--> |             |Application|
+()  ()  ()  ()  / \==========|    v    |=============|   Server  |
+  ()  ()  ()   /   \         +---------+             +-----------+
+ Dev            RGWs             NGW                      App
+~~~~
+{: #Fig-LPWANnetarch title="Typical LPWAN Network Architecture"}
+
+LPWAN networks typically follow a star topology, where:
+
+- Devices (Dev) communicate with Application Servers (App)
+- through a Network Gateway (NGW).
+
+In this model:
+
+- Devices are highly constrained.
+- Gateways and servers are less constrained.
+
+Because:
+- applications are often embedded in Devices, and  
+- traffic patterns are known in advance,  
+
+The SCHC Context (including Rules for C/D and F/R) can be
+**pre-provisioned**. 
+
+
+
+
+
+
 
 # Operational Condiderations
 
