@@ -377,51 +377,30 @@ A SCHC Datagram is the unit exchanged between SCHC Instances.
 
 It provides a unified representation for:
 - compressed packets
-- fragmented packets
+- fragmented messages (fragments, acknowledgements, acknowledgement requests, ...)
 
 A SCHC Datagram is composed of:
 
+- a RuleID
 - a SCHC Control Header
 - a SCHC Data Header
-- an optional Payload
+- the Payload
 
 ```
-+----------------------+----------------------+------------------+
-| SCHC Control Header  | SCHC Data Header     | Payload          |
-+----------------------+----------------------+------------------+
++--------+----------------------+----------------------+------------------+
+| RuleID | SCHC Control Header  | SCHC Data Header     | Payload          |
++--------+----------------------+----------------------+------------------+
 ```
-
-
-## Unified Rule Model
-
-Both the SCHC Control Header and the SCHC Data Header are defined and processed using Rules.
-
-Each header follows the same abstract structure:
-
-```
-+----------+----------------------+
-|  RuleID  |   Rule Content       |
-+----------+----------------------+
-```
-
-Where:
-- RuleID identifies the rule to apply
-- Rule Content is interpreted according to that rule
-
-This applies uniformly to:
-- Control information
-- Compression (C/D)
-- Fragmentation (F/R)
-- Management messages
 
 
 ## SCHC Control Header (Optional - Rule-Based)
 
-The SCHC Control Header is a Rule-driven structure used to:
+The SCHC Control Header is a Rule-driven structure used by a specific Control Instance, which may provide one or more of the following services, whenever they are necessary:
 
-- identify the SCHC Instance
-- select the appropriate Context
-- validate the datagram
+- identify the SCHC Instance (Multiplexing)
+- upon compression, render explicit Discriminator implicit (e.g. compressed IPv6 traffic over Ethernet will be transported with EtherType=SCHC, but the decompressor needs to know that the initial Discriminator was EtherType=0x8DD)
+- validate the datagram (Protection)
+- OAM, etc.
 
 Example representations:
 
@@ -445,64 +424,74 @@ The SCHC Control Header MAY be:
 - fully implicit
 
 
+### Advanced SCHC Control Header Use-Cases
+
+In highly constrained, star-topology networks, the SCHC Control Header may be fully elided, with the Dispatcher 
+acting purely as a multiplexer driven by an extrinsic Discriminator. However, in more complex, heterogeneous, 
+or multi-hop deployments, a rule-based SCHC Control Header provides functionalities beyond simple Instance identification.
+
+Implementing the Unified Rule Model for the SCHC Control Header enables the following advanced capabilities:
+- Payload and Header Integrity: When Upper Layer Protocol (ULP) checksums (e.g., UDP or TCP) are elided during compression, the SCHC Control Header can carry an overarching Cyclic Redundancy Check (CRC). This protects the entire SCHC Datagram against corruption, ensuring invalid packets are dropped before expending processing power on decompression.
+- Context Versioning and Synchronization: In environments where the Set of Rules (SoR) is dynamically updated (e.g. via CORECONF), the Control Header can carry a compressed Context Version ID or a rule hash. This may prevent race conditions by allowing the receiver to immediately detect a SoR mismatch and trigger a management update rather than outputting corrupted data.
+- In-Band OAM (Operations, Administration, and Maintenance): Specific RuleIDs within the Control Header can be reserved for stratum-level OAM. This permits Endpoints to exchange telemetry, keepalives, or link-quality reports without consuming application payload space or invoking upper-layer protocols.
+- Replay Protection and Sequence Numbering: For underlays lacking native security or sequencing, the Control Header can introduce a localized sequence number or cryptographic nonce. This allows the SCHC Control End-Point to discard duplicates and mitigate replay attacks at the ingress boundary.
+- Mesh Routing and Multi-Hop Metadata: In non-star topologies, intermediate nodes may need to forward SCHC Datagrams without decompressing the Data Header. The Control Header can carry compressed routing metadata, such as hop limits or mesh-dispatch identifiers.
+
+Architecturally, these functions are executed by the SCHC Control Instance during the initial ingress and dispatching phases. By validating, synchronizing, and securing the datagram early in the pipeline.
+
+
+
 ## SCHC Data Header (Rule-Based)
 
-The SCHC Data Header carries the output of SCHC processing.
 
-It follows the same rule-based structure:
-
-```
-+----------+----------------------+
-|  RuleID  |   Rule Content       |
-+----------+----------------------+
-```
-
-
-## Unified Representation of SCHC Operations
-
-### Compression (C/D)
+As defined in section 5.1 of [rfc8724], a **SCHC** datagram (or packet) is composed of the compressed header called the **SCHC** Data Header followed by the uncompressed remainder payload from the original datagram (or packet). The **SCHC** Data Header, contains the data generated by the **SCHC** operation. It is composed of a RuleID followed by the content described in the Rule. The content may be a C/D datagram, a F/R datagram, a CORECONF_Management or a Non Compressed datagram.
 
 ```
-+----------+----------------------+
-| RuleID   | Compressed Residue   |
-+----------+----------------------+
+ <------ Compressed Header ------> <- Uncompressed Data ->
+
++------------------------------------------------------+
+|                   SCHC Datagram                      |
++------------------------------------------------------+
+
++---------------------------------+--------------------+
+|      SCHC Data Header           |      Payload       |
++---------------------------------+--------------------+
+
++----------+----------------------+--------------------+
+|  RuleID  |    Rule Content      |      Payload       |
++----------+----------------------+--------------------+
 ```
 
-### Fragmentation (F/R)
+Figure 3: **SCHC** Datagram
+
+Figure 4 shows the compressed header format that is composed of the RuledID and a Compressed Residue, which is the output of compressing a datagram header with a Rule.
+
+C/D Compressed **SCHC** Data Header:
 
 ```
-+----------+----------------------+--------+--...--+--------+
-| RuleID   | Fragmentation Header | Tile_1 |       | Tile_n |
-+----------+----------------------+--------+--...--+--------+
++------------+----------------------+
+|   RuleID   | Compressed Residue   |
++------------+----------------------+
 ```
 
--
-## Key Property
-
-A SCHC Datagram is defined generically as:
-
-**RuleID + Rule Content (+ optional Payload)**
-
-From this:
-
-- A SCHC Packet is a SCHC Datagram where Rule Content = Compressed Residue
-- A SCHC Fragment is a SCHC Datagram where Rule Content = Fragmentation Header + Tiles
-
-Both are instances of the same structure and MUST NOT be treated as distinct architectural objects.
-
--
-## Mapping to SCHC Operations
+F/R Compressed **SCHC** Data Header:
 
 ```
-Original Packet
-      ↓ Compression (C/D)
-Compressed Packet
-      ↓ Optional Fragmentation (F/R)
-SCHC Datagram(s)
++------------+----------------------+--------+--...--+--------+
+|   RuleID   | Fragmentation Header | Tile_1 |       | Tile_n |
++------------+----------------------+--------+--...--+--------+
 ```
 
-- Without fragmentation: one SCHC Datagram
-- With fragmentation: multiple SCHC Datagrams
+CORECONF_Management **SCHC** Data Header:
+
+```
++------------+----------------------+
+|   RuleID   | Compressed Residue   |
++------------+----------------------+
+```
+
+Figure 4: **SCHC** Data Header
+
 
 -
 ## Architectural Implications
