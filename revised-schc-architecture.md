@@ -108,8 +108,9 @@ Ensure that you do not introduce requirements that would contradict RFC 8724 or 
 
 # Terminology {#Terminology}
 
-This section defines terminology and abbreviations used in this   document. In 
-  the following, terms are assumed to be defined in the context of the SCHC ecosystem, unless specified otherwise, *.e.g* Endpoint refers to a SCHC 
+This section defines terminology and abbreviations used in this document. In 
+  the following, terms are assumed to be defined in the context of the SCHC 
+  ecosystem, unless specified otherwise, *.e.g* Endpoint refers to a SCHC 
   Endpoint, Instance refers to a SCHC Instance, and so on.
 
 **SCHC**: A Generic Framework, as defined in {{RFC8724}}, that performs 
@@ -118,13 +119,15 @@ This section defines terminology and abbreviations used in this   document. In
   Endpoints. The SCHC acronym is pronounced like "sheek" in English (or "chic" 
   in French).
 
-**Endpoint**: A network entity capable of performing SCHC operations, e.g. 
-  compressing and decompressing headers, fragmenting and reassembling packets.
-  An Endpoint can host one or multiple Instances.
+**Endpoint**: A logical entity that provides SCHC functionality by hosting
+  the SCHC processing code, rather than a physical device. Multiple SCHC
+  Endpoints can operate on the same physical equipment, for example to serve
+  different Domains, tenants, strata.
 
-**Instance**: A logical component of an Endpoint that executes the SCHC
-  operations. Each Instance operates independently, with its own Context and 
-  Profile.
+**Instance**: A logical component of an Endpoint that executes the actual SCHC
+  operations, e.g. compressing and decompressing headers, fragmenting and reassembling
+  packets. Multiple Instances can coexist on the same Endpoint but each
+  Instance operates independently, with its own Context and Configuration.
 
 **Rule**: A structured set of header fields and matching conditions used by SCHC
   to process packets in accordance with specified actions.
@@ -133,12 +136,12 @@ This section defines terminology and abbreviations used in this   document. In
   header fields are processed by an Instance.
 
 **Context**: A SoR together with metadata, shared by two or more Instances.
-  Metadata may, for example, refer to a data model or a parser compatible with 
+  Metadata may, for example, refer to a data model or a parser compatible with
   the rule format.
 
-**Profile**: A set of configurations specific to an Instance that define how 
-  SCHC operations are performed, e.g. role of the Instance, matching policy,
-  dispatcher configuration,supported SCHC features.
+**Instance Configuration**: A set of configurations specific to an Instance that
+  define how SCHC operations are performed, e.g. role of the Instance, matching
+  policy, dispatcher configuration, supported SCHC features.
 
 **Session**: A communication session between two Instances or more that share a
   common Context for SCHC operations.
@@ -147,31 +150,43 @@ This section defines terminology and abbreviations used in this   document. In
   fragmentation-related timers, retransmission counters, state flags, and other
   per-session values that may change during operation.
 
-**Dispatcher**: A logical component of the Endpoint that routes packets to the
+**Dispatcher**: An logical component of the Endpoint that routes packets to the
   appropriate Instances based on defined admission rules. It can be integrated
   into the network stack or implemented as a separate component.
 
-**Discriminator**: An optional information element included in compressed 
-  packets to identify the Instance that should process the packet. It is used by
+**Discriminator**: An explicit or implicit information element included in SCHC
+  Datagrams to identify the Instance that should process the packet. It is used by
   the Dispatcher to route packets to the appropriate Instance for decompression
   and reassembly.
 
-**Domain**: A logical grouping of Instances that share a common set of Contexts 
+**Domain**: A logical grouping of Instances that share a common set of Contexts
   for compression and fragmentation operations.
 
+**Stratum**: A background concept that identifies a portion of the network protocol
+  stack targeted by SCHC, i.e., the contiguous layers within which SCHC processing
+  can be applied. The Stratum defines the scope of the protocol headers that the
+  SCHC Rules in the associated Context can address.
+
+**SCHC Datagram**: The unit exchanged between SCHC instances. A SCHC Datagram
+  consists of a Rule Identifier (RuleID) and the result of the SCHC operation
+  (if non-empty), such as a compression residue or a packet fragment. The SCHC
+  Datagram may include an optional SCHC Control Header located at the beginning,
+  and end with a Payload taken from the original packet.
+
+**Control Header: A structure used to provide one or more control information
+  elements in a SCHC Datagram whenever necessary. For example, it may contain a
+  Discriminator to route a SCHC datagram to the correct instance.
+
 **Domain Manager**: A logical component that manages the Domain, including
-  context synchronization and profile distribution. #TODO: needed?
+  context synchronization and profile distribution.
 
 **Endpoint Manager**: A logical component that manages the lifecycle and
   configuration of Instances within an Endpoint. It is responsible for
   creating, updating, and deleting Instances as needed, synchronizing
-  Contexts and Profiles, and managing the Dispatcher. #TODO: needed?
+  Contexts and Profiles, and managing the Dispatcher.
 
 **Context Repository**: A logical component that stores and manages the
-  Contexts used by its Domain. #TODO: needed?
-
-
-**SCHC Datagram**: The unit exchanged between SCHC Instances. A SCHC Datagram is composed of an optional SCHC Control Header, a SCHC Data Header, and an optional Payload. Both SCHC Packet and SCHC Fragment are types of a SCHC Datagram.
+  Contexts used by its Domain.
 
 # Architecture 
 
