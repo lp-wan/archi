@@ -279,6 +279,8 @@ Instances sharing a common Context form a Domain. The Domain Manager is
   identifiable to allow the Domain Manager to update the Context of a specific
   Instance.
 
+
+
 ~~~~~~~~
 +-----------------------+                   +-----------------------+
 | Endpoint              |                   | Endpoint              |

@@ -2,7 +2,7 @@
 
 # Variables
 DRAFT_NAME = draft-ietf-schc-architecture-02
-MARKDOWN_FILE = $(DRAFT_NAME).md
+MARKDOWN_FILE = revised-schc-architecture.md
 XML_FILE = $(DRAFT_NAME).xml
 TXT_FILE = $(DRAFT_NAME).txt
 HTML_FILE = $(DRAFT_NAME).html
