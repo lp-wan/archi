@@ -187,12 +187,14 @@ headers that the SCHC Rules in the associated Context can address.
 -->
 
 **Domain Manager**: A logical component that manages the Domain, including
-  context synchronization and profile distribution.
+  context synchronization and configuration distribution.
 
 **Instance Manager**: A logical component that manages the lifecycle and
   configuration of Instances within an Endpoint. It is responsible for
   creating, updating, and deleting Instances as needed, synchronizing
   Contexts, and managing Instance Configurations.
+
+**Endpoint Manager**: 
 
 **Context Repository**: A logical component that stores and manages the
   Contexts used by its Domain.
@@ -278,33 +280,80 @@ Instances sharing a common Context form a Domain. The Domain Manager is
   Instance.
 
 ~~~~~~~~
-+-----------------------+  +-------------+  +-----------------------+
-| Endpoint              |  | Context     |  | Endpoint              |
-|                       |  | Repository  |  |                       |
-| +-------------------+ |  |             |  | +-------------------+ |
-| | Instance          | |  | +---------+ |  | | Instance          | |
-| |                   | |  | | Context | |  | |                   | |
-| | +---------------+ | |  | +---------+ |  | | +---------------+ | |
-| | | Instance      | | |  +-----|--|----+  | | | Instance      | | |
-| | | Configuration | | |        |  |       | | | Configuration | | |
-| | +---------------+ | |        |  |       | | +---------------+ | |
-| | +---------+       | |        |  |       | | +---------+       | |
-| | | Context |<-----------------+  +---------->| Context |       | |
++-----------------------+                   +-----------------------+
+| Endpoint              |                   | Endpoint              |
+|                       |                   |                       |
+| +-------------------+ |                   | +-------------------+ |
+| | Instance          | |                   | | Instance          | |
+| |                   | |                   | |                   | |
+| | +---------------+ | |                   | | +---------------+ | |
+| | | Instance      | | |                   | | | Instance      | | |
+| | | Configuration | | |                   | | | Configuration | | |
+| | +---------------+ | |                   | | +---------------+ | |
 | | +---------+       | |                   | | +---------+       | |
+| | | Context |< - - - - - - - - - - - - - - - >| Context |       | |
+| | +---------+       | |     Shared        | | +---------+       | |
+| +-------------------+ |     Context       | +-------------------+ |
 | +-------------------+ |                   | +-------------------+ |
-| +-------------------+ |                   | +-------------------+ |
-| |SCHC Functions     | |------------------>| |SCHC Functions     | |
-| |                   | |<------------------| |                   | |
-| | +-----+   +-----+ | |   SCHC Datagrams  | | +-----+   +-----+ | |
-| | | C/D |   | F/R | | |                   | | | C/D |   | F/R | | |
+| |SCHC Functions     | |                   | SCHC Functions      | |
+| |                   | |                   |                     | |
+| | +-----+   +-----+ | |                   | | +-----+   +-----+ | |
+| | | C/D |   | F/R | | |                   | | | C/D |  | F/R  | | |
 | | +-----+   +-----+ | |                   | | +-----+   +-----+ | |
 | +-------------------+ |                   | +-------------------+ |
 +-----------------------+                   +-----------------------+ 
+            ^                                           ^
+            |                                           |
+            ---------------------------------------------
+              SCHC Datagams exchanged inside a Session         
+
 ~~~~~~~~
 {: #Fig-Simple-Overview title='Overview of two simple Endpoints exchanging
 SCHC Datagrams'}
 
-<!-- TODO: Add a figure to illlustrate Session and Domain -->
+~~~~~~~~
+         +-----------------------------------------------------+           
+         | Domain Manager                                      |           
+         |                                                     |           
+         |  +-------------+ +--------------+ +--------------+  |           
+         |  |Endpoint     | |Context       | |Instance      |  |           
+         |  |Manager      | |Manager       | |Configuration |  |           
+         |  |             | |+------------+| |Manager       |  |           
+         |  |             | || Context    || |              |  |           
+         |  |             | || Repository || |              |  |           
+         |  |             | |+------------+| |              |  |           
+         |  +-------------+ +--------------+ +--------------+  |           
+         |      ^                       ^       ^              |           
+         +------|-----------------------|-------|--------------+           
+                |                       |       |                          
+    Registration|   Context Provisioning|       |Configuration             
+              +-|    and Synchronization|       |Distribution              
+              | |                       |       |                          
+              v |                       |       |                          
++---------------|-------------------+   |       |
+| Endpoint      |                   |   |       |
+|               v                   |   |       |
+|  +------------------------+       |   |       |
+|  | Instance Manager       |       |   |       |
+|  +------------------------+       |   |       |
+|    ^  ^                           |   |       |
+|    |  |    +--------------------+ |   |       |
+|    |  +--->| Instance 1         | |   |       |
+|    |       |                    | |   |       |
+|    |       | +--------------+   | |   |       |
+|    |       | |Context       |<--------+       |
+|    |       | +--------------+   | |           |
+|    |       | +--------------+   | |           |
+|    |       | |Instance      |<----------------+
+|    |       | |Configuration |   | |
+|    |       | +--------------+   | |
+|    |       +--------------------+ |
+|    |       +--------------------+ |
+|    +------>| Instance 2         | |
+|            +--------------------+ |
++-----------------------------------+
+~~~~~~~~
+{: #Fig-Domain-Manager title='Overview of the functions of the Domain Manager'}
 
 ## Focus on core components
 
@@ -465,7 +514,7 @@ Instances'}
 
 As illustrated in the figure below, the Session is a communication session
   between two or more Instances that share a common Context, i.e. they are
-  part of the same Domain. 
+  part of the same Domain.
 
 ~~~~~~~~
 
@@ -483,6 +532,43 @@ As illustrated in the figure below, the Session is a communication session
 
 ~~~~~~~~
 {: #Fig-Session title='Session between multiple Instances'}
+
+### Domain
+
+In the figure below, two Domains are represented, where Endpoint A and
+  Endpoint B host Instances belonging to Domain 1, and Endpoint B and
+  Endpoint C host Instances belonging to Domain 2. Instances from the same
+  Domain communicate through a Session. A Session Identifier, or Session ID,
+  may be used as a Discriminator to route the Datagrams to the correct
+  Instance (e.g., to distinguish between the two Instances of Endpoint B), 
+  and/or for management purpose. 
+
+~~~~~~~~
+  +--------------------------------------------------------------------+  
+  |                          Domain Manager                            |  
+  +--------------------------------------------------------------------+  
+          ^                         ^                         ^            
+          |                         |                         |           
+          v                         v                         v           
+  +----------------+      +-------------------+      +-----------------+  
+  |   Endpoint A   |      |    Endpoint B     |      |   Endpoint C    |  
++-----------------------------------------------+    |                 |  
+| | +-----------+  |      |   +-----------+   | |    |                 |  
+| | | Instance  |<----------->| Instance  |   | |    |                 |  
+| | +-----------+  |      |   +-----------+   | |    |                 |  
++--------------------|--------------------------+    |                 |  
+  |                | |  +------------------------------------------------+
+  |                | |  | |   +-----------+   |      |   +-----------+ | |
+  |                | |  | |   | Instance  |<------------>| Instance  | | |
+  |                | |  | |   +-----------+   |      |   +-----------+ | |
+  |                | |  +-------------------------|----------------------+
+  |                | |    |                   |   |  |                 |
+  +----------------+ |    +-------------------+   |  +-----------------+  
+                     |                            |                       
+                     |                            |                       
+                     +---> Domain 1               +-> Domain 2            
+~~~~~~~~
+{: #Fig-Domains title='Overview of multiple Domains'}
 
 ### Datagram Format {#DatagramFormat}
 
