@@ -159,10 +159,9 @@ This section defines terminology and abbreviations used in this document. In
   appropriate Instances based on defined admission rules. It can be integrated
   into the network stack or implemented as a separate component.
 
-**Discriminator**: An explicit or implicit information element included in SCHC
-  Packets to identify the Instance that should process the packet. It is used by
-  the Dispatcher to route packets to the appropriate Instance for decompression
-  and reassembly.
+**Discriminator**: An optional information element used by the Dispatcher to
+  route SCHC Datagrams to the appropriate Instance. The discriminator can be a
+  combination of several criteria.
 
 **Parser**: A software tool or component that dissects and analyzes network
   packets, to extract meaningful information such as source and destination
@@ -171,25 +170,26 @@ This section defines terminology and abbreviations used in this document. In
 **Domain**: A logical grouping of Instances that share a common set of Contexts
   for SCHC operations.
 
-**Stratum**: A background concept that identifies a portion of the network protocol
-  stack targeted by SCHC, i.e., the contiguous layers within which SCHC processing
-  can be applied. The Stratum defines the scope of the protocol headers that the
-  SCHC Rules in the associated Context can address.
+**Stratum**: A background concept that identifies a portion of the network
+protocol stack targeted by SCHC, i.e., the contiguous layers within which SCHC
+processing can be applied. The Stratum defines the scope of the protocol
+headers that the SCHC Rules in the associated Context can address.
 
-**SCHC Packets**: The unit exchanged between SCHC instances. A SCHC Packet
+**Datagram**: The unit exchanged between SCHC instances. A Datagram
   consists of a Rule Identifier (RuleID) and the result of the SCHC operation
-  (if non-empty), such as a compression residue or a packet fragment. The SCHC
-  Packet may include an optional SCHC Control Header located at the beginning,
-  and end with a Payload taken from the original packet.
+  (if non-empty), such as a compression residue or a packet fragment. It ends
+  with a Payload taken from the original packet (if any).
 
+<!--
 **Control Header**: A structure used to provide one or more control information
-  elements in a SCHC Packet whenever necessary. For example, it may contain a
-  Discriminator to route a SCHC Packet to the correct instance.
+  elements in a SCHC Datagram whenever necessary. For example, it may contain a
+  Discriminator to route a SCHC Datagram to the correct instance.
+-->
 
 **Domain Manager**: A logical component that manages the Domain, including
   context synchronization and profile distribution.
 
-**Endpoint Manager**: A logical component that manages the lifecycle and
+**Instance Manager**: A logical component that manages the lifecycle and
   configuration of Instances within an Endpoint. It is responsible for
   creating, updating, and deleting Instances as needed, synchronizing
   Contexts, and managing Instance Configurations.
@@ -244,7 +244,7 @@ SCHC is a framework designed to efficiently compress headers of network packets.
   the Context, which contains Rules. Using a Rule that matches the headers of
   a packet to be transmitted, the sender replaces the known header fields with
   a short RuleID which identifies the rule that applies, and a compression
-  residue if any, forming a SCHC Packet. The receiver of this SCHC Packet
+  residue if any, forming a SCHC Datagram. The receiver of this SCHC Datagram
   matches the RuleID against its own Context and applies decompression actions
   to reconstruct the original header.
 
@@ -270,44 +270,41 @@ Each host runs an Endpoint that implements SCHC functions that are executed by
   the header fields, and/or which Data Model, such as the one defined in
   {{RFC9363}}.
 
-<!-- TODO: Add quick introduction of Session and Domaine -->
+Instances sharing a common Context form a Domain. The Domain Manager is
+  responsible to manage the Contexts of all Instances that belong to it.
+  A communication between two Instances or more that share a common Context is
+  called a Session. Each Instance, Context, and Session must be uniquely
+  identifiable to allow the Domain Manager to update the Context of a specific
+  Instance.
 
 ~~~~~~~~
-   +------------------------+                       +------------------------+
-   |Endpoint                |                       |Endpoint                |
-   |                        |                       |                        |
-   | +--------------------+ |                       | +--------------------+ |
-   | |SCHC Functions      | |    +-------------+    | |SCHC Functions      | |
-   | |                    | |    | Context     |    | |                    | |
-   | | +-----+   +-----+  | |    | Repository  |    | | +-----+   +-----+  | |
-   | | | C/D |   | F/R |  | |    |             |    | | | C/D |   | F/R |  | |
-   | | +-----+   +-----+  | |    | +---------+ |    | | +-----+   +-----+  | |
-   | +--------------------+ |    | | Context | |    | +--------------------+ |
-   | +--------------------+ |    | +---------+ |    | +--------------------+ |
-   | |Instance            | |    +----|---|----+    | |Instance            | |
-   | |                    | |         |   |         | |                    | |
-   | | +---------+        | |         |   |         | | +---------+        | |
-   | | | Context |<-------------------+   +------------>| Context |        | |
-   | | +---------+        | |                       | | +---------+        | |
-   | | +----------------+ | |                       | | +----------------+ | |
-   | | | Instance       | | |                       | | | Instance       | | |
-   | | | Configuration  | | |                       | | | Configuration  | | |
-   | | +----------------+ | |                       | | +----------------+ | |
-   | +--------------------+ |                       | +--------------------+ |
-   +------------------------+                       +------------------------+
-        ^  |         ^  |                              ^  |           ^  |        
-        |  |         |  v                              |  v           |  |        
-        |  |     +----------+                     +----------+        |  |        
-        |  |     | Parser   |                     | Parser   |        |  |        
-        |  |     +----------+                     +----------+        |  |        
-        |  |         ^  |                            ^  |             |  |        
-        |  v         |  v           SCHC             |  v             |  v        
-   +-------------+  +---------+     Packets       +---------+  +-------------+
-   | Application |->| Network |------------------>| Network |->| Application |
-   |             |<-| Stack   |<------------------| Stack   |<-|             |
-   +-------------+  +---------+                   +---------+  +-------------+
++-----------------------+  +-------------+  +-----------------------+
+| Endpoint              |  | Context     |  | Endpoint              |
+|                       |  | Repository  |  |                       |
+| +-------------------+ |  |             |  | +-------------------+ |
+| | Instance          | |  | +---------+ |  | | Instance          | |
+| |                   | |  | | Context | |  | |                   | |
+| | +---------------+ | |  | +---------+ |  | | +---------------+ | |
+| | | Instance      | | |  +-----|--|----+  | | | Instance      | | |
+| | | Configuration | | |        |  |       | | | Configuration | | |
+| | +---------------+ | |        |  |       | | +---------------+ | |
+| | +---------+       | |        |  |       | | +---------+       | |
+| | | Context |<-----------------+  +---------->| Context |       | |
+| | +---------+       | |                   | | +---------+       | |
+| +-------------------+ |                   | +-------------------+ |
+| +-------------------+ |                   | +-------------------+ |
+| |SCHC Functions     | |------------------>| |SCHC Functions     | |
+| |                   | |<------------------| |                   | |
+| | +-----+   +-----+ | |   SCHC Datagrams  | | +-----+   +-----+ | |
+| | | C/D |   | F/R | | |                   | | | C/D |   | F/R | | |
+| | +-----+   +-----+ | |                   | | +-----+   +-----+ | |
+| +-------------------+ |                   | +-------------------+ |
++-----------------------+                   +-----------------------+ 
 ~~~~~~~~
-{: #Fig-Simple-Overview title='Overview of two simple Endpoints exchanging SCHC Packets'}
+{: #Fig-Simple-Overview title='Overview of two simple Endpoints exchanging
+SCHC Datagrams'}
+
+<!-- TODO: Add a figure to illlustrate Session and Domain -->
 
 ## Focus on core components
 
@@ -378,7 +375,9 @@ Internally, on compression, the C/D engine:
 - chooses the appropriate compression Rule among candidate Rules from the Context
   based on the matching policy defined in the Instance Configuration;
 - applies the compression Rule to the fields of the header(s);
-- generates the compressed SCHC Packet.
+- generates the compressed SCHC Datagram.
+In {{RFC8724}}, a packet whose header has been compressed is called a SCHC
+  Packet.
 
 On decompression, the C/D engine:
 
@@ -393,7 +392,8 @@ On decompression, the C/D engine:
 This component is responsible for fragmenting larger packets into smaller
   fragments and reassembling them at the receiving end. It is optional feature
   but recommended for scenarios where packet sizes may exceed the maximum
-  transmission unit (MTU) of the underlying network.
+  transmission unit (MTU) of the underlying network. In {{RFC8724}}, the
+  pieces of a SCHC Packet that has been fragmented are called SCHC Fragments.
 
 #### SCHClets
 
@@ -408,147 +408,150 @@ A SCHClet is a self-contained unit within the SCHC framework that implements
 An Endpoint can host multiple Instances, each with its own Context and Instance
 Configuration.
 
-When an Endpoint is supporting multiple Instances, the Endpoint Manager is
+When an Endpoint is supporting multiple Instances, the Instance Manager is
   responsible for managing the lifecycle and configuration of these Instances.
-  Packets are routed to the appropriate Instance by the Dispatcher using
-  admission rules based on information provided in the Instance Configuration.
-  The Dispatcher is a single point of decision for packet forwarding within the
-  Endpoint.
+  Datagrams are routed to the appropriate Instance by the Dispatcher using
+  the Discriminator and admission rules based on information provided in the
+  Instance Configuration. The Dispatcher is a single point of decision for
+  packet forwarding within the Endpoint.
+
+In some deployments, the Discriminator is derived entirely from lower-layer
+context (e.g., a specific PPP link, an IPv6 address, or a UDP port).
+If external context is insufficient or unavailable, the Dispatcher may need an
+explicit Discriminator. For example, Datagrams can be encapsulated in a light
+transport protocol whose header contains a Session, Context, or Instance
+identifier, and can provide additional services such as integrity checking (CRC).
 
 The following figure illustrates the main components of an Endpoint supporting
   multiple Instances and their interactions:
 
 ~~~~~~~~
-    +-------------------+         +----------------+                     
-    | Endpoint Manager  |         | SCHC Functions |                     
-    +-------------------+         +----------------+                     
- manages lifecyle  | |                      ^                            
- of Instances,     | |                      | compresses,                
- retrieve Contexts | +--------------------+ | decompresses,              
- and Configs       |                      | | etc.                       
-                   v                      v v                            
-        +-------------+             +-------------+                      
-     +->| Instance I1 |       ...   | Instance Ik |<-------+             
-     |  +-------------+             +-------------+        |             
-     |   | |                         | |                   |             
-     |   | |  +------------+         | |  +------------+   |             
-     |   | +--| Context C1 |  ...    | +--| Context Ck |   |             
-     |   |    +------------+         |    +------------+   |             
-     |   |    +------------+         |    +------------+   |             
-     |   +----| Config G1  |  ...    +----| Config Gk  |   |             
-     |        +------------+              +------------+   |             
-     |              |                         |            |             
-     |    configures|                         |configures  |             
-     |              |     +-------------+     |            |             
-     |              +---->|             |<----+            |             
-     +------------------->| Dispatcher  |<-----------------+             
-        dispatch packets  |             |  dispatch packets              
-                          +-------------+                                
-                                ^ |                                      
-                      intercept | | reinject                             
-                                | v                                      
-                       +-----------------------+                         
-                       | OS/firmware, network  |                         
-                       | stack, application    |                         
-                       +-----------------------+                         
+    +-------------------+         +----------------+         
+    | Instance Manager  |         | SCHC Functions |         
+    +-------------------+         +----------------+         
+ manages lifecyle  | |                      ^                
+ of Instances,     | |                      | compresses,    
+ retrieve Contexts | +--------------------+ | decompresses,  
+ and Configs       |                      | | etc.           
+                   v                      v v                
+        +-------------+             +-------------+          
+     +->| Instance I1 |       ...   | Instance Ik |<--------+ 
+     |  +-------------+             +-------------+         | 
+     |   | |                         | |                    | 
+     |   | |  +------------+         | |  +------------+    | 
+     |   | +--| Context C1 |  ...    | +--| Context Ck |    | 
+     |   |    +------------+         |    +------------+    | 
+     |   |    +------------+         |    +------------+    | 
+     |   +----| Config G1  |  ...    +----| Config Gk  |    | 
+     |        +------------+              +------------+    | 
+     |              |                         |             | 
+     |   is applied |                         | is applied  | 
+     |   to         |     +-------------+     | to          | 
+     |              +---->|             |<----+             | 
+     +------------------->| Dispatcher  |<------------------+ 
+        dispatch packets  |             |  dispatch packets  
+                          +-------------+                    
+                                ^ |                          
+                          admit | | reinject                 
+                                | v                          
+                          +---------------+                  
+                          | Network stack |                  
+                          +---------------+                  
 ~~~~~~~~
-{: #Fig-Multiple-Instances title='Overview of an Endpoints hosting multiple Instances'}
+{: #Fig-Multiple-Instances title='Overview of an Endpoints hosting multiple
+Instances'}
 
-<!-- Marion: I stopped here -->
-<!-- TODO: Review the following text: 
-
-In its simplest form, an Endpoint MAY implement a single Instance with a
-  hardwired configuration, as described in {{DRAFT-SCHCLET}}. In this case, the
-  Endpoint Manager and Dispatcher components are not required.
-
-To route an incoming SCHC Packet to the correct Instance, the Dispatcher 
-relies on a Discriminator. In most deployments, this Discriminator is external 
-to the SCHC Packet, derived entirely from lower-layer context
-(e.g., a specific PPP link, an IPv6 address, or a UDP port).
-
-If external context is insufficient or unavailable, the Dispatcher MAY rely 
-on the optional SCHC Control Header to convey the internal discriminator. When present, 
-the SCHC Control Header is identified and parsed using its specific RuleID.
-
--->
-
-<!-- TODO: Review the following sections -->
 ### Session
 
 As illustrated in the figure below, the Session is a communication session
   between two or more Instances that share a common Context, i.e. they are
-  part of the same Domain. It is established whenever the Context is updated
-  or modified.
+  part of the same Domain. 
 
 ~~~~~~~~
 
-   Endpoint A                                  Endpoint B
-+------------------+                      +------------------+
-|  SCHC Instance   | <---           ----> |  SCHC Instance   |
-+------------------+     \         /      +------------------+
-                          \       /
-                           Session
-                          /       \
-+------------------+     /         \      +------------------+
-|  SCHC Instance   | <---           --->  |  SCHC Instance   |
-+------------------+                      +------------------+
-   Endpoint C                                  Endpoint D
+   Endpoint A                            Endpoint B
++--------------+                       +--------------+
+|   Instance   | <----           ----> |   Instance   |
++--------------+      \         /      +--------------+
+                       \       /
+                        Session
+                       /       \
++--------------+      /         \      +--------------+
+|   Instance   | <----           ----> |   Instance   |
++--------------+                       +--------------+
+   Endpoint C                            Endpoint D
 
 ~~~~~~~~
+{: #Fig-Session title='Session between multiple Instances'}
 
+### Datagram Format {#DatagramFormat}
 
-### SCHC Packet Format {#PacketFormat}
-
-A SCHC Datagram is the unit exchanged between SCHC Instances.
+A Datagram is the unit exchanged between SCHC Instances.
 
 It provides a unified representation for:
 - compressed packets
-- fragmented messages (fragments, acknowledgements, acknowledgement requests, ...)
+- fragmented messages (fragments, acknowledgements, acknowledgement requests,
+...)
 
-A SCHC Packet is composed of:
+A Datagram is composed of:
 
 - a RuleID
-- a SCHC Control Header
-- a SCHC Data Header
+- the result of the SCHC operation (residue, fragment)
 - the Payload
 
+The result of the SCHC operation and the Payload may be empty.
+As stated in {{RFC8724}}, a Datagram resulting from a compression operation is
+called a SCHC Packet, and a Datagram resulting from a fragmentation operation
+is called a Fragment.
+
 ```
-+--------+----------------------+----------------------+------------------+
-| RuleID | SCHC Control Header  | SCHC Data Header     | Payload          |
-+--------+----------------------+----------------------+------------------+
++--------+------------------------+----------+
+| RuleID | Residue, Fragment, ... | Payload  |
++--------+------------------------+----------+
 ```
+{: #Fig-Datagram title='Datagram Format'}
 
+#### Routing of Datagrams
 
-### SCHC Control Header (Optional - Rule-Based)
+In some deployments, it may be necessary to add information to the Datagram so
+that it can be properly routed to the correct Instance.  
+This information may be contained in a specific control structure, external to
+the Datagram, such as the header of an underlying transport protocol.
 
-The SCHC Control Header is a Rule-driven structure used by a specific Control Instance, which may provide one or more of the following services, whenever they are necessary:
+This structure may be used to carry various types of information in order to
+provide functionalities such as:
 
-- identify the SCHC Instance (Multiplexing)
-- upon compression, render explicit Discriminator implicit (e.g. compressed IPv6 traffic over Ethernet will be transported with EtherType=SCHC, but the decompressor needs to know that the initial Discriminator was EtherType=0x8DD)
-- validate the packet content (Protection)
-- OAM, etc.
+- Multiplexing (Session, Instance, Context Identifier)
+- Protection (Integrity)
+- Backup (Retain information that is lost when performing the SCHC operation,
+e.g., save the initial value of the EtherType field when it is changed to
+EtherType=SCHC)
 
-Example representations:
+Example representation:
 
-Non-compressed:
 ```
-+------------------+-------------+------+
-| SCHC Instance ID | Protocol ID | CRC  |
-+------------------+-------------+------+
++-------------+---------------+------+
+| Instance ID | SCHC Datagram | CRC  |
++-------------+---------------+------+
 ```
+{: #Fig-Transport title='SCHC Datagram encapsulated into a transport protocol'}
 
-Compressed (rule-based):
-```
-+----------+----------------------+
-| RuleID   | Compressed Residue   |
-+----------+----------------------+
-```
+**Important notice**: The structure or transport protocol used to carry these
+control informations must be a standard format and/or protocol in order to
+ensure interoperability. Therefore, it might be desirable to design a new
+protocol tailored to the needs of SCHC, such as a lightweight version of UDP.
+Various header formats would then be defined to support the aforementioned
+functions.
 
-The SCHC Control Header MAY be:
-- explicit
-- partially elided
-- fully implicit
 
+
+
+
+
+
+<!-- Marion: I stopped here -->
+
+<!-- TODO: Review the following sections -->
 
 ### Advanced SCHC Control Header Use-Cases
 
