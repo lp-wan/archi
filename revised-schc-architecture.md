@@ -546,12 +546,12 @@ In the figure below, two Domains are represented, where Endpoint A and
   and/or for management purpose. 
 
 ~~~~~~~~
-  +--------------------------------------------------------------------+  
-  |                          Domain Manager                            |  
-  +--------------------------------------------------------------------+  
-          ^                         ^                         ^            
-          |                         |                         |           
-          v                         v                         v           
+  +------------------------------+      +------------------------------+  
+  |      Domain Manager 1        |      |       Domain Manager 2       |
+  +------------------------------+      +------------------------------+  
+          ^                   ^            ^               ^            
+          |                   |            |               |           
+          v                   v            v               v           
   +----------------+      +-------------------+      +-----------------+  
   |   Endpoint A   |      |    Endpoint B     |      |   Endpoint C    |  
 +-----------------------------------------------+    |                 |  
@@ -618,9 +618,9 @@ EtherType=SCHC)
 Example representation:
 
 ~~~~~~~~
-+-------------+---------------+------+
-| Instance ID | SCHC Datagram | CRC  |
-+-------------+---------------+------+
++-------------+-----+---------------+
+| Instance ID | CRC | SCHC Datagram |
++-------------+-----+---------------+
 ~~~~~~~~
 {: #Fig-Transport title='SCHC Datagram encapsulated into a transport protocol'}
 
