@@ -652,7 +652,7 @@ This section considers a typical LPWAN deployment where an IoT device
   Endpoint. Each Instance is pre-configured with a static Context.
 
   The Discriminator is a field value within the LPWAN link layer, e.g. LoRAWAN
-  frame port (fPort), SigFox device ID (devID) and the Dispatcher is hardcoded 
+  frame port (fPort) and the Dispatcher is hardcoded 
   in the network stack: all traffic with pre-defined fPort or device ID are 
   dispatched to the SCHC Instance.
 
@@ -679,12 +679,17 @@ fPort = xxx | LPWAN Link Layer |       | LPWAN Link Layer | fPort = xxx
 ~~~~~~~~
 
 
-WIP
+| Core Element     | Notes          |
+|------------------|----------------|
+| Domain           | single         |
+| Endpoint         | single         |
+| Instance         | single         |
+| Context          | pre-configured |
+| Discriminator    |  fPort         |
+| Dispatcher       | hardcoded      |
 
-| Core Element     | Multiplexing | Integrity | Overhead  | Link Coverage |
-|------------------|--------------|-----------|-----------|---------------|
-| Endpoint         | No           | No        | 0 bytes   | IEEE 802 only |
-| Instance         | Yes          | No        | 4+ bytes  | Ethernet, IP  |
+
+  
 
 
 ## 6Lo deployment
@@ -715,6 +720,14 @@ Placeholder description text
         (RuleID 2, E2)
 ~~~~~~~~
 
+| Core Element     | Notes          |
+|------------------|----------------|
+| Domains          | 2              |
+| Endpoint         | 1 per device   |
+| Instance         | 2, I1 & I2     |
+| Contexts         | pre-configured |
+| Discriminator    | session ID     |
+| Dispatcher       | VOICI ?        |
 
 
 
