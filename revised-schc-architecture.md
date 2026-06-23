@@ -207,7 +207,7 @@ headers that the SCHC Rules in the associated Context can address.
 
 **CDA**: Compression/Decompression Action
 
-# Architecture
+# Architecture {#Architecture}
 
 This section provides an overview (diagrams) and describes the principal
 entities and their relations (architectural semantics). It must reference the
@@ -734,7 +734,56 @@ Placeholder description text
 # Operational considerations
 
 Management, Data Models, SCHC Endpoint lifecycle (provisioning,
-context synchronization), Interoperability, Error handling, etc.
+context synchronization), Interoperability, Error handling,
+Same context vs. compatible contexts, etc.
+
+## Data Models
+
+## Lifecycle
+
+## Management
+
+## Context consistency
+
+In {{Architecture}}, we have established that a Session is a communication
+  session between two or more Instances that share a common Context.
+  For a packet to be properly decompressed, the receiver must know the rule
+  that the sender used to compress the packet headers.
+
+To facilitate the provisioning and synchronization of Contexts within a Domain
+  for a given Session, it is recommended to deploy the same Context (with
+  identical SoR) on all Instances participating in a given Session. However,
+  it is possible for one or more Instances to have only a subset of the SoR,
+  as long as the Contexts of the Instances participating in a given session
+  remain compatible.
+
+In the following example of a deployment using a star topology where leaf
+  nodes only communicate with the root, rather than creating a separate
+  Instance for each link, or storing the entire SoR on each node, leafs nodes
+  only store the rules necessary for their communication with the root.
+  It should be noted that there may be a risk that the root user uses a rule
+  that is unknown to the recipient, leading to an error.
+
+~~~~~~~~
+                  +--------------+                  
+                  | Root         |                  
+                  | +----------+ |                  
+                  | | Rule 1   | |                  
+                  | | Rule 2   | |                  
+                  | | Rule 3   | |                  
+                  | +----------+ |                  
+                  +------|-------+                  
+                         |                          
+        +----------------|-----------------+        
+        |                |                 |        
++-------|------+  +------|-------+  +------|-------+
+| Node A       |  | Node B       |  | Node C       |
+| +----------+ |  | +----------+ |  | +----------+ |
+| | Rule 1   | |  | | Rule 2   | |  | | Rule 3   | |
+| +----------+ |  | +----------+ |  | +----------+ |
++--------------+  +--------------+  +--------------+
+~~~~~~~~
+{: #Fig-Consistency title='Example of compatible partial Contexts'}
 
 # Security Considerations
 
