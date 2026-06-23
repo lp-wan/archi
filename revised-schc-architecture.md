@@ -638,6 +638,86 @@ Give deployment examples (point to point, point to multipoint,
 multi-instances, SCHC with cryptographic boundaries, etc.) and link them to
 specific technologies (LPWAN, PPP, Ethernet, 6Lo, etc.)
 
+## LPWAN deployment
+
+This section considers a typical LPWAN deployment where an IoT device
+  communicates with a gateway or server using SCHC for header compression and
+  decompression. In this scenario, SCHC is used to compress the CoAP,
+  UDP, and IPv6 headers before sending the datagrams over the LPWAN link layer.
+  SCHC is used as an adaptation layer between the IPv6 layer and the LPWAN link
+  layer to compress the headers of the datagrams such that they fit within the
+  constraints of the LPWAN link layer.
+
+  In this setup, each device features a single SCHC Instance in a single SCHC 
+  Endpoint. Each Instance is pre-configured with a static Context.
+
+  The Discriminator is a field value within the LPWAN link layer, e.g. LoRAWAN
+  frame port (fPort), SigFox device ID (devID) and the Dispatcher is hardcoded 
+  in the network stack: all traffic with pre-defined fPort or device ID are 
+  dispatched to the SCHC Instance.
+
+
+~~~~~~~~
+             Host A, IoT Device       Host B, Gateway/Server
+            +------------------+       +------------------+
+            |  Application A   |       |  Application B   |
+            +------------------+       +------------------+
+            |       CoAP       |       |       CoAP       |
+            +------------------+       +------------------+
+            |       UDP        |       |       UDP        |
+            +------------------+       +------------------+
+            |       IPv6       |       |       IPv6       |
+            +------------------+       +------------------+
+            |       SCHC       |       |       SCHC       |
+            +------------------+       +------------------+
+fPort = xxx | LPWAN Link Layer |       | LPWAN Link Layer | fPort = xxx
+            +------------------+       +------------------+
+            |  Physical Layer  |       |  Physical Layer  |
+            +------------------+       +------------------+
+                    |                           |
+                    +---------------------------+
+~~~~~~~~
+
+
+WIP
+
+| Core Element     | Multiplexing | Integrity | Overhead  | Link Coverage |
+|------------------|--------------|-----------|-----------|---------------|
+| Endpoint         | No           | No        | 0 bytes   | IEEE 802 only |
+| Instance         | Yes          | No        | 4+ bytes  | Ethernet, IP  |
+
+
+## 6Lo deployment
+
+Placeholder description text 
+
+~~~~~~~~
+
+
+                                                   Host E
+                    (RuleID 2, E2)                /
+                    (RuleID 1, E1)      +--------+
+                    (RuleID 2, E1)  --- |Internet|
+                    (RuleID 3, E1) /    +--------+
+                   6LBR -----------
+                 /      \
+                /        \
+              6LR         6LR -------------+            Nodes | End point
+(RuleID 1, E1) |         | (RuleID 1, E1)  |   RuleID 1: A, B      E1
+(RuleID 2, E1) |         | (RuleID 2, E1)  |   RuleID 2: A, C      E1
+(RuleID 3, E1) |         | (RuleID 3, E1)  |   RuleID 3: A, E      E1
+(RuleID 2, E2) |         | (RuleID 2, E2)  |   RuleID 2: A, B      E2
+               |         |                 |
+              Host A      Host B         Host C
+        (RuleID 1, E1)    (RuleID 1, E1)   (RuleID 2, E1)
+        (RuleID 2, E1)    (RuleID 2, E2)
+        (RuleID 3, E1)
+        (RuleID 2, E2)
+~~~~~~~~
+
+
+
+
 # Operational considerations
 
 Management, Data Models, SCHC Endpoint lifecycle (provisioning,
