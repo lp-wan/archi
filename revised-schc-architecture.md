@@ -705,7 +705,7 @@ LPWAN deployment — Stratum annotated as range
    +------------------+             +------------------+ -+ Upper boundary: CoAP
    |       CoAP       |             |       CoAP       |  | 
    +------------------+             +------------------+  |
-   |       UDP        |             |       UDP        |  | 
+   |       UDP        |             |       UDP        |  |   Stratum
    +------------------+             +------------------+  |
    |       IPv6       |             |       IPv6       |  |
    +------------------+             +------------------+ -+ Lower boundary: IPv6
