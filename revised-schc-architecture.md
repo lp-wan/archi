@@ -256,10 +256,10 @@ SCHC can be used in two fundamentally different ways.
 **Case A: SCHC as a Network Service.**  The SCHC Instance acts on headers the 
   stack itself needs to inspect and route. By itself, an Instance cannot 
   intercept packets in the network stack, and SCHC is not a protocol residing in
-  the stack. Because SCHC is not a protocol in the stack, the Dispatcher 
-  intercepts datagrams before they enter the Stratum and routes them to the 
-  correct Instance. The Instance reconstructs the compressed header before the 
-  protocols of the stratum further process the datagram.
+  the stack. Because SCHC is not a protocol in the stack, an entity of the network
+  stack, the Dispatcher, handles datagrams before they enter the Stratum and 
+  routes them to the correct Instance. The Instance reconstructs the compressed
+  header before the protocols of the stratum further process the datagram.
    
 For example, in the 6Lo scenario detailed below, the Instance addresses an 
   IPv6/UDP/CoAP Stratum above the 802.15.4 L2 header. The Dispatcher is the 
@@ -278,8 +278,9 @@ The Discriminator usually sits in the adjacent layer below the Stratum lower
   needed. The Instance's Invocation Context is the application's processing stage.
 
 The same core architectural concepts (Instance, Context, Rule, Stratum, Domain) 
-apply in both cases.  What differs is the routing and configuration mechanism:
-Carrier Layer, Discriminator and Dispatcher apply only to Case A.
+  apply in both cases.  What differs is the routing and configuration mechanism:
+  Carrier Layer, Discriminator and Dispatcher apply only to Case A.
+
 
 # Architecture
 
@@ -701,27 +702,21 @@ LPWAN deployment — Stratum annotated as range
     Host A, IoT Device              Host B, Gateway/Server
    +------------------+             +------------------+
    |   Application A  |             |   Application B  |
-   +------------------+             +------------------+
-   |       CoAP       |             |       CoAP       |
-   +------------------+             +------------------+
-   |  [upper]         |             |  [upper]         |  -> Upper boundary: CoAP
-   +------------------+             +------------------+
-   |       UDP        |             |       UDP        |
-   +------------------+             +------------------+
-   |       IPv6       |             |       IPv6       |
-   +------------------+             +------------------+
-   |  [lower]         |             |  [lower]         |  -> Lower boundary: IPv6
-   +------------------+             +------------------+
-fPort = xxx | LPWAN Link Layer |   | LPWAN Link Layer | fPort = xxx
-   |  (Carrier Layer) |   | (Carrier Layer)  |
-   +------------------+             +------------------+
+   +------------------+             +------------------+ -+ Upper boundary: CoAP
+   |       CoAP       |             |       CoAP       |  | 
+   +------------------+             +------------------+  |
+   |       UDP        |             |       UDP        |  | 
+   +------------------+             +------------------+  |
+   |       IPv6       |             |       IPv6       |  |
+   +------------------+             +------------------+ -+ Lower boundary: IPv6
+   | LPWAN Link Layer |             | LPWAN Link Layer | - Carrier Layer,
+   +------------------+             +------------------+   discriminator: fPort
    |  Physical Layer  |             |  Physical Layer  |
    +------------------+             +------------------+
            |                           |
            +---------------------------+
                    LPWAN link
-                   Discriminator derived from
-                   Carrier Layer (fPort)
+                 
 ~~~~~~~~
 
 | Core Element     | Notes                  |
