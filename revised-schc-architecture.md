@@ -234,9 +234,9 @@ Instead of transmitting headers in full, the sender replaces known header
   process through a shared **Context**.
 
 This shared Context may be static, for example pre-provisioned with the device
-  firmware or installed dynamically. In the latter case, the logical grouping 
-  that share the same context, and therefore require timely and coordinated 
-  updates, is called a **Domain**.
+   firmware or installed dynamically. In the latter case, the logical groupings
+   that share the same Context, and therefore require timely and coordinated
+   updates, are called  **Domains**.
 
 Compression and decompression occur in SCHC **Instances** — logical entities
   that:
@@ -261,10 +261,10 @@ SCHC can be used in two fundamentally different ways.
   
   On the compressor side, the Dispatcher intercepts **Native** Datagrams 
   targeted by an Instance after the network protocols of the Stratum have 
-  finished processing the Datagram. The Dispatcher then dispatch the Native 
+  finished processing the Datagram. The Dispatcher then dispatches the Native 
   Datagram to the Instance which compresses the Datagram to form the SCHC 
   Datagram. The SCHC Datagram is then reinjected into the network stack at the
-  adjactent layer below the Stratum -- the **Carrier** Layer. Eventually, the 
+  adjacent layer below the Stratum -- the **Carrier** Layer. Eventually, the 
   Dispatcher fills the Carrier **Discriminator**, a value of the Carrier header
   that indicates the Datagram is compressed with SCHC. The SCHC Datagram is then
   processed further by the network stack and sent to its recipient.
@@ -443,7 +443,7 @@ The following figure illustrates the main components of an Endpoint supporting
 {: #Fig-Multiple-Instances title='Overview of an Endpoints hosting multiple
 Instances'}
 
-### SCHC configuration provisioning architecure
+### SCHC configuration provisioning architecture
 
 Endpoints with Instances sharing a common Context may register to a **Domain**. 
 
@@ -509,7 +509,7 @@ An Instance is the fundamental component that runs a set of SCHC functionalities
   as defined in {{RFC8724}} hosted on an Endpoint. Its operation is defined by
   an Instance Configuration and a Context. An Endpoint MAY execute several
   Instances. Each Instance operates independently, with its own Context and
-  Instance Configuration. Instance mays execute dynamic Context update
+  Instance Configuration. Instance may execute dynamic Context update
   mechanisms and performance monitoring and reporting in complex scenarios.
   
 #### Instance Configuration
@@ -548,7 +548,7 @@ For example, for Header Compression and Decompression (C/D) or Fragmentation
 ### Endpoint
 
 A network entity providing SCHC functionalities, and hosting the Instances
-that consist of a specific execution of one or more of these aforementionned
+that consist of a specific execution of one or more of these aforementioned
 functionalities.
 
 #### Header Compression and Decompression (C/D)
@@ -597,8 +597,6 @@ A SCHClet is a self-contained unit within the SCHC framework that implements
   implement aspects defined in {{RFC8724}} or functions from other related
   SCHC RFCs, and MAY be combined with other SCHClets within an Instance, as
   speficied in the Manifest in the Instance Configuration.
-
-
 
 ### Session
 
@@ -721,64 +719,112 @@ Various header formats would then be defined to support the aforementioned
 functions.
 
 # Deployment models
-
+<!--
 Give deployment examples (point to point, point to multipoint,
 multi-instances, SCHC with cryptographic boundaries, etc.) and link them to
 specific technologies (LPWAN, PPP, Ethernet, 6Lo, etc.)
+-->
+
+In this section, we review the deployment scenarios considered in the SCHC 
+Working Group and match the terminology with the scenario characteristics.
+
 ## LPWAN deployment
 
 This section considers a typical LPWAN deployment where an IoT device communicates 
-with a gateway or server using SCHC for header compression and decompression. 
-The Instance's Stratum spans [IPv6, UDP, CoAP] — meaning the Rules in its 
-Context can address headers across all three protocol layers. The Carrier Layer
-(LPWAN link) adjacent below the Stratum's lower boundary carries the Discriminator
-in a frame field such as the LoRaWAN frame port (fPort).
+  with a gateway or server using SCHC for header compression and decompression. 
+  The Instance's Stratum spans [IPv6, UDP, CoAP] — meaning the Rules in its 
+  Context address headers across those three protocol layers. The Carrier Layer
+  (LPWAN link) adjacent below the Stratum's lower boundary carries the Discriminator
+  in a frame field such as the LoRaWAN frame port (fPort).
 
 In this setup, each device features a single SCHC Instance in a single Endpoint.
-Each Instance is pre-configured with a static Context. The Discriminator is an
-explicit field in the LPWAN frame (e.g., fPort) and the Dispatcher is hardcoded
-in the network stack.
+  Each Instance is pre-configured with a static Context and Instance configuration.
+  The Discriminator is an explicit field in the LPWAN frame (e.g., fPort) and 
+  the Dispatcher is hardcoded in the network stack.
 
 ~~~~~~~~
-
-LPWAN deployment — Stratum annotated as range
 
     Host A, IoT Device              Host B, Gateway/Server
    +------------------+             +------------------+
    |   Application A  |             |   Application B  |
-   +------------------+             +------------------+ -+ Upper boundary: CoAP
-   |       CoAP       |             |       CoAP       |  | 
+   +------------------+             +------------------+ -+ 
+   |       CoAP       |             |       CoAP       |  | Upper boundary: CoAP
    +------------------+             +------------------+  |
    |       UDP        |             |       UDP        |  |   Stratum
    +------------------+             +------------------+  |
-   |       IPv6       |             |       IPv6       |  |
-   +------------------+             +------------------+ -+ Lower boundary: IPv6
+   |       IPv6       |             |       IPv6       |  | Lower boundary: IPv6
+   +------------------+             +------------------+ -+ 
    | LPWAN Link Layer |             | LPWAN Link Layer | - Carrier Layer,
    +------------------+             +------------------+   discriminator: fPort
    |  Physical Layer  |             |  Physical Layer  |
    +------------------+             +------------------+
-           |                           |
-           +---------------------------+
-                   LPWAN link
-                 
+           |                                  |
+           +----------------------------------+
+                         LPWAN link
 ~~~~~~~~
-
-| Core Element     | Notes                        |
-|------------------|------------------------------|
-| Domain           | single                       |
-| Endpoint         | single                       |
-| Instance         | single                       |
-| Context          | pre-configured               |
-| Stratum          | [IPv6, UDP, CoAP]            |
-| Carrier          | Link Layer                   |
-| Discriminator    | fPort                        |
-| Dispatcher       | hardcoded in network stack   |
-
-
-  
-
+{: #Fig-lpwan-deployment title='LPWAN deployment'}
 
 ## 6Lo deployment
+
+This section considers deployment scenarios as defined in {{SCHCo15dot4}}.
+
+In the first deployment, a 6Lo Node in a SCHC-Lo network commmunicates with an
+external host on the Internet.
+
+~~~~~~~~
+                  6LN                6LBR             External host
+
+             +- +--------+                              +--------+
+             |  |  CoAP  |                              |  CoAP  |
+             |  +--------+                              +--------+
+  I1 stratum |  |  UDP   |                              |  UDP   |
+             |  +--------+     +----------------+       +--------+
+             |  |  IPv6  |     |      IPv6      |       |  IPv6  |
+             +- +--------+     +----------------+       +--------+
+   Carrier      |6lo frag|     |6lo frag|       .       .        .
+                +--------+     +--------+       .       .        .
+                |802.15.4|     |802.15.4|       .       .        .
+                +--------+     +----------------+       ..........
+          |               |        |                         |
+          +---------------+        +-------------------------+
+           SCHC-Lo network                   Internet
+~~~~~~~~
+{: #Fig-lpwan-deployment title='6Lo deploymentm 6Lo Node connected to an external host through a 6Lo Border Router'}
+
+## 6Lo with DTLS deployment
+~~~~~~~~
+                  6LN                6LBR             External host
+
+             +- +--------+                              +--------+
+I1 stratum - |  |  CoAP  |                              |  CoAP  |
+             +- +--------+                              +--------+
+                |  DTLS  |                              |  DTLS  |
+             +- +--------+                              +--------+
+             |  |  UDP   |                              |  UDP   |
+I2 stratum   |  +--------+     +----------------+       +--------+
+             |  |  IPv6  |     |      IPv6      |       |  IPv6  |
+             +- +--------+     +----------------+       +--------+
+                |6lo frag|     |6lo frag|       .       .        .
+                +--------+     +--------+       .       .        .
+                |802.15.4|     |802.15.4|       .       .        .
+                +--------+     +----------------+       ..........
+          |               |        |                         |
+          +---------------+        +-------------------------+
+           SCHC-Lo network                   Internet
+~~~~~~~~
+{: #Fig-lpwan-deployment title='6Lo deploymentm 6Lo Node connected to an external host through a 6Lo Border Router'}
+
+
+In this scenario, the 6Lo Node endpoint features two Instances I1 and I2.
+I1 compresses the CoAP header while I2 compresses the UDP and IPv6 headers.
+
+The corresponding Endpoint is located on the 6Lo Border router which features 
+the corresponding Instances.
+
+
+
+
+The terminology is updated to reflect this of the current document.
 
 Placeholder description text 
 
