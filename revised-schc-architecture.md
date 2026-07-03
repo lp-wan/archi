@@ -385,16 +385,75 @@ SCHC Datagrams'}
   the header fields, and/or which Data Model, such as the one defined in
   {{RFC9363}}.
 
-### Provisioning of SCHC configurations
+### Multiple Instances Architecture
 
-Quentin is HERE. In the above scenario, the Context 
+An Endpoint can host multiple Instances, each with its own Context and Instance
+Configuration.
 
-Instances sharing a common Context form a **Domain**. The Domain Manager is
-  responsible to manage the Contexts of all Instances that belong to it.
-  A communication between two Instances or more that share a common Context is
-  called a Session. Each Instance, Context, and Session must be uniquely
-  identifiable to allow the Domain Manager to update the Context of a specific
-  Instance.
+When an Endpoint is supporting multiple Instances, the **Instance Manager** is
+  responsible for managing the lifecycle and configuration of these Instances.
+  Datagrams are routed to the appropriate Instance by the Dispatcher using
+  the Discriminator and admission rules based on information provided in the
+  Instance Configuration. The Dispatcher is a single point of decision for
+  packet forwarding within the Endpoint.
+
+In some deployments, the Discriminator is derived entirely from lower-layer
+context (e.g., a specific PPP link, an IPv6 address, or a UDP port).
+If external context is insufficient or unavailable, the Dispatcher may need an
+explicit Discriminator. For example, Datagrams can be encapsulated in a light
+transport protocol whose header contains a Session, Context, or Instance
+identifier, and can provide additional services such as integrity checking (CRC).
+
+The following figure illustrates the main components of an Endpoint supporting
+  multiple Instances and their interactions:
+
+~~~~~~~~
+    +-------------------+         +----------------+         
+    | Instance Manager  |         | SCHC Functions |         
+    +-------------------+         +----------------+         
+ manages lifecyle  | |                      ^                
+ of Instances,     | |                      | compresses,    
+ retrieve Contexts | +--------------------+ | decompresses,  
+ and Configs       |                      | | etc.           
+                   v                      v v                
+        +-------------+             +-------------+          
+     +->| Instance I1 |       ...   | Instance Ik |<--------+ 
+     |  +-------------+             +-------------+         | 
+     |   | |                         | |                    | 
+     |   | |  +------------+         | |  +------------+    | 
+     |   | +--| Context C1 |  ...    | +--| Context Ck |    | 
+     |   |    +------------+         |    +------------+    | 
+     |   |    +------------+         |    +------------+    | 
+     |   +----| Config G1  |  ...    +----| Config Gk  |    | 
+     |        +------------+              +------------+    | 
+     |              |                         |             | 
+     |   is applied |                         | is applied  | 
+     |   to         |     +-------------+     | to          | 
+     |              +---->|             |<----+             | 
+     +------------------->| Dispatcher  |<------------------+ 
+        dispatch packets  |             |  dispatch packets  
+                          +-------------+                    
+                                ^ |                          
+                          admit | | reinject                 
+                                | v                          
+                          +---------------+                  
+                          | Network stack |                  
+                          +---------------+                  
+~~~~~~~~
+{: #Fig-Multiple-Instances title='Overview of an Endpoints hosting multiple
+Instances'}
+
+### SCHC configuration provisioning architecure
+
+Endpoints with Instances sharing a common Context may register to a **Domain**. 
+
+When Contexts are provisioned dynamically, a **Domain Manager** is responsible
+  for this provisioning. within a Domain, the **Endpoint Manager** is in charge
+  of the on-boarding of participating Endpoints. Contexts are stored in 
+  the **Context Repository** and the **Context Manager** is in charge of the
+  synchronization of the instances' Contexts. Similarly, the **Instance 
+  Configuration Manager** is in charge of the deployment of the Instance-specific
+  configurations.
 
 ~~~~~~~~
          +-----------------------------------------------------+           
@@ -439,6 +498,8 @@ Instances sharing a common Context form a **Domain**. The Domain Manager is
 +-----------------------------------+
 ~~~~~~~~
 {: #Fig-Domain-Manager title='Overview of the functions of the Domain Manager'}
+
+
 
 ## Focus on core components
 
@@ -537,63 +598,7 @@ A SCHClet is a self-contained unit within the SCHC framework that implements
   SCHC RFCs, and MAY be combined with other SCHClets within an Instance, as
   speficied in the Manifest in the Instance Configuration.
 
-#### Multiple Instances
 
-An Endpoint can host multiple Instances, each with its own Context and Instance
-Configuration.
-
-When an Endpoint is supporting multiple Instances, the Instance Manager is
-  responsible for managing the lifecycle and configuration of these Instances.
-  Datagrams are routed to the appropriate Instance by the Dispatcher using
-  the Discriminator and admission rules based on information provided in the
-  Instance Configuration. The Dispatcher is a single point of decision for
-  packet forwarding within the Endpoint.
-
-In some deployments, the Discriminator is derived entirely from lower-layer
-context (e.g., a specific PPP link, an IPv6 address, or a UDP port).
-If external context is insufficient or unavailable, the Dispatcher may need an
-explicit Discriminator. For example, Datagrams can be encapsulated in a light
-transport protocol whose header contains a Session, Context, or Instance
-identifier, and can provide additional services such as integrity checking (CRC).
-
-The following figure illustrates the main components of an Endpoint supporting
-  multiple Instances and their interactions:
-
-~~~~~~~~
-    +-------------------+         +----------------+         
-    | Instance Manager  |         | SCHC Functions |         
-    +-------------------+         +----------------+         
- manages lifecyle  | |                      ^                
- of Instances,     | |                      | compresses,    
- retrieve Contexts | +--------------------+ | decompresses,  
- and Configs       |                      | | etc.           
-                   v                      v v                
-        +-------------+             +-------------+          
-     +->| Instance I1 |       ...   | Instance Ik |<--------+ 
-     |  +-------------+             +-------------+         | 
-     |   | |                         | |                    | 
-     |   | |  +------------+         | |  +------------+    | 
-     |   | +--| Context C1 |  ...    | +--| Context Ck |    | 
-     |   |    +------------+         |    +------------+    | 
-     |   |    +------------+         |    +------------+    | 
-     |   +----| Config G1  |  ...    +----| Config Gk  |    | 
-     |        +------------+              +------------+    | 
-     |              |                         |             | 
-     |   is applied |                         | is applied  | 
-     |   to         |     +-------------+     | to          | 
-     |              +---->|             |<----+             | 
-     +------------------->| Dispatcher  |<------------------+ 
-        dispatch packets  |             |  dispatch packets  
-                          +-------------+                    
-                                ^ |                          
-                          admit | | reinject                 
-                                | v                          
-                          +---------------+                  
-                          | Network stack |                  
-                          +---------------+                  
-~~~~~~~~
-{: #Fig-Multiple-Instances title='Overview of an Endpoints hosting multiple
-Instances'}
 
 ### Session
 
