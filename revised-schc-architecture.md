@@ -809,7 +809,7 @@ A datagram compressed by SCHC results in the following frame format:
   802.15.4  | 6Lo Dispatch |     SCHC Datagram      |
    header   |   (1 byte)   |                        | 
 ~~~~~~~~
-{: #Fig-6lo-simple-datagran title='SCHC Datagram'}
+{: #Fig-6lo-simple-datagram title='SCHC-Lo Datagram'}
 
 In a second deployment, a 6LN communicates with an external host on the Internet.
   In this scenario, the CoAP header is encrypted using DTLS. The 6LN Endpoint 
@@ -829,7 +829,7 @@ I1 stratum - |  |  CoAP  |                              |  CoAP  |
 I2 stratum   |  +--------+     +----------------+       +--------+
              |  |  IPv6  |     |      IPv6      |       |  IPv6  |
              +- +--------+     +----------------+       +--------+
-   Carrier      |  6lo   |     |  6lo   |       .       .        .
+   Carrier ---  |  6lo   |     |  6lo   |       .       .        .
                 +--------+     +--------+       .       .        .
                 |802.15.4|     |802.15.4|       .       .        .
                 +--------+     +----------------+       ..........
@@ -843,6 +843,46 @@ I2 stratum   |  +--------+     +----------------+       +--------+
 The 6Lo Node endpoint features two Instances I1 and I2. I1 corresponding 
 Instance lives on the external host while I2 corresponding Instance lives on the
 6LBR.
+
+When the 6LN's CoAP application generates a datagram, that is a CoAP header and 
+  eventually a payload, The Dispatcher dispatches the datagram to Instance I1.
+  I1 builds a SCHC Datagram SD1 comprising a Rule ID and SCHC Residue, result of
+  the compression of the CoAP header and Payload. This SCHC Datagram is passed 
+  on to the DTLS layer which encrypts the SCHC Residue and then to UDP and IPv6. 
+  Once the IPv6 header is formed, the Dispatcher dispatches the datagram to 
+  Instance I2 which compresses the IPv6 and UDP header to form a SCHC Datagram 
+  SD2.
+
+Supposing a minimal size DTLS unified header (1byte), the 802.15.4 frame that is
+  transmitted on the SCHC-Lo network is structured as illustrated below.
+
+~~~~~~~~
++- - - - -+--------+-------+-------+--------+---------------+----------+
+|         |  0x44  |Rule ID|Residue|  0x21  |Rule ID|Residue| Payload  |
++- - - - -+--------+-------+-------+--------+---------------+----------+
+ 802.15.4 |6Lo     | SCHC Datagram |  DTLS  | SCHC Datagram |
+  header  |Dispatch|      SD2      |unif.hdr|      SD1      |
+~~~~~~~~
+{: #Fig-6lo-schclo-dtls title='SCHC-Lo Datagram with DTLS'}
+
+When the 6LBR receives a 802.15.4 frame featuring the 6Lo Dispatch for SCHC, the
+  Dispatcher passe the frame to instance I2 relative on the 6LBR Endpoint. This 
+  Instance reconstructs the IPv6 and UDP headers that was compressed by I1. Once
+  decompressed, the frame is reinjected in the stack and further process by the 
+  IPv6 layer. The 6LBR then routes the IPv6 frame towards its destination, the 
+  external host.
+
+The external host receives a frame structured as follows:
+
+~~~~~~~~
++- - - - -+--------+------|--------+---------------+----------+
+|         |  IPv6  | UDP  |  0x21  |Rule ID|Residue| Payload  |
++- - - - -+--------+------|--------+---------------+----------+
+ L2 layer |        |      |  DTLS  | SCHC Datagram |
+          |        |      |unif.hdr|      SD1      |
+~~~~~~~~
+{: #Fig-6lo-internet-dtls title='Internet Datagram with DTLS'}
+
 
 
 ## Deployment Example: OSCORE-Protected CoAP
