@@ -883,8 +883,15 @@ The external host receives a frame structured as follows:
 ~~~~~~~~
 {: #Fig-6lo-internet-dtls title='Internet Datagram with DTLS'}
 
+Once the Carrier Layer has finished processing the ingress datagram, the 
+  Dispatcher dispatches the SD1 SCHC Datagram to the corresponding instance, which
+  reconstructs the CoAP header. The CoAP header is then passed by the Dispatcher 
+  to the CoAP layer.
 
 
+
+
+<!--
 ## Deployment Example: OSCORE-Protected CoAP
 
 A detailed walkthrough of the OSCORE-protected CoAP scenario demonstrates how
@@ -984,6 +991,8 @@ application-layer compression within a single packet.  The architecture's core
 concepts (Instance, Context, Rule, Stratum) apply across both invocation modes,
 while network-specific concepts (Carrier Layer, Discriminator, Dispatcher,
 Domain) are restricted to Case A.
+
+-->
 
 # Operational considerations
 
