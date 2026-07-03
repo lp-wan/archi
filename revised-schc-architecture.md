@@ -764,12 +764,17 @@ In this setup, each device features a single SCHC Instance in a single Endpoint.
 ~~~~~~~~
 {: #Fig-lpwan-deployment title='LPWAN deployment'}
 
-## 6Lo deployment
+## 6Lo deployments
 
 This section considers deployment scenarios as defined in {{SCHCo15dot4}}.
+  The terminology is updated to reflect this of the current document.
 
-In the first deployment, a 6Lo Node in a SCHC-Lo network commmunicates with an
-external host on the Internet.
+In a first deployment, a 6Lo Node (6LN) in a SCHC-Lo network commmunicates 
+  with an external host on the Internet. In this scenario, the 6LN is in direct 
+  communication with the 6Lo Border Router (6LBR). SCHC datagrams are only 
+  carried over the SCHC-Lo network, between the 6LN. The CoAP header and payload
+  are sent in clear (no encryption), and we assume that the SCHC datagram is 
+  small enough to fit in a single 802.15.4 frame.
 
 ~~~~~~~~
                   6LN                6LBR             External host
@@ -781,17 +786,37 @@ external host on the Internet.
              |  +--------+     +----------------+       +--------+
              |  |  IPv6  |     |      IPv6      |       |  IPv6  |
              +- +--------+     +----------------+       +--------+
-   Carrier      |6lo frag|     |6lo frag|       .       .        .
+   Carrier      |  6lo   |     |  6lo   |       .       .        .
                 +--------+     +--------+       .       .        .
                 |802.15.4|     |802.15.4|       .       .        .
                 +--------+     +----------------+       ..........
-          |               |        |                         |
-          +---------------+        +-------------------------+
-           SCHC-Lo network                   Internet
+                    |               |        |               |
+                    +---------------+        +---------------+
+                     SCHC-Lo network              Internet
 ~~~~~~~~
-{: #Fig-lpwan-deployment title='6Lo deploymentm 6Lo Node connected to an external host through a 6Lo Border Router'}
+{: #Fig-6lo-simple title='6Lo deployment: 6Lo Node connected to an external host through a 6Lo Border Router'}
 
-## 6Lo with DTLS deployment
+In this scenario, the 6LN endpoint features a single Instance I1 that compresses
+  the IPv6, UDP and CoAP stratum. The Carrier Layer is the 6Lo adaptation layer 
+  which is materialized in frame by the dispatch byte.
+
+A datagram compressed by SCHC results in the following frame format:
+
+~~~~~~~~
++- - - - - -+------------------------+--------------+
+|           |   01000100   | Rule ID |   Residue    |
++- - - - - -+------------------------+--------------+
+  802.15.4  | 6Lo Dispatch |     SCHC Datagram      |
+   header   |   (1 byte)   |                        | 
+~~~~~~~~
+{: #Fig-6lo-simple-datagran title='SCHC Datagram'}
+
+In a second deployment, a 6LN communicates with an external host on the Internet.
+  In this scenario, the CoAP header is encrypted using DTLS. The 6LN Endpoint 
+  features two Instances I1 and I2. I1 compresses the CoAP header while I2 
+  compresses the UDP and IPv6 headers.
+
+
 ~~~~~~~~
                   6LN                6LBR             External host
 
@@ -804,63 +829,20 @@ I1 stratum - |  |  CoAP  |                              |  CoAP  |
 I2 stratum   |  +--------+     +----------------+       +--------+
              |  |  IPv6  |     |      IPv6      |       |  IPv6  |
              +- +--------+     +----------------+       +--------+
-                |6lo frag|     |6lo frag|       .       .        .
+   Carrier      |  6lo   |     |  6lo   |       .       .        .
                 +--------+     +--------+       .       .        .
                 |802.15.4|     |802.15.4|       .       .        .
                 +--------+     +----------------+       ..........
-          |               |        |                         |
-          +---------------+        +-------------------------+
-           SCHC-Lo network                   Internet
+                    |               |        |               |
+                    +---------------+        +---------------+
+                     SCHC-Lo network              Internet
 ~~~~~~~~
-{: #Fig-lpwan-deployment title='6Lo deploymentm 6Lo Node connected to an external host through a 6Lo Border Router'}
+{: #Fig-6lo-dtls title='6Lo deployment: 6Lo Node connected to an external host through a 6Lo Border Router. The CoAP is encrypted using DTLS'}
 
 
-In this scenario, the 6Lo Node endpoint features two Instances I1 and I2.
-I1 compresses the CoAP header while I2 compresses the UDP and IPv6 headers.
-
-The corresponding Endpoint is located on the 6Lo Border router which features 
-the corresponding Instances.
-
-
-
-
-The terminology is updated to reflect this of the current document.
-
-Placeholder description text 
-
-~~~~~~~~
-
-
-                                                   Host E
-                    (RuleID 2, E2)                /
-                    (RuleID 1, E1)      +--------+
-                    (RuleID 2, E1)  --- |Internet|
-                    (RuleID 3, E1) /    +--------+
-                   6LBR -----------
-                 /      \
-                /        \
-              6LR         6LR -------------+            Nodes | End point
-(RuleID 1, E1) |         | (RuleID 1, E1)  |   RuleID 1: A, B      E1
-(RuleID 2, E1) |         | (RuleID 2, E1)  |   RuleID 2: A, C      E1
-(RuleID 3, E1) |         | (RuleID 3, E1)  |   RuleID 3: A, E      E1
-(RuleID 2, E2) |         | (RuleID 2, E2)  |   RuleID 2: A, B      E2
-               |         |                 |
-              Host A      Host B         Host C
-        (RuleID 1, E1)    (RuleID 1, E1)   (RuleID 2, E1)
-        (RuleID 2, E1)    (RuleID 2, E2)
-        (RuleID 3, E1)
-        (RuleID 2, E2)
-~~~~~~~~
-
-| Core Element     | Notes          |
-|------------------|----------------|
-| Domains          | 2              |
-| Endpoint         | 1 per device   |
-| Instance         | 2, I1 & I2     |
-| Contexts         | pre-configured |
-| Discriminator    | session ID     |
-| Dispatcher       | VOICI ?        |
-
+The 6Lo Node endpoint features two Instances I1 and I2. I1 corresponding 
+Instance lives on the external host while I2 corresponding Instance lives on the
+6LBR.
 
 
 ## Deployment Example: OSCORE-Protected CoAP
