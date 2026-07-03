@@ -279,7 +279,10 @@ SCHC can be used in two fundamentally different ways.
   The Datagram is further processed by the Network stack, as would the Native
   Datagram be processed.
 
-   
+The same core architectural concepts (Instance, Context, Rule, Stratum, Domain) 
+  apply in both cases.  What differs is the routing and configuration mechanism:
+  Carrier Layer, Discriminator and Dispatcher apply only to Case A.
+
 For example, in the 6Lo scenario detailed below, the Instance addresses an 
   IPv6/UDP/CoAP Stratum above the 802.15.4 L2 header. The Dispatcher is the 
   stack routine that redirects frames bearing the SCHC Dispatch byte (`0100 0100`)
@@ -293,12 +296,9 @@ The Discriminator usually sits in the adjacent layer below the Stratum lower
 **Case B: SCHC as an Application Service.**  The Instance is invoked by the
   application's processing pipeline, compressing data that does not affect the
   network stack processing. The application calls the Instance as a library 
-  function, in an order the application dictates. No Dispatch, or Discriminator is
-  needed. The Instance's Invocation Context is the application's processing stage.
-
-The same core architectural concepts (Instance, Context, Rule, Stratum, Domain) 
-  apply in both cases.  What differs is the routing and configuration mechanism:
-  Carrier Layer, Discriminator and Dispatcher apply only to Case A.
+  function, in an order the application dictates. No Dispatch, or Discriminator 
+  is needed. The Instance's Invocation Context is the application's processing 
+  stage.
 
 
 # Architecture
@@ -327,30 +327,22 @@ operations of SCHC can be developed.
   applications running on two remote hosts using SCHC Compression/Decompression
   and optionally Fragmentation/Reassembly.
 
-Each host runs an Endpoint that implements SCHC functions that are executed by
-  an Instance. The Instance stores a Context that may have been obtained from
-  an entity called the Context Repository. The same Context is shared between
-  the two Endpoints. The Instance Configuration specifies the required SCHC
-  functions and parameters necessary for the Instance to operate properly:
-  which packets to intercept, the rule-matching policy (e.g., first-match,
-  best-match), the Instance’s role (in the case of asymmetric processing), etc.
+Each host features an **Endpoint** that implements SCHC functions. The effective
+  Compression/Decompression or Fragmentation/Reassembly of datagrams is carried
+  out by the **Instance**, a runtime entity.
 
-**Important notice**: having the same Context is not sufficient to guarantee
-  the interoperability of SCHC operations between two Instances. The format of
-  the data obtained from the Parser when processing the headers must be
-  consistent on each Endpoint to allow the successful decompression. To ensure
-  interoperability, the Context may specify which Parser to use to delineate
-  the header fields, and/or which Data Model, such as the one defined in
-  {{RFC9363}}.
-
-Instances sharing a common Context form a Domain. The Domain Manager is
-  responsible to manage the Contexts of all Instances that belong to it.
-  A communication between two Instances or more that share a common Context is
-  called a Session. Each Instance, Context, and Session must be uniquely
-  identifiable to allow the Domain Manager to update the Context of a specific
+How Compression/Decompression and Fragmentation/Reassembly is performed by 
+  each Instance is specified in two configuration elements: the **Context**
+  which contains the configuration shared and identical between the two 
+  Instances and the **Instance Configuration** which is specific to each 
   Instance.
 
+Most notably, the Context contains the **Set of Rules** (SoR), which defines how
+  datagrams are compressed and/or fragmented, and the Instance Configuration 
+  specifies which role each Instance assumes (Uplink/Downlink).
 
+The two Instances that share the same Context form a **Session**, eventually 
+identified by a **Session ID** which is then specified in the Context.
 
 ~~~~~~~~
 +-----------------------+                   +-----------------------+
@@ -383,6 +375,26 @@ Instances sharing a common Context form a Domain. The Domain Manager is
 ~~~~~~~~
 {: #Fig-Simple-Overview title='Overview of two simple Endpoints exchanging
 SCHC Datagrams'}
+
+
+**Important notice**: having the same Context is not sufficient to guarantee
+  the interoperability of SCHC operations between two Instances. The format of
+  the data obtained from the Parser when processing the headers must be
+  consistent on each Endpoint to allow the successful decompression. To ensure
+  interoperability, the Context may specify which Parser to use to delineate
+  the header fields, and/or which Data Model, such as the one defined in
+  {{RFC9363}}.
+
+### Provisioning of SCHC configurations
+
+Quentin is HERE. In the above scenario, the Context 
+
+Instances sharing a common Context form a **Domain**. The Domain Manager is
+  responsible to manage the Contexts of all Instances that belong to it.
+  A communication between two Instances or more that share a common Context is
+  called a Session. Each Instance, Context, and Session must be uniquely
+  identifiable to allow the Domain Manager to update the Context of a specific
+  Instance.
 
 ~~~~~~~~
          +-----------------------------------------------------+           
