@@ -228,17 +228,17 @@ SCHC is primarily a compression mechanism for structured datagrams comprising
   field values, network prefixes in addresses, known port numbers).
 
 Instead of transmitting headers in full, the sender replaces known header
-  fields with a compressed residue and an identifier (a RuleID) that instructs
-  the receiver how to reconstruct the original headers. Both the sender and
-  receiver share the set of Rules needed for this process through a shared
-  Context.
+  fields with a compressed residue and an identifier -- a **RuleID** that 
+  instructs the receiver how to reconstruct the original headers. 
+  Both the sender and receiver share the **set of Rules** (SoR) needed for this
+  process through a shared **Context**.
 
 This shared Context may be static, for example pre-provisioned with the device
   firmware or installed dynamically. In the latter case, the logical grouping 
   that share the same context, and therefore require timely and coordinated 
-  updates, is called a Domain.
+  updates, is called a **Domain**.
 
-Compression and decompression occur in **SCHC Instances** — logical entities
+Compression and decompression occur in SCHC **Instances** — logical entities
   that:
    - Match datagram headers against Rules and compress them
    - Identify the Rule used by the compressor (via RuleID) and reconstruct the
@@ -257,9 +257,28 @@ SCHC can be used in two fundamentally different ways.
   stack itself needs to inspect and route. By itself, an Instance cannot 
   intercept packets in the network stack, and SCHC is not a protocol residing in
   the stack. Because SCHC is not a protocol in the stack, an entity of the network
-  stack, the Dispatcher, handles datagrams before they enter the Stratum and 
-  routes them to the correct Instance. The Instance reconstructs the compressed
-  header before the protocols of the stratum further process the datagram.
+  stack, the **Dispatcher**, routes Datagrams to and from Instances. 
+  
+  On the compressor side, the Dispatcher intercepts **Native** Datagrams 
+  targeted by an Instance after the network protocols of the Stratum have 
+  finished processing the Datagram. The Dispatcher then dispatch the Native 
+  Datagram to the Instance which compresses the Datagram to form the SCHC 
+  Datagram. The SCHC Datagram is then reinjected into the network stack at the
+  adjactent layer below the Stratum -- the **Carrier** Layer. Eventually, the 
+  Dispatcher fills the Carrier **Discriminator**, a value of the Carrier header
+  that indicates the Datagram is compressed with SCHC. The SCHC Datagram is then
+  processed further by the network stack and sent to its recipient.
+  
+  On the decompressor side, the SCHC Datagram is delivered by the network stack
+  to the Dispatcher, eventually identified by the Carrier Discriminator.
+  The Dispatcher delivers the SCHC Datagram to the appropriate Instance, which 
+  processes the SCHC Datagram to reconstruct the headers of the Stratum. Once 
+  reconstructed, the Dispatcher restore the Carrier Layer with the Native
+  Datagram field values, for instance when a Carrier Discriminator is used.
+
+  The Datagram is further processed by the Network stack, as would the Native
+  Datagram be processed.
+
    
 For example, in the 6Lo scenario detailed below, the Instance addresses an 
   IPv6/UDP/CoAP Stratum above the 802.15.4 L2 header. The Dispatcher is the 
@@ -691,9 +710,17 @@ multi-instances, SCHC with cryptographic boundaries, etc.) and link them to
 specific technologies (LPWAN, PPP, Ethernet, 6Lo, etc.)
 ## LPWAN deployment
 
-This section considers a typical LPWAN deployment where an IoT device communicates with a gateway or server using SCHC for header compression and decompression. The Instance's Stratum spans [IPv6, UDP, CoAP] — meaning the Rules in its Context can address headers across all three protocol layers. The Carrier Layer (LPWAN link) adjacent below the Stratum's lower boundary carries the Discriminator in a frame field such as the LoRaWAN frame port (fPort).
+This section considers a typical LPWAN deployment where an IoT device communicates 
+with a gateway or server using SCHC for header compression and decompression. 
+The Instance's Stratum spans [IPv6, UDP, CoAP] — meaning the Rules in its 
+Context can address headers across all three protocol layers. The Carrier Layer
+(LPWAN link) adjacent below the Stratum's lower boundary carries the Discriminator
+in a frame field such as the LoRaWAN frame port (fPort).
 
-In this setup, each device features a single SCHC Instance in a single Endpoint. Each Instance is pre-configured with a static Context. The Discriminator is an explicit field in the LPWAN frame (e.g., fPort) and the Dispatcher is hardcoded in the network stack.
+In this setup, each device features a single SCHC Instance in a single Endpoint.
+Each Instance is pre-configured with a static Context. The Discriminator is an
+explicit field in the LPWAN frame (e.g., fPort) and the Dispatcher is hardcoded
+in the network stack.
 
 ~~~~~~~~
 
@@ -719,15 +746,16 @@ LPWAN deployment — Stratum annotated as range
                  
 ~~~~~~~~
 
-| Core Element     | Notes                  |
+| Core Element     | Notes                        |
 |------------------|------------------------------|
 | Domain           | single                       |
 | Endpoint         | single                       |
 | Instance         | single                       |
 | Context          | pre-configured               |
 | Stratum          | [IPv6, UDP, CoAP]            |
+| Carrier          | Link Layer                   |
 | Discriminator    | fPort                        |
-| Dispatcher       | hardcoded                    |
+| Dispatcher       | hardcoded in network stack   |
 
 
   
@@ -779,7 +807,7 @@ all architectural concepts (Stratum, Carrier Layer, Discriminator, Dispatcher,
 Invocation Context) apply across Network Service and Application Service
 invocation modes within a single packet.
 
-**Scenario.**  An IoT sensor (6LN) sends a CoAP POST to a server via a 6LBR,
+**Scenario**  An IoT sensor (6LN) sends a CoAP POST to a server via a 6LBR,
 secured with OSCORE, and compressed by SCHC at three Strata.  All three
 Instances reside on both the 6LN and the 6LBR.
 
@@ -794,11 +822,11 @@ Instances reside on both the 6LN and the 6LBR.
 
 **Three Instances on each 6LN and 6LBR:**
 
-| Instance | Stratum [lower, upper] | Carrier | Discriminator | Invocation |
-|---|---|---|---|---|
-| I1 (L2.5) | [IPv6, UDP] | 802.15.4 | Dispatch byte — **explicit** | Network Service (A) |
-| I2 (outer) | [CoAP outer] | SCHC carrier port | VOICI Session ID — **explicit** | Application Service (B) |
-| I3 (inner) | [CoAP inner] | CoAP/OSCORE pipeline | pipeline state — **intrinsic** | Application Service (B) |
+| Instance   | Stratum [lower, upper] |  Carrier | Discriminator |        Invocation       |
+|------------|------------------------|----------|---------------|-------------------------|
+| I1 (L2.5)  |      [IPv6, UDP]       | 802.15.4 | Dispatch byte | Network Service (A)     |
+| I2 (outer) |      [CoAP outer]      |   VOICI  |  Session ID   | Network Service (A)     |
+| I3 (inner) |      [CoAP inner]      |   N/A    |     N/A       | Application Service (B) |
 
 **Sender-side (high to low):**
 
@@ -826,7 +854,7 @@ Step 1: Frame received, Discriminator: Dispatch byte = 01000100
 
 Step 2: Stack demux: IPv6 → NH=UDP → UDP dst=port_schc → VOICI handler
 
-Step 3: VOICI dispatches: Session ID → I2 (Application Service, Case B)
+Step 3: VOICI dispatches: Session ID → I2 (Network Service, Case A)
      I2 decompresses → CoAP outer header
 
 Step 4: VOICI reconstructs: original UDP port = 5683, feeds back to stack
@@ -842,23 +870,24 @@ Step 7: Application receives CoAP POST to /temp, payload {reading: 42}
 
 **Key observations:**
 
-1. **Two invocation modes in one packet.**  I1 is a Network Service invoked by
-   Dispatcher/Discriminator.  I2 and I3 are Application Services invoked by the
-   CoAP/OSCORE processing pipeline.  All three use the same architectural concepts
-   (Instance, Context, Rule, Stratum).
+1. **Two invocation modes in one packet.**  I1 and I2 are Network Services
+   (Case A), invoked through Dispatchers using explicit Discriminators (L2
+   Dispatch byte and VOICI Session ID respectively).  I3 is an Application
+   Service (Case B), invoked by the CoAP/OSCORE processing pipeline.  All
+   three use the same architectural concepts (Instance, Context, Rule,
+   Stratum).
 
-2. **Carrier Layer and Discriminator apply only to Case A.**  I1 has a Carrier
-   Layer (802.15.4) and an explicit Discriminator (Dispatch byte).  I2 has no
-   Carrier Layer in the network-stack sense — the VOICI handler uses the SCHC
-   carrier port for demux and the Session ID for Instance selection.  I3 has no
-   Carrier Layer and no Discriminator — the CoAP/OSCORE pipeline selects it
-   intrinsically.
+2. **Carrier Layer and Discriminator apply to I1 and I2, not I3.**  I1 has a
+   Carrier Layer (802.15.4) and an explicit Discriminator (Dispatch byte).
+   I2 has a Carrier Layer (VOICI header) and an explicit Discriminator
+   (Session ID).  I3 has neither — the CoAP/OSCORE processing pipeline selects
+   it intrinsically.
 
-3. **Network transparency of Application Service.**  I2 and I3 operate entirely
-   within the CoAP/OSCORE processing pipeline.  The network stack sees only the
-   IPv6 packet compressed by I1.  It does not know — and does not need to know —
-   that the CoAP outer and inner headers are also compressed.  The application-
-   layer compression is transparent to the network.
+3. **Network transparency of Application Service.**  I1 and I2 are invoked
+   from the network stack; the stack routes frames to I1 using the L2 Dispatch
+   byte, and I1's output (including VOICI) reaches I2 through standard
+   demuxing.  I3 operates entirely within the CoAP/OSCORE processing pipeline
+   and is transparent to the network layer.
 
 4. **Rule design carries cross-Instance constraints.**  I2's Rules must preserve
    the Token field (partial IV) because OSCORE needs it downstream.  I1's Rules
