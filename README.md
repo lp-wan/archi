@@ -46,20 +46,14 @@ pip install xml2rfc
 Use the provided Makefile to build the draft:
 
 ```bash
-# Generate all formats (markdown, TXT, HTML, XML, PDF)
+# Generate all formats (TXT, HTML, XML, PDF)
 make
 
 # Generate specific format
-make markdown
 make txt
 make html
 make xml
 make pdf
-
-# Status variants (appended to draft version)
-make STATUS=wip   # work-in-progress (default)
-make STATUS=rc    # release candidate
-make STATUS=      # final release
 
 # Check if tools are installed
 make check-tools
@@ -74,14 +68,11 @@ make clean
 make help
 ```
 
-The Makefile automatically fetches the latest draft version from the IETF
-Datatracker and appends the `STATUS` suffix (`wip`, `rc`, or none for
-release).
-
 ## Files
 
-- `revised-schc-architecture.md` - Main draft source in Markdown format
-- `Makefile` - Build automation with dynamic versioning
+- `schc-architecture.md` - Main draft source in Markdown format
+- `schc-architecture-old.md` - Previous draft version (archived)
+- `Makefile` - Build automation
 - `README.md` - This file
 
 ## Contributing

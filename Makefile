@@ -14,10 +14,10 @@ HTML_FILE = $(DRAFT_NAME).html
 PDF_FILE = $(DRAFT_NAME).pdf
 
 # Default target
-all: markdown txt html xml pdf
+all: txt html xml pdf
 
 # Generate all formats
-complete: markdown txt html xml pdf
+complete: txt html xml pdf
 
 # Individual targets
 txt: $(TXT_FILE)
@@ -49,7 +49,7 @@ $(PDF_FILE): $(MARKDOWN_FILE)
 # Clean generated files
 clean:
 	@echo "Cleaning generated files for $(DRAFT_NAME)..."
-	rm -f $(MARKDOWN_OUT_FILE) $(XML_FILE) $(TXT_FILE) $(HTML_FILE) $(PDF_FILE)
+	rm -f $(XML_FILE) $(TXT_FILE) $(HTML_FILE) $(PDF_FILE)
 
 # Check if required tools are installed
 check-tools:
@@ -76,16 +76,10 @@ help:
 	@echo "  html      - Generate HTML file only"
 	@echo "  xml       - Generate XML file only"
 	@echo "  pdf       - Generate PDF file only"
-	@echo "  markdown  - Copy source markdown with draft naming"
 	@echo "  clean     - Remove all generated files"
 	@echo "  check-tools - Check if required tools are installed"
 	@echo "  validate  - Validate the XML file"
 	@echo "  preview   - Open HTML file in browser (macOS)"
 	@echo "  help      - Show this help message"
-	@echo ""
-	@echo "Usage:"
-	@echo "  make                     (uses default STATUS=wip)"
-	@echo "  make STATUS=rc           (for release candidate)"
-	@echo "  make STATUS=             (for final release)"
 
-.PHONY: all complete markdown txt html xml pdf clean check-tools validate preview help
+.PHONY: all complete txt html xml pdf clean check-tools validate preview help
