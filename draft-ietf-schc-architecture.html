@@ -1,0 +1,2563 @@
+<!DOCTYPE html>
+<html lang="en" class="Internet-Draft">
+<head>
+<meta charset="utf-8">
+<meta content="Common,Latin" name="scripts">
+<meta content="initial-scale=1.0" name="viewport">
+<title>Static Context Header Compression (SCHC) Architecture</title>
+<meta content="Alexander Pelov" name="author">
+<meta content="Pascal Thubert" name="author">
+<meta content="Ana Minaburo" name="author">
+<meta content="Quentin Lampin" name="author">
+<meta content="Marion Dumay" name="author">
+<meta content="
+       TODO Abstract 
+    " name="description">
+<meta content="xml2rfc 3.29.0" name="generator">
+<meta content="draft-ietf-schc-architecture" name="ietf.draft">
+<!-- Generator version information:
+  xml2rfc 3.29.0
+    Python 3.13.3
+    ConfigArgParse 1.7.1
+    google-i18n-address 3.1.1
+    intervaltree 3.1.0
+    Jinja2 3.1.6
+    lxml 6.0.0
+    platformdirs 4.3.8
+    pycountry 24.6.1
+    PyYAML 6.0.2
+    requests 2.32.4
+    setuptools 80.9.0
+    wcwidth 0.2.13
+-->
+<link href="schc-architecture.xml" rel="alternate" type="application/rfc+xml">
+<link href="#copyright" rel="license">
+<style type="text/css">/*
+
+  NOTE: Changes at the bottom of this file overrides some earlier settings.
+
+  Once the style has stabilized and has been adopted as an official RFC style,
+  this can be consolidated so that style settings occur only in one place, but
+  for now the contents of this file consists first of the initial CSS work as
+  provided to the RFC Formatter (xml2rfc) work, followed by itemized and
+  commented changes found necessary during the development of the v3
+  formatters.
+
+*/
+
+/* fonts */
+@import url('https://fonts.googleapis.com/css?family=Noto+Sans'); /* Sans-serif */
+@import url('https://fonts.googleapis.com/css?family=Noto+Serif'); /* Serif (print) */
+@import url('https://fonts.googleapis.com/css?family=Roboto+Mono'); /* Monospace */
+
+:root {
+  --font-sans: 'Noto Sans', Arial, Helvetica, sans-serif;
+  --font-serif: 'Noto Serif', 'Times', 'Times New Roman', serif;
+  --font-mono: 'Roboto Mono', Courier, 'Courier New', monospace;
+}
+
+@viewport {
+  zoom: 1.0;
+}
+@-ms-viewport {
+  width: extend-to-zoom;
+  zoom: 1.0;
+}
+/* general and mobile first */
+html {
+}
+body {
+  max-width: 90%;
+  margin: 1.5em auto;
+  color: #222;
+  background-color: #fff;
+  font-size: 14px;
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  scroll-behavior: smooth;
+  overflow-wrap: break-word;
+}
+.ears {
+  display: none;
+}
+
+/* headings */
+#title, h1, h2, h3, h4, h5, h6 {
+  margin: 1em 0 0.5em;
+  font-weight: bold;
+  line-height: 1.3;
+}
+#title {
+  clear: both;
+  border-bottom: 1px solid #ddd;
+  margin: 0 0 0.5em 0;
+  padding: 1em 0 0.5em;
+}
+.author {
+  padding-bottom: 4px;
+}
+h1 {
+  font-size: 26px;
+  margin: 1em 0;
+}
+h2 {
+  font-size: 22px;
+  margin-top: -20px;  /* provide offset for in-page anchors */
+  padding-top: 33px;
+}
+h3 {
+  font-size: 18px;
+  margin-top: -36px;  /* provide offset for in-page anchors */
+  padding-top: 42px;
+}
+h4 {
+  font-size: 16px;
+  margin-top: -36px;  /* provide offset for in-page anchors */
+  padding-top: 42px;
+}
+h5, h6 {
+  font-size: 14px;
+}
+#n-copyright-notice {
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 1em;
+  margin-bottom: 1em;
+}
+/* general structure */
+p {
+  padding: 0;
+  margin: 0 0 1em 0;
+  text-align: left;
+}
+div, span {
+  position: relative;
+}
+div {
+  margin: 0;
+}
+.alignRight.art-text {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  padding: 1em 1em 0;
+  margin-bottom: 1.5em;
+}
+.alignRight.art-text pre {
+  padding: 0;
+}
+.alignRight {
+  margin: 1em 0;
+}
+.alignRight > *:first-child {
+  border: none;
+  margin: 0;
+  float: right;
+  clear: both;
+}
+.alignRight > *:nth-child(2) {
+  clear: both;
+  display: block;
+  border: none;
+}
+svg {
+  display: block;
+}
+@media print {
+  svg {
+    max-height: 850px;
+    max-width: 660px;
+  }
+}
+svg[font-family~="serif" i], svg [font-family~="serif" i] {
+  font-family: var(--font-serif);
+}
+svg[font-family~="sans-serif" i], svg [font-family~="sans-serif" i] {
+  font-family: var(--font-sans);
+}
+svg[font-family~="monospace" i], svg [font-family~="monospace" i] {
+  font-family: var(--font-mono);
+}
+.alignCenter.art-text {
+  background-color: #f9f9f9;
+  border: 1px solid #eee;
+  border-radius: 3px;
+  padding: 1em 1em 0;
+  margin-bottom: 1.5em;
+}
+.alignCenter.art-text pre {
+  padding: 0;
+}
+.alignCenter {
+  margin: 1em 0;
+}
+.alignCenter > *:first-child {
+  display: table;
+  border: none;
+  margin: 0 auto;
+}
+
+/* lists */
+ol, ul {
+  padding: 0;
+  margin: 0 0 1em 2em;
+}
+ol ol, ul ul, ol ul, ul ol {
+  margin-left: 1em;
+}
+li {
+  margin: 0 0 0.25em 0;
+}
+.ulCompact li {
+  margin: 0;
+}
+ul.empty, .ulEmpty {
+  list-style-type: none;
+}
+ul.empty li, .ulEmpty li {
+  margin-top: 0.5em;
+}
+ul.ulBare, li.ulBare {
+  margin-left: 0em !important;
+}
+ul.compact, .ulCompact,
+ol.compact, .olCompact {
+  line-height: 100%;
+  margin: 0 0 0 2em;
+}
+
+/* definition lists */
+dl {
+}
+dl > dt {
+  float: left;
+  margin-right: 1em;
+}
+/* 
+dl.nohang > dt {
+  float: none;
+}
+*/
+dl > dd {
+  margin-bottom: .8em;
+  min-height: 1.3em;
+}
+dl.compact > dd, .dlCompact > dd {
+  margin-bottom: 0em;
+}
+dl > dd > dl {
+  margin-top: 0.5em;
+  margin-bottom: 0em;
+}
+
+/* links */
+a {
+  text-decoration: none;
+}
+a[href] {
+  color: #22e; /* Arlen: WCAG 2019 */
+}
+a[href]:hover {
+  background-color: #f2f2f2;
+}
+figcaption a[href],
+a[href].selfRef {
+  color: #222;
+}
+/* XXX probably not this:
+a.selfRef:hover {
+  background-color: transparent;
+  cursor: default;
+} */
+
+/* Figures */
+tt, code, pre {
+  background-color: #f9f9f9;
+  font-family: var(--font-mono);
+}
+pre {
+  border: 1px solid #eee;
+  margin: 0;
+  padding: 1em;
+}
+img {
+  max-width: 100%;
+}
+figure {
+  margin: 0;
+}
+figure blockquote {
+  margin: 0.8em 0.4em 0.4em;
+}
+figcaption {
+  font-style: italic;
+  margin: 0 0 1em 0;
+}
+@media screen {
+  pre {
+    overflow-x: auto;
+    max-width: 100%;
+    max-width: calc(100% - 22px);
+  }
+}
+
+/* aside, blockquote */
+aside, blockquote {
+  margin-left: 0;
+  padding: 1.2em 2em;
+}
+blockquote {
+  background-color: #f9f9f9;
+  color: #111; /* Arlen: WCAG 2019 */
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  margin: 1em 0;
+}
+blockquote > *:last-child {
+  margin-bottom: 0;
+}
+cite {
+  display: block;
+  text-align: right;
+  font-style: italic;
+}
+.xref {
+  overflow-wrap: normal;
+}
+
+/* tables */
+table {
+  width: 100%;
+  margin: 0 0 1em;
+  border-collapse: collapse;
+  border: 1px solid #eee;
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 0.5em 0.75em;
+}
+th {
+  text-align: left;
+  background-color: #e9e9e9;
+}
+tr:nth-child(2n+1) > td {
+  background-color: #f5f5f5;
+}
+table caption {
+  font-style: italic;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+table p {
+  /* XXX to avoid bottom margin on table row signifiers. If paragraphs should
+     be allowed within tables more generally, it would be far better to select on a class. */
+  margin: 0;
+}
+
+/* pilcrow */
+a.pilcrow {
+  color: #666; /* Arlen: AHDJ 2019 */
+  text-decoration: none;
+  visibility: hidden;
+  user-select: none;
+  -ms-user-select: none;
+  -o-user-select:none;
+  -moz-user-select: none;
+  -khtml-user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+@media screen {
+  aside:hover > a.pilcrow,
+  p:hover > a.pilcrow,
+  blockquote:hover > a.pilcrow,
+  div:hover > a.pilcrow,
+  li:hover > a.pilcrow,
+  pre:hover > a.pilcrow {
+    visibility: visible;
+  }
+  a.pilcrow:hover {
+    background-color: transparent;
+  }
+}
+
+/* misc */
+hr {
+  border: 0;
+  border-top: 1px solid #eee;
+}
+.bcp14 {
+  font-variant: small-caps;
+}
+
+.role {
+  font-variant: all-small-caps;
+}
+
+/* info block */
+#identifiers {
+  margin: 0;
+  font-size: 0.9em;
+}
+#identifiers dt {
+  width: 3em;
+  clear: left;
+}
+#identifiers dd {
+  float: left;
+  margin-bottom: 0;
+}
+/* Fix PDF info block run off issue */
+@media print {
+  #identifiers dd {
+    max-width: 100%;
+  }
+}
+#identifiers .authors .author {
+  display: inline-block;
+  margin-right: 1.5em;
+}
+#identifiers .authors .org {
+  font-style: italic;
+}
+
+/* The prepared/rendered info at the very bottom of the page */
+.docInfo {
+  color: #666; /* Arlen: WCAG 2019 */
+  font-size: 0.9em;
+  font-style: italic;
+  margin-top: 2em;
+}
+.docInfo .prepared {
+  float: left;
+}
+.docInfo .prepared {
+  float: right;
+}
+
+/* table of contents */
+#toc  {
+  padding: 0.75em 0 2em 0;
+  margin-bottom: 1em;
+}
+nav.toc ul {
+  margin: 0 0.5em 0 0;
+  padding: 0;
+  list-style: none;
+}
+nav.toc li {
+  line-height: 1.3em;
+  margin: 0.75em 0;
+  padding-left: 1.2em;
+  text-indent: -1.2em;
+}
+/* references */
+.references dt {
+  text-align: right;
+  font-weight: bold;
+  min-width: 7em;
+}
+.references dd {
+  margin-left: 8em;
+  overflow: auto;
+}
+
+.refInstance {
+  margin-bottom: 1.25em;
+}
+
+.refSubseries {
+  margin-bottom: 1.25em;
+}
+
+.references .ascii {
+  margin-bottom: 0.25em;
+}
+
+/* index */
+.index ul {
+  margin: 0 0 0 1em;
+  padding: 0;
+  list-style: none;
+}
+.index ul ul {
+  margin: 0;
+}
+.index li {
+  margin: 0;
+  text-indent: -2em;
+  padding-left: 2em;
+  padding-bottom: 5px;
+}
+.indexIndex {
+  margin: 0.5em 0 1em;
+}
+.index a {
+  font-weight: 700;
+}
+/* make the index two-column on all but the smallest screens */
+@media (min-width: 600px) {
+  .index ul {
+    -moz-column-count: 2;
+    -moz-column-gap: 20px;
+  }
+  .index ul ul {
+    -moz-column-count: 1;
+    -moz-column-gap: 0;
+  }
+}
+
+/* authors */
+address.vcard {
+  font-style: normal;
+  margin: 1em 0;
+}
+
+address.vcard .nameRole {
+  font-weight: 700;
+  margin-left: 0;
+}
+address.vcard .label {
+  font-family: var(--font-sans);
+  margin: 0.5em 0;
+}
+address.vcard .type {
+  display: none;
+}
+.alternative-contact {
+  margin: 1.5em 0 1em;
+}
+hr.addr {
+  border-top: 1px dashed;
+  margin: 0;
+  color: #ddd;
+  max-width: calc(100% - 16px);
+}
+
+/* temporary notes */
+.rfcEditorRemove::before {
+  position: absolute;
+  top: 0.2em;
+  right: 0.2em;
+  padding: 0.2em;
+  content: "The RFC Editor will remove this note";
+  color: #9e2a00; /* Arlen: WCAG 2019 */
+  background-color: #ffd; /* Arlen: WCAG 2019 */
+}
+.rfcEditorRemove {
+  position: relative;
+  padding-top: 1.8em;
+  background-color: #ffd; /* Arlen: WCAG 2019 */
+  border-radius: 3px;
+}
+.cref {
+  background-color: #ffd; /* Arlen: WCAG 2019 */
+  padding: 2px 4px;
+}
+.crefSource {
+  font-style: italic;
+}
+/* alternative layout for smaller screens */
+@media screen and (max-width: 1023px) {
+  body {
+    padding-top: 2em;
+  }
+  #title {
+    padding: 1em 0;
+  }
+  h1 {
+    font-size: 24px;
+  }
+  h2 {
+    font-size: 20px;
+    margin-top: -18px;  /* provide offset for in-page anchors */
+    padding-top: 38px;
+  }
+  #identifiers dd {
+    max-width: 60%;
+  }
+  #toc {
+    position: fixed;
+    z-index: 2;
+    top: 0;
+    right: 0;
+    padding: 0;
+    margin: 0;
+    background-color: inherit;
+    border-bottom: 1px solid #ccc;
+  }
+  #toc h2 {
+    margin: -1px 0 0 0;
+    padding: 4px 0 4px 6px;
+    padding-right: 1em;
+    min-width: 190px;
+    font-size: 1.1em;
+    text-align: right;
+    background-color: #444;
+    color: white;
+    cursor: pointer;
+  }
+  #toc h2::before { /* css hamburger */
+    float: right;
+    position: relative;
+    width: 1em;
+    height: 1px;
+    left: -164px;
+    margin: 6px 0 0 0;
+    background: white none repeat scroll 0 0;
+    box-shadow: 0 4px 0 0 white, 0 8px 0 0 white;
+    content: "";
+  }
+  #toc nav {
+    display: none;
+    padding: 0.5em 1em 1em;
+    overflow: auto;
+    height: calc(100vh - 48px);
+    border-left: 1px solid #ddd;
+  }
+}
+
+/* alternative layout for wide screens */
+@media screen and (min-width: 1024px) {
+  body {
+    max-width: 724px;
+    margin: 42px auto;
+    padding-left: 1.5em;
+    padding-right: 29em;
+  }
+  #toc {
+    position: fixed;
+    top: 42px;
+    right: 42px;
+    width: 25%;
+    margin: 0;
+    padding: 0 1em;
+    z-index: 1;
+  }
+  #toc h2 {
+    border-top: none;
+    border-bottom: 1px solid #ddd;
+    font-size: 1em;
+    font-weight: normal;
+    margin: 0;
+    padding: 0.25em 1em 1em 0;
+  }
+  #toc nav {
+    display: block;
+    height: calc(90vh - 84px);
+    bottom: 0;
+    padding: 0.5em 0 0;
+    overflow: auto;
+  }
+  img { /* future proofing */
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+/* pagination */
+@media print {
+  body {
+    width: 100%;
+  }
+  p {
+    orphans: 3;
+    widows: 3;
+  }
+  #n-copyright-notice {
+    border-bottom: none;
+  }
+  #toc, #n-introduction {
+    page-break-before: always;
+  }
+  #toc {
+    border-top: none;
+    padding-top: 0;
+  }
+  figure, pre {
+    page-break-inside: avoid;
+  }
+  figure {
+    overflow: scroll;
+  }
+  .breakable pre {
+    break-inside: auto;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+  h2+*, h3+*, h4+*, h5+*, h6+* {
+    page-break-before: avoid;
+  }
+  pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-size: 10pt;
+  }
+  table {
+    border: 1px solid #ddd;
+  }
+  td {
+    border-top: 1px solid #ddd;
+  }
+}
+
+/* This is commented out here, as the string-set: doesn't
+   pass W3C validation currently */
+/*
+.ears thead .left {
+  string-set: ears-top-left content();
+}
+
+.ears thead .center {
+  string-set: ears-top-center content();
+}
+
+.ears thead .right {
+  string-set: ears-top-right content();
+}
+
+.ears tfoot .left {
+  string-set: ears-bottom-left content();
+}
+
+.ears tfoot .center {
+  string-set: ears-bottom-center content();
+}
+
+.ears tfoot .right {
+  string-set: ears-bottom-right content();
+}
+*/
+
+@page :first {
+  padding-top: 0;
+  @top-left {
+    content: normal;
+    border: none;
+  }
+  @top-center {
+    content: normal;
+    border: none;
+  }
+  @top-right {
+    content: normal;
+    border: none;
+  }
+}
+
+@page {
+  size: A4;
+  margin-bottom: 45mm;
+  padding-top: 20px;
+  /* The following is commented out here, but set appropriately by in code, as
+     the content depends on the document */
+  /*
+  @top-left {
+    content: 'Internet-Draft';
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @top-left {
+    content: string(ears-top-left);
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @top-center {
+    content: string(ears-top-center);
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @top-right {
+    content: string(ears-top-right);
+    vertical-align: bottom;
+    border-bottom: solid 1px #ccc;
+  }
+  @bottom-left {
+    content: string(ears-bottom-left);
+    vertical-align: top;
+    border-top: solid 1px #ccc;
+  }
+  @bottom-center {
+    content: string(ears-bottom-center);
+    vertical-align: top;
+    border-top: solid 1px #ccc;
+  }
+  @bottom-right {
+      content: '[Page ' counter(page) ']';
+      vertical-align: top;
+      border-top: solid 1px #ccc;
+  }
+  */
+
+}
+
+/* Changes introduced to fix issues found during implementation */
+/* Make sure links are clickable even if overlapped by following H* */
+a {
+  z-index: 2;
+}
+/* Separate body from document info even without intervening H1 */
+section {
+  clear: both;
+}
+
+
+/* Top align author divs, to avoid names without organization dropping level with org names */
+.author {
+  vertical-align: top;
+}
+
+/* Leave room in document info to show Internet-Draft on one line */
+#identifiers dt {
+  width: 8em;
+}
+
+/* Don't waste quite as much whitespace between label and value in doc info */
+#identifiers dd {
+  margin-left: 1em;
+}
+
+/* Give floating toc a background color (needed when it's a div inside section */
+#toc {
+  background-color: white;
+}
+
+/* Make the collapsed ToC header render white on gray also when it's a link */
+@media screen and (max-width: 1023px) {
+  #toc h2 a,
+  #toc h2 a:link,
+  #toc h2 a:focus,
+  #toc h2 a:hover,
+  #toc a.toplink,
+  #toc a.toplink:hover {
+    color: white;
+    background-color: #444;
+    text-decoration: none;
+  }
+}
+
+/* Give the bottom of the ToC some whitespace */
+@media screen and (min-width: 1024px) {
+  #toc {
+    padding: 0 0 1em 1em;
+  }
+}
+
+/* Style section numbers with more space between number and title */
+.section-number {
+  padding-right: 0.5em;
+}
+
+/* prevent monospace from becoming overly large */
+tt, code, pre {
+  font-size: 95%;
+}
+
+/* Fix the height/width aspect for ascii art*/
+.sourcecode pre,
+.art-text pre {
+  line-height: 1.12;
+}
+
+
+/* Add styling for a link in the ToC that points to the top of the document */
+a.toplink {
+  float: right;
+  margin-right: 0.5em;
+}
+
+/* Fix the dl styling to match the RFC 7992 attributes */
+dl > dt,
+dl.dlParallel > dt {
+  float: left;
+  margin-right: 1em;
+}
+dl.dlNewline > dt {
+  float: none;
+}
+
+/* Provide styling for table cell text alignment */
+table td.text-left,
+table th.text-left {
+  text-align: left;
+}
+table td.text-center,
+table th.text-center {
+  text-align: center;
+}
+table td.text-right,
+table th.text-right {
+  text-align: right;
+}
+
+/* Make the alternative author contact information look less like just another
+   author, and group it closer with the primary author contact information */
+.alternative-contact {
+  margin: 0.5em 0 0.25em 0;
+}
+address .non-ascii {
+  margin: 0 0 0 2em;
+}
+
+/* With it being possible to set tables with alignment
+  left, center, and right, { width: 100%; } does not make sense */
+table {
+  width: auto;
+}
+
+/* Avoid reference text that sits in a block with very wide left margin,
+   because of a long floating dt label.*/
+.references dd {
+  overflow: visible;
+}
+
+/* Control caption placement */
+caption {
+  caption-side: bottom;
+}
+
+/* Limit the width of the author address vcard, so names in right-to-left
+   script don't end up on the other side of the page. */
+
+address.vcard {
+  max-width: 30em;
+  margin-right: auto;
+}
+
+/* For address alignment dependent on LTR or RTL scripts */
+address div.left {
+  text-align: left;
+}
+address div.right {
+  text-align: right;
+}
+
+/* Provide table alignment support.  We can't use the alignX classes above
+   since they do unwanted things with caption and other styling. */
+table.right {
+ margin-left: auto;
+ margin-right: 0;
+}
+table.center {
+ margin-left: auto;
+ margin-right: auto;
+}
+table.left {
+ margin-left: 0;
+ margin-right: auto;
+}
+
+/* Give the table caption label the same styling as the figcaption */
+caption a[href] {
+  color: #222;
+}
+
+@media print {
+  .toplink {
+    display: none;
+  }
+
+  /* avoid overwriting the top border line with the ToC header */
+  #toc {
+    padding-top: 1px;
+  }
+
+  /* Avoid page breaks inside dl and author address entries */
+  .vcard {
+    page-break-inside: avoid;
+  }
+
+}
+/* Tweak the bcp14 keyword presentation */
+.bcp14 {
+  font-variant: small-caps;
+  font-weight: bold;
+  font-size: 0.9em;
+}
+/* Tweak the invisible space above H* in order not to overlay links in text above */
+ h2 {
+  margin-top: -18px;  /* provide offset for in-page anchors */
+  padding-top: 31px;
+ }
+ h3 {
+  margin-top: -18px;  /* provide offset for in-page anchors */
+  padding-top: 24px;
+ }
+ h4 {
+  margin-top: -18px;  /* provide offset for in-page anchors */
+  padding-top: 24px;
+ }
+/* Float artwork pilcrow to the right */
+@media screen {
+  .artwork a.pilcrow {
+    display: block;
+    line-height: 0.7;
+    margin-top: 0.15em;
+  }
+}
+/* Make pilcrows on dd visible */
+@media screen {
+  dd:hover > a.pilcrow {
+    visibility: visible;
+  }
+}
+/* Make the placement of figcaption match that of a table's caption
+   by removing the figure's added bottom margin */
+.alignLeft.art-text,
+.alignCenter.art-text,
+.alignRight.art-text {
+   margin-bottom: 0;
+}
+.alignLeft,
+.alignCenter,
+.alignRight {
+  margin: 1em 0 0 0;
+}
+/* In print, the pilcrow won't show on hover, so prevent it from taking up space,
+   possibly even requiring a new line */
+@media print {
+  a.pilcrow {
+    display: none;
+  }
+}
+/* Styling for the external metadata */
+div#external-metadata {
+  background-color: #eee;
+  padding: 0.5em;
+  margin-bottom: 0.5em;
+  display: none;
+}
+div#internal-metadata {
+  padding: 0.5em;                       /* to match the external-metadata padding */
+}
+/* Styling for title RFC Number */
+h1#rfcnum {
+  clear: both;
+  margin: 0 0 -1em;
+  padding: 1em 0 0 0;
+}
+/* Make .olPercent look the same as <ol><li> */
+dl.olPercent > dd {
+  margin-bottom: 0.25em;
+  min-height: initial;
+}
+/* Give aside some styling to set it apart */
+aside {
+  border-left: 1px solid #ddd;
+  margin: 1em 0 1em 2em;
+  padding: 0.2em 2em;
+}
+aside > dl,
+aside > ol,
+aside > ul,
+aside > table,
+aside > p {
+  margin-bottom: 0.5em;
+}
+/* Additional page break settings */
+@media print {
+  figcaption, table caption {
+    page-break-before: avoid;
+  }
+}
+/* Font size adjustments for print */
+@media print {
+  body  { font-size: 10pt;      line-height: normal; max-width: 96%; }
+  h1    { font-size: 1.72em;    padding-top: 1.5em; } /* 1*1.2*1.2*1.2 */
+  h2    { font-size: 1.44em;    padding-top: 1.5em; } /* 1*1.2*1.2 */
+  h3    { font-size: 1.2em;     padding-top: 1.5em; } /* 1*1.2 */
+  h4    { font-size: 1em;       padding-top: 1.5em; }
+  h5, h6 { font-size: 1em;      margin: initial; padding: 0.5em 0 0.3em; }
+}
+/* Sourcecode margin in print, when there's no pilcrow */
+@media print {
+  .artwork,
+  .artwork > pre,
+  .sourcecode {
+    margin-bottom: 1em;
+  }
+}
+/* Avoid narrow tables forcing too narrow table captions, which may render badly */
+table {
+  min-width: 20em;
+}
+/* ol type a */
+ol.type-a { list-style-type: lower-alpha; }
+ol.type-A { list-style-type: upper-alpha; }
+ol.type-i { list-style-type: lower-roman; }
+ol.type-I { list-style-type: upper-roman; }
+/* Apply the print table and row borders in general, on request from the RPC,
+and increase the contrast between border and odd row background slightly */
+table {
+  border: 1px solid #ddd;
+}
+td {
+  border-top: 1px solid #ddd;
+}
+tr {
+  break-inside: avoid;
+}
+tr:nth-child(2n+1) > td {
+  background-color: #f8f8f8;
+}
+/* Use style rules to govern display of the TOC. */
+@media screen and (max-width: 1023px) {
+  #toc nav { display: none; }
+  #toc.active nav { display: block; }
+}
+/* Add support for keepWithNext */
+.keepWithNext {
+  break-after: avoid-page;
+  break-after: avoid-page;
+}
+/* Add support for keepWithPrevious */
+.keepWithPrevious {
+  break-before: avoid-page;
+}
+/* Change the approach to avoiding breaks inside artwork etc. */
+figure, pre, table, .artwork, .sourcecode  {
+  break-before: auto;
+  break-after: auto;
+}
+/* Avoid breaks between <dt> and <dd> */
+dl {
+  break-before: auto;
+  break-inside: auto;
+}
+dt {
+  break-before: auto;
+  break-after: avoid-page;
+}
+dd {
+  break-before: avoid-page;
+  break-after: auto;
+  orphans: 3;
+  widows: 3
+}
+span.break, dd.break {
+  margin-bottom: 0;
+  min-height: 0;
+  break-before: auto;
+  break-inside: auto;
+  break-after: auto;
+}
+/* Undo break-before ToC */
+@media print {
+  #toc {
+    break-before: auto;
+  }
+}
+/* Text in compact lists should not get extra bottom margin space,
+   since that would makes the list not compact */
+ul.compact p, .ulCompact p,
+ol.compact p, .olCompact p {
+ margin: 0;
+}
+/* But the list as a whole needs the extra space at the end */
+section ul.compact,
+section .ulCompact,
+section ol.compact,
+section .olCompact {
+  margin-bottom: 1em;                    /* same as p not within ul.compact etc. */
+}
+/* The tt and code background above interferes with for instance table cell
+   backgrounds.  Changed to something a bit more selective. */
+tt, code {
+  background-color: transparent;
+}
+p tt, p code, li tt, li code, dt tt, dt code {
+  background-color: #f8f8f8;
+}
+/* Tweak the pre margin -- 0px doesn't come out well */
+pre {
+   margin-top: 0.5px;
+}
+/* Tweak the compact list text */
+ul.compact, .ulCompact,
+ol.compact, .olCompact,
+dl.compact, .dlCompact {
+  line-height: normal;
+}
+/* Don't add top margin for nested lists */
+li > ul, li > ol, li > dl,
+dd > ul, dd > ol, dd > dl,
+dl > dd > dl {
+  margin-top: initial;
+}
+/* Elements that should not be rendered on the same line as a <dt> */
+/* This should match the element list in writer.text.TextWriter.render_dl() */
+dd > div.artwork:first-child,
+dd > aside:first-child,
+dd > figure:first-child,
+dd > ol:first-child,
+dd > div.sourcecode:first-child,
+dd > table:first-child,
+dd > ul:first-child {
+  clear: left;
+}
+/* fix for weird browser behaviour when <dd/> is empty */
+dt+dd:empty::before{
+  content: "\00a0";
+}
+/* Make paragraph spacing inside <li> smaller than in body text, to fit better within the list */
+li > p {
+  margin-bottom: 0.5em
+}
+/* Don't let p margin spill out from inside list items */
+li > p:last-of-type:only-child {
+  margin-bottom: 0;
+}
+</style>
+<link href="rfc-local.css" rel="stylesheet" type="text/css">
+<script type="application/javascript">async function addMetadata(){try{const e=document.styleSheets[0].cssRules;for(let t=0;t<e.length;t++)if(/#identifiers/.exec(e[t].selectorText)){const a=e[t].cssText.replace("#identifiers","#external-updates");document.styleSheets[0].insertRule(a,document.styleSheets[0].cssRules.length)}}catch(e){console.log(e)}const e=document.getElementById("external-metadata");if(e)try{var t,a="",o=function(e){const t=document.getElementsByTagName("meta");for(let a=0;a<t.length;a++)if(t[a].getAttribute("name")===e)return t[a].getAttribute("content");return""}("rfc.number");if(o){t="https://www.rfc-editor.org/rfc/rfc"+o+".json";try{const e=await fetch(t);a=await e.json()}catch(e){t=document.URL.indexOf("html")>=0?document.URL.replace(/html$/,"json"):document.URL+".json";const o=await fetch(t);a=await o.json()}}if(!a)return;e.style.display="block";const s="",d="https://datatracker.ietf.org/doc",n="https://datatracker.ietf.org/ipr/search",c="https://www.rfc-editor.org/info",l=a.doc_id.toLowerCase(),i=a.doc_id.slice(0,3).toLowerCase(),f=a.doc_id.slice(3).replace(/^0+/,""),u={status:"Status",obsoletes:"Obsoletes",obsoleted_by:"Obsoleted By",updates:"Updates",updated_by:"Updated By",see_also:"See Also",errata_url:"Errata"};let h="<dl style='overflow:hidden' id='external-updates'>";["status","obsoletes","obsoleted_by","updates","updated_by","see_also","errata_url"].forEach(e=>{if("status"==e){a[e]=a[e].toLowerCase();var t=a[e].split(" "),o=t.length,w="",p=1;for(let e=0;e<o;e++)p<o?w=w+r(t[e])+" ":w+=r(t[e]),p++;a[e]=w}else if("obsoletes"==e||"obsoleted_by"==e||"updates"==e||"updated_by"==e){var g,m="",b=1;g=a[e].length;for(let t=0;t<g;t++)a[e][t]&&(a[e][t]=String(a[e][t]).toLowerCase(),m=b<g?m+"<a href='"+s+"/rfc/".concat(a[e][t])+"'>"+a[e][t].slice(3)+"</a>, ":m+"<a href='"+s+"/rfc/".concat(a[e][t])+"'>"+a[e][t].slice(3)+"</a>",b++);a[e]=m}else if("see_also"==e){var y,L="",C=1;y=a[e].length;for(let t=0;t<y;t++)if(a[e][t]){a[e][t]=String(a[e][t]);var _=a[e][t].slice(0,3),v=a[e][t].slice(3).replace(/^0+/,"");L=C<y?"RFC"!=_?L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+_+" "+v+"</a>, ":L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+v+"</a>, ":"RFC"!=_?L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+_+" "+v+"</a>":L+"<a href='"+s+"/info/"+_.toLowerCase().concat(v.toLowerCase())+"'>"+v+"</a>",C++}a[e]=L}else if("errata_url"==e){var R="";R=a[e]?R+"<a href='"+a[e]+"'>Errata exist</a> | <a href='"+d+"/"+l+"'>Datatracker</a>| <a href='"+n+"/?"+i+"="+f+"&submit="+i+"'>IPR</a> | <a href='"+c+"/"+l+"'>Info page</a>":"<a href='"+d+"/"+l+"'>Datatracker</a> | <a href='"+n+"/?"+i+"="+f+"&submit="+i+"'>IPR</a> | <a href='"+c+"/"+l+"'>Info page</a>",a[e]=R}""!=a[e]?"Errata"==u[e]?h+=`<dt>More info:</dt><dd>${a[e]}</dd>`:h+=`<dt>${u[e]}:</dt><dd>${a[e]}</dd>`:"Errata"==u[e]&&(h+=`<dt>More info:</dt><dd>${a[e]}</dd>`)}),h+="</dl>",e.innerHTML=h}catch(e){console.log(e)}else console.log("Could not locate metadata <div> element");function r(e){return e.charAt(0).toUpperCase()+e.slice(1)}}window.removeEventListener("load",addMetadata),window.addEventListener("load",addMetadata);</script>
+</head>
+<body class="xml2rfc">
+<script src="metadata.min.js"></script>
+<table class="ears">
+<thead><tr>
+<td class="left">Internet-Draft</td>
+<td class="center">SCHC Architecture</td>
+<td class="right">July 2026</td>
+</tr></thead>
+<tfoot><tr>
+<td class="left">Pelov, et al.</td>
+<td class="center">Expires 5 January 2027</td>
+<td class="right">[Page]</td>
+</tr></tfoot>
+</table>
+<div id="external-metadata" class="document-information"></div>
+<div id="internal-metadata" class="document-information">
+<dl id="identifiers">
+<dt class="label-workgroup">Workgroup:</dt>
+<dd class="workgroup">SCHC Working Group</dd>
+<dt class="label-internet-draft">Internet-Draft:</dt>
+<dd class="internet-draft">draft-ietf-schc-architecture</dd>
+<dt class="label-published">Published:</dt>
+<dd class="published">
+<time datetime="2026-07-04" class="published">4 July 2026</time>
+    </dd>
+<dt class="label-intended-status">Intended Status:</dt>
+<dd class="intended-status">Informational</dd>
+<dt class="label-expires">Expires:</dt>
+<dd class="expires"><time datetime="2027-01-05">5 January 2027</time></dd>
+<dt class="label-authors">Authors:</dt>
+<dd class="authors">
+<div class="author">
+      <div class="author-name">A. Pelov</div>
+<div class="org">IMT Atlantique</div>
+</div>
+<div class="author">
+      <div class="author-name">P. Thubert</div>
+</div>
+<div class="author">
+      <div class="author-name">A. Minaburo</div>
+<div class="org">Consultant</div>
+</div>
+<div class="author">
+      <div class="author-name">Q. Lampin</div>
+<div class="org">Orange</div>
+</div>
+<div class="author">
+      <div class="author-name">M. Dumay</div>
+<div class="org">Orange</div>
+</div>
+</dd>
+</dl>
+</div>
+<h1 id="title">Static Context Header Compression (SCHC) Architecture</h1>
+<section id="section-abstract">
+      <h2 id="abstract"><a href="#abstract" class="selfRef">Abstract</a></h2>
+<p id="section-abstract-1">TODO Abstract<a href="#section-abstract-1" class="pilcrow">¶</a></p>
+</section>
+<div id="status-of-memo">
+<section id="section-boilerplate.1">
+        <h2 id="name-status-of-this-memo">
+<a href="#name-status-of-this-memo" class="section-name selfRef">Status of This Memo</a>
+        </h2>
+<p id="section-boilerplate.1-1">
+        This Internet-Draft is submitted in full conformance with the
+        provisions of BCP 78 and BCP 79.<a href="#section-boilerplate.1-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-2">
+        Internet-Drafts are working documents of the Internet Engineering Task
+        Force (IETF). Note that other groups may also distribute working
+        documents as Internet-Drafts. The list of current Internet-Drafts is
+        at <span><a href="https://datatracker.ietf.org/drafts/current/">https://datatracker.ietf.org/drafts/current/</a></span>.<a href="#section-boilerplate.1-2" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-3">
+        Internet-Drafts are draft documents valid for a maximum of six months
+        and may be updated, replaced, or obsoleted by other documents at any
+        time. It is inappropriate to use Internet-Drafts as reference
+        material or to cite them other than as "work in progress."<a href="#section-boilerplate.1-3" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.1-4">
+        This Internet-Draft will expire on 5 January 2027.<a href="#section-boilerplate.1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="copyright">
+<section id="section-boilerplate.2">
+        <h2 id="name-copyright-notice">
+<a href="#name-copyright-notice" class="section-name selfRef">Copyright Notice</a>
+        </h2>
+<p id="section-boilerplate.2-1">
+            Copyright (c) 2026 IETF Trust and the persons identified as the
+            document authors. All rights reserved.<a href="#section-boilerplate.2-1" class="pilcrow">¶</a></p>
+<p id="section-boilerplate.2-2">
+            This document is subject to BCP 78 and the IETF Trust's Legal
+            Provisions Relating to IETF Documents
+            (<span><a href="https://trustee.ietf.org/license-info">https://trustee.ietf.org/license-info</a></span>) in effect on the date of
+            publication of this document. Please review these documents
+            carefully, as they describe your rights and restrictions with
+            respect to this document. Code Components extracted from this
+            document must include Revised BSD License text as described in
+            Section 4.e of the Trust Legal Provisions and are provided without
+            warranty as described in the Revised BSD License.<a href="#section-boilerplate.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="toc">
+<section id="section-toc.1">
+        <a href="#" onclick="scroll(0,0)" class="toplink">▲</a><h2 id="name-table-of-contents">
+<a href="#name-table-of-contents" class="section-name selfRef">Table of Contents</a>
+        </h2>
+<nav class="toc"><ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.1">
+            <p id="section-toc.1-1.1.1" class="keepWithNext"><a href="#section-1" class="auto internal xref">1</a>.  <a href="#name-introduction" class="internal xref">Introduction</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.2">
+            <p id="section-toc.1-1.2.1" class="keepWithNext"><a href="#section-2" class="auto internal xref">2</a>.  <a href="#name-terminology" class="internal xref">Terminology</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3">
+            <p id="section-toc.1-1.3.1"><a href="#section-3" class="auto internal xref">3</a>.  <a href="#name-schc-primer" class="internal xref">SCHC: Primer</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.3.2.1">
+                <p id="section-toc.1-1.3.2.1.1" class="keepWithNext"><a href="#section-3.1" class="auto internal xref">3.1</a>.  <a href="#name-schc-invocation-network-ser" class="internal xref">SCHC Invocation: Network Service vs. Application Service</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4">
+            <p id="section-toc.1-1.4.1"><a href="#section-4" class="auto internal xref">4</a>.  <a href="#name-architecture" class="internal xref">Architecture</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1">
+                <p id="section-toc.1-1.4.2.1.1"><a href="#section-4.1" class="auto internal xref">4.1</a>.  <a href="#name-overview-of-a-basic-archite" class="internal xref">Overview of a Basic Architecture</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1.2.1">
+                    <p id="section-toc.1-1.4.2.1.2.1.1"><a href="#section-4.1.1" class="auto internal xref">4.1.1</a>.  <a href="#name-basic-schc-architecture" class="internal xref">Basic SCHC Architecture</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1.2.2">
+                    <p id="section-toc.1-1.4.2.1.2.2.1"><a href="#section-4.1.2" class="auto internal xref">4.1.2</a>.  <a href="#name-multiple-instances-architec" class="internal xref">Multiple Instances Architecture</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.1.2.3">
+                    <p id="section-toc.1-1.4.2.1.2.3.1"><a href="#section-4.1.3" class="auto internal xref">4.1.3</a>.  <a href="#name-schc-configuration-provisio" class="internal xref">SCHC configuration provisioning architecture</a></p>
+</li>
+                </ul>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2">
+                <p id="section-toc.1-1.4.2.2.1"><a href="#section-4.2" class="auto internal xref">4.2</a>.  <a href="#name-focus-on-core-components" class="internal xref">Focus on core components</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.1">
+                    <p id="section-toc.1-1.4.2.2.2.1.1"><a href="#section-4.2.1" class="auto internal xref">4.2.1</a>.  <a href="#name-instance" class="internal xref">Instance</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.2">
+                    <p id="section-toc.1-1.4.2.2.2.2.1"><a href="#section-4.2.2" class="auto internal xref">4.2.2</a>.  <a href="#name-endpoint" class="internal xref">Endpoint</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.3">
+                    <p id="section-toc.1-1.4.2.2.2.3.1"><a href="#section-4.2.3" class="auto internal xref">4.2.3</a>.  <a href="#name-session" class="internal xref">Session</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.4">
+                    <p id="section-toc.1-1.4.2.2.2.4.1"><a href="#section-4.2.4" class="auto internal xref">4.2.4</a>.  <a href="#name-domain" class="internal xref">Domain</a></p>
+</li>
+                  <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.4.2.2.2.5">
+                    <p id="section-toc.1-1.4.2.2.2.5.1"><a href="#section-4.2.5" class="auto internal xref">4.2.5</a>.  <a href="#name-datagram-format" class="internal xref">Datagram Format</a></p>
+</li>
+                </ul>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5">
+            <p id="section-toc.1-1.5.1"><a href="#section-5" class="auto internal xref">5</a>.  <a href="#name-deployment-models" class="internal xref">Deployment models</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.1">
+                <p id="section-toc.1-1.5.2.1.1"><a href="#section-5.1" class="auto internal xref">5.1</a>.  <a href="#name-lpwan-deployment" class="internal xref">LPWAN deployment</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.5.2.2">
+                <p id="section-toc.1-1.5.2.2.1"><a href="#section-5.2" class="auto internal xref">5.2</a>.  <a href="#name-6lo-deployments" class="internal xref">6Lo deployments</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.6">
+            <p id="section-toc.1-1.6.1"><a href="#section-6" class="auto internal xref">6</a>.  <a href="#name-operational-considerations" class="internal xref">Operational considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.7">
+            <p id="section-toc.1-1.7.1"><a href="#section-7" class="auto internal xref">7</a>.  <a href="#name-security-considerations" class="internal xref">Security Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.8">
+            <p id="section-toc.1-1.8.1"><a href="#section-8" class="auto internal xref">8</a>.  <a href="#name-iana-considerations" class="internal xref">IANA Considerations</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9">
+            <p id="section-toc.1-1.9.1"><a href="#section-9" class="auto internal xref">9</a>.  <a href="#name-references" class="internal xref">References</a></p>
+<ul class="compact toc ulBare ulEmpty">
+<li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.1">
+                <p id="section-toc.1-1.9.2.1.1"><a href="#section-9.1" class="auto internal xref">9.1</a>.  <a href="#name-normative-references" class="internal xref">Normative References</a></p>
+</li>
+              <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.9.2.2">
+                <p id="section-toc.1-1.9.2.2.1"><a href="#section-9.2" class="auto internal xref">9.2</a>.  <a href="#name-informative-references" class="internal xref">Informative References</a></p>
+</li>
+            </ul>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.10">
+            <p id="section-toc.1-1.10.1"><a href="#appendix-A" class="auto internal xref">Appendix A</a>.  <a href="#name-acknowledgments-numberedfal" class="internal xref">Acknowledgments {numbered="false"}</a></p>
+</li>
+          <li class="compact toc ulBare ulEmpty" id="section-toc.1-1.11">
+            <p id="section-toc.1-1.11.1"><a href="#appendix-B" class="auto internal xref"></a><a href="#name-authors-addresses" class="internal xref">Authors' Addresses</a></p>
+</li>
+        </ul>
+</nav>
+</section>
+</div>
+<div id="Introduction">
+<section id="section-1">
+      <h2 id="name-introduction">
+<a href="#section-1" class="section-number selfRef">1. </a><a href="#name-introduction" class="section-name selfRef">Introduction</a>
+      </h2>
+<p id="section-1-1">The SCHC Working Group has developed the <span>[<a href="#RFC8724" class="cite xref">RFC8724</a>]</span> SCHC protocol for
+  Low-Power Wide-Area (LPWA) networks, providing efficient header compression
+  and fragmentation mechanisms.<a href="#section-1-1" class="pilcrow">¶</a></p>
+<p id="section-1-2"># Requirements Language<a href="#section-1-2" class="pilcrow">¶</a></p>
+<p id="section-1-3">The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED",
+"MAY", and "OPTIONAL" in this document are to be interpreted as
+described in BCP14 <span>[<a href="#RFC2119" class="cite xref">RFC2119</a>]</span> <span>[<a href="#RFC8174" class="cite xref">RFC8174</a>]</span> when, and only when, they
+appear in all capitals, as shown here.<a href="#section-1-3" class="pilcrow">¶</a></p>
+<p id="section-1-4">Check the use of normative keywords.
+(ex.: "Since <span>[<a href="#RFC8724" class="cite xref">RFC8724</a>]</span> requires X, an architecture compliant with this
+document MUST ...")
+Be very clear about what constitutes a "requirement on implementations" versus
+a "recommendation on deployments."
+Ensure that you do not introduce requirements that would contradict RFC 8724
+or existing profiles (SCHC over LoRaWAN, NB-IoT, etc.).<a href="#section-1-4" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="Terminology">
+<section id="section-2">
+      <h2 id="name-terminology">
+<a href="#section-2" class="section-number selfRef">2. </a><a href="#name-terminology" class="section-name selfRef">Terminology</a>
+      </h2>
+<p id="section-2-1">This section defines terminology and abbreviations used in this document. In
+  the following, terms are assumed to be defined in the context of the SCHC
+  ecosystem, unless specified otherwise, <em>.e.g</em> Endpoint refers to a SCHC
+  Endpoint, Instance refers to a SCHC Instance, and so on.<a href="#section-2-1" class="pilcrow">¶</a></p>
+<p id="section-2-2"><strong>SCHC</strong>: A Generic Framework, as defined in <span>[<a href="#RFC8724" class="cite xref">RFC8724</a>]</span>, that performs
+  compression/decompression and, optionally, fragmentation/reassembly of
+  protocol headers, based on a Static Context shared between two or more
+  Endpoints. The SCHC acronym is pronounced like "sheek" in English (or "chic"
+  in French).<a href="#section-2-2" class="pilcrow">¶</a></p>
+<p id="section-2-3"><strong>Endpoint</strong>: A logical entity that provides SCHC functionality by hosting
+  the SCHC processing code, rather than a physical device. Multiple SCHC
+  Endpoints can operate on the same physical equipment, for example to serve
+  different Domains, tenants, strata.<a href="#section-2-3" class="pilcrow">¶</a></p>
+<p id="section-2-4"><strong>Instance</strong>: A logical component of an Endpoint that executes the actual SCHC
+  operations, e.g. compressing and decompressing headers, fragmenting and
+  reassembling packets. Multiple Instances can coexist on the same Endpoint
+  but each Instance operates independently, with its own Context and Configuration.<a href="#section-2-4" class="pilcrow">¶</a></p>
+<p id="section-2-5"><strong>Rule</strong>: A structured set of header fields and matching conditions used by SCHC
+  to process packets in accordance with specified actions.<a href="#section-2-5" class="pilcrow">¶</a></p>
+<p id="section-2-6"><strong>Set of Rules (SoR)</strong>: A collection of Rule entries that define how specific
+  header fields are processed by an Instance.<a href="#section-2-6" class="pilcrow">¶</a></p>
+<p id="section-2-7"><strong>Context</strong>: A SoR together with metadata, shared by two or more Instances.
+  Metadata may, for example, refer to a data model or a parser compatible with
+  the rule format.<a href="#section-2-7" class="pilcrow">¶</a></p>
+<p id="section-2-8"><strong>Instance Configuration</strong>: A set of configurations specific to an Instance that
+  define how SCHC operations are performed, e.g. role of the Instance, matching
+  policy, dispatcher configuration, supported SCHC features.<a href="#section-2-8" class="pilcrow">¶</a></p>
+<p id="section-2-9"><strong>Session</strong>: A communication session between two or more Instances that share a
+  common Context for SCHC operations.<a href="#section-2-9" class="pilcrow">¶</a></p>
+<p id="section-2-10"><strong>Set of Variables (SoV)</strong>: Runtime parameters and session variables, such as
+  fragmentation-related timers, retransmission counters, state flags, and other
+  per-session values that may change during operation.<a href="#section-2-10" class="pilcrow">¶</a></p>
+<p id="section-2-11"><strong>Dispatcher</strong>: Entity that uses the Discriminator to route a Datagram to the 
+   appropriate Instance.  The Dispatcher can be integrated into the network 
+   stack or be a separate component.<a href="#section-2-11" class="pilcrow">¶</a></p>
+<p id="section-2-12"><strong>Discriminator</strong>: Information element derived from the Carrier Layer that 
+   enables the selection of the correct Instance. The Discriminator can be an 
+   <strong>explicit</strong> field in the Datagram or frame (for example, a 6LoWPAN Dispatch
+   byte, a VOICI Session ID).<a href="#section-2-12" class="pilcrow">¶</a></p>
+<p id="section-2-13"><strong>Carrier Layer</strong>: The layer adjacent to and below the Stratum's lower boundary,
+   from which the Discriminator is derived. The Carrier Layer is outside the 
+   Stratum and not addressable by the Instance's Rules. Examples include IEEE 
+   802.15.4, LPWAN links, PPP frames.<a href="#section-2-13" class="pilcrow">¶</a></p>
+<p id="section-2-14"><strong>Parser</strong>: A software tool or component that dissects and analyzes network
+   packets, to extract header fields such as source and destination
+   addresses, port numbers, and payload data.<a href="#section-2-14" class="pilcrow">¶</a></p>
+<p id="section-2-15"><strong>Domain</strong>: A logical grouping of Instances that share a common set of Contexts
+   for SCHC operations.<a href="#section-2-15" class="pilcrow">¶</a></p>
+<p id="section-2-16"><strong>Stratum</strong>: A background concept that defines the scope of headers an Instance
+  addresses.  It is expressed as a contiguous range <strong>[lower boundary, upper
+  boundary]</strong> of protocol layers, where both boundaries are inclusive.  If
+  lower boundary equals upper boundary, the Stratum spans a single layer.
+  Headers originating from above the upper boundary are unaffected by the
+  Instance.  The term "Stratum" originates from the idea of layers in a
+  network stack but is applicable beyond the network stack, for instance to
+  application-layer protocol headers.<a href="#section-2-16" class="pilcrow">¶</a></p>
+<p id="section-2-17"><strong>Datagram</strong>: The unit exchanged between SCHC instances. A Datagram
+  consists of a Rule Identifier (RuleID) and the result of the SCHC operation
+  (if non-empty), such as a compression residue or a packet fragment. It ends
+  with a Payload taken from the original packet (if any).<a href="#section-2-17" class="pilcrow">¶</a></p>
+<p id="section-2-18"><strong>Domain Manager</strong>: A logical component that manages the Domain, including
+  context synchronization and configuration distribution.<a href="#section-2-18" class="pilcrow">¶</a></p>
+<p id="section-2-19"><strong>Instance Manager</strong>: A logical component that manages the lifecycle and
+  configuration of Instances within an Endpoint. It is responsible for
+  creating, updating, and deleting Instances as needed, synchronizing
+  Contexts, and managing Instance Configurations.<a href="#section-2-19" class="pilcrow">¶</a></p>
+<p id="section-2-20"><strong>Endpoint Manager</strong>:<a href="#section-2-20" class="pilcrow">¶</a></p>
+<p id="section-2-21"><strong>Context Repository</strong>: A logical component that stores and manages the
+  Contexts used by its Domain.<a href="#section-2-21" class="pilcrow">¶</a></p>
+<p id="section-2-22"><strong>C/D</strong>: SCHC function that performs the Compression and Decompression of headers.<a href="#section-2-22" class="pilcrow">¶</a></p>
+<p id="section-2-23"><strong>F/R</strong>: SCHC function that performs the Fragmentation and Reassembly of headers.<a href="#section-2-23" class="pilcrow">¶</a></p>
+<p id="section-2-24"><strong>MO</strong>: Matching Operator<a href="#section-2-24" class="pilcrow">¶</a></p>
+<p id="section-2-25"><strong>CDA</strong>: Compression/Decompression Action<a href="#section-2-25" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="schc-primer">
+<section id="section-3">
+      <h2 id="name-schc-primer">
+<a href="#section-3" class="section-number selfRef">3. </a><a href="#name-schc-primer" class="section-name selfRef">SCHC: Primer</a>
+      </h2>
+<p id="section-3-1">SCHC is primarily a compression mechanism for structured datagrams comprising
+  headers. It reduces the size of these datagrams by exploiting predictable
+  patterns found in application data and network header structures, e.g., static
+  field values, network prefixes in addresses, known port numbers.<a href="#section-3-1" class="pilcrow">¶</a></p>
+<p id="section-3-2">Instead of transmitting headers in full, the sender replaces known header
+  fields with a compressed residue and an identifier -- a <strong>RuleID</strong> that 
+  instructs the receiver how to reconstruct the original headers. 
+  Both the sender and receiver share the <strong>set of Rules</strong> (SoR) needed for this
+  process through a shared <strong>Context</strong>.<a href="#section-3-2" class="pilcrow">¶</a></p>
+<p id="section-3-3">This shared Context may be static, for example pre-provisioned with the device
+   firmware or installed dynamically. In the latter case, the logical groupings
+   that share the same Context, and therefore require timely and coordinated
+   updates, are called  <strong>Domains</strong>.<a href="#section-3-3" class="pilcrow">¶</a></p>
+<p id="section-3-4">Compression and decompression occur in SCHC <strong>Instances</strong> --- logical entities
+  that:
+   - Match datagram headers against Rules and compress them
+   - Identify the Rule used by the compressor (via RuleID) and reconstruct the
+     headers on decompression<a href="#section-3-4" class="pilcrow">¶</a></p>
+<p id="section-3-5">Each Instance addresses a set of adjacent headers --- for example, the IPv6, 
+  UDP and CoAP headers in a network stack. This "slice" of the stack is called
+  a <strong>Stratum</strong> and is defined by a lower boundary (the layer closest to the
+  physical interface) and an upper boundary (the highest layer in the stack).<a href="#section-3-5" class="pilcrow">¶</a></p>
+<div id="sec-schc-invocation">
+<section id="section-3.1">
+        <h3 id="name-schc-invocation-network-ser">
+<a href="#section-3.1" class="section-number selfRef">3.1. </a><a href="#name-schc-invocation-network-ser" class="section-name selfRef">SCHC Invocation: Network Service vs. Application Service</a>
+        </h3>
+<p id="section-3.1-1">SCHC can be used in two fundamentally different ways.<a href="#section-3.1-1" class="pilcrow">¶</a></p>
+<p id="section-3.1-2"><strong>Case A: SCHC as a Network Service.</strong>  The SCHC Instance acts on headers the 
+  stack itself needs to inspect and route. By itself, an Instance cannot 
+  intercept packets in the network stack, and SCHC is not a protocol residing in
+  the stack. Because SCHC is not a protocol in the stack, an entity of the network
+  stack, the <strong>Dispatcher</strong>, routes Datagrams to and from Instances.<a href="#section-3.1-2" class="pilcrow">¶</a></p>
+<p id="section-3.1-3">On the compressor side, the Dispatcher intercepts <strong>Native</strong> Datagrams 
+  targeted by an Instance after the network protocols of the Stratum have 
+  finished processing the Datagram. The Dispatcher then dispatches the Native 
+  Datagram to the Instance which compresses the Datagram to form the SCHC 
+  Datagram. The SCHC Datagram is then reinjected into the network stack at the
+  adjacent layer below the Stratum -- the <strong>Carrier</strong> Layer. Eventually, the 
+  Dispatcher fills the Carrier <strong>Discriminator</strong>, a value of the Carrier header
+  that indicates the Datagram is compressed with SCHC. The SCHC Datagram is then
+  processed further by the network stack and sent to its recipient.<a href="#section-3.1-3" class="pilcrow">¶</a></p>
+<p id="section-3.1-4">On the decompressor side, the SCHC Datagram is delivered by the network stack
+  to the Dispatcher, eventually identified by the Carrier Discriminator.
+  The Dispatcher delivers the SCHC Datagram to the appropriate Instance, which 
+  processes the SCHC Datagram to reconstruct the headers of the Stratum. Once 
+  reconstructed, the Dispatcher restore the Carrier Layer with the Native
+  Datagram field values, for instance when a Carrier Discriminator is used.<a href="#section-3.1-4" class="pilcrow">¶</a></p>
+<p id="section-3.1-5">The Datagram is further processed by the Network stack, as would the Native
+  Datagram be processed.<a href="#section-3.1-5" class="pilcrow">¶</a></p>
+<p id="section-3.1-6">The same core architectural concepts (Instance, Context, Rule, Stratum, Domain) 
+  apply in both cases.  What differs is the routing and configuration mechanism:
+  Carrier Layer, Discriminator and Dispatcher apply only to Case A.<a href="#section-3.1-6" class="pilcrow">¶</a></p>
+<p id="section-3.1-7">For example, in the 6Lo scenario detailed below, the Instance addresses an 
+  IPv6/UDP/CoAP Stratum above the 802.15.4 L2 header. The Dispatcher is the 
+  stack routine that redirects frames bearing the SCHC Dispatch byte (<code>0100 0100</code>)
+  to the correct Instance. The Dispatch byte is the <strong>Discriminator</strong> --- the 
+  information element the Dispatcher uses to route SCHC Datagrams.<a href="#section-3.1-7" class="pilcrow">¶</a></p>
+<p id="section-3.1-8">The Discriminator usually sits in the adjacent layer below the Stratum lower
+  boundary, outside the scope of addressable (compressible) headers for the SCHC
+  instance.<a href="#section-3.1-8" class="pilcrow">¶</a></p>
+<p id="section-3.1-9"><strong>Case B: SCHC as an Application Service.</strong>  The Instance is invoked by the
+  application's processing pipeline, compressing data that does not affect the
+  network stack processing. The application calls the Instance as a library 
+  function, in an order the application dictates. No Dispatch, or Discriminator 
+  is needed. The Instance's Invocation Context is the application's processing 
+  stage.<a href="#section-3.1-9" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="architecture">
+<section id="section-4">
+      <h2 id="name-architecture">
+<a href="#section-4" class="section-number selfRef">4. </a><a href="#name-architecture" class="section-name selfRef">Architecture</a>
+      </h2>
+<div id="overview-of-a-basic-architecture">
+<section id="section-4.1">
+        <h3 id="name-overview-of-a-basic-archite">
+<a href="#section-4.1" class="section-number selfRef">4.1. </a><a href="#name-overview-of-a-basic-archite" class="section-name selfRef">Overview of a Basic Architecture</a>
+        </h3>
+<div id="basic-schc-architecture">
+<section id="section-4.1.1">
+          <h4 id="name-basic-schc-architecture">
+<a href="#section-4.1.1" class="section-number selfRef">4.1.1. </a><a href="#name-basic-schc-architecture" class="section-name selfRef">Basic SCHC Architecture</a>
+          </h4>
+<p id="section-4.1.1-1"><a href="#Fig-Simple-Overview" class="auto internal xref">Figure 1</a> illustrates how messages are exchanged between
+  applications running on two remote hosts using SCHC Compression/Decompression
+  and optionally Fragmentation/Reassembly.<a href="#section-4.1.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.1.1-2">Each host features an <strong>Endpoint</strong> that implements SCHC functions. The effective
+  Compression/Decompression or Fragmentation/Reassembly of datagrams is carried
+  out by the <strong>Instance</strong>, a runtime entity.<a href="#section-4.1.1-2" class="pilcrow">¶</a></p>
+<p id="section-4.1.1-3">How Compression/Decompression and Fragmentation/Reassembly is performed by 
+  each Instance is specified in two configuration elements: the <strong>Context</strong>
+  which contains the configuration shared and identical between the two 
+  Instances and the <strong>Instance Configuration</strong> which is specific to each 
+  Instance.<a href="#section-4.1.1-3" class="pilcrow">¶</a></p>
+<p id="section-4.1.1-4">Most notably, the Context contains the <strong>Set of Rules</strong> (SoR), which defines how
+  datagrams are compressed and/or fragmented, and the Instance Configuration 
+  specifies which role each Instance assumes (Uplink/Downlink).<a href="#section-4.1.1-4" class="pilcrow">¶</a></p>
+<p id="section-4.1.1-5">The two Instances that share the same Context form a <strong>Session</strong>, eventually 
+identified by a <strong>Session ID</strong> which is then specified in the Context.<a href="#section-4.1.1-5" class="pilcrow">¶</a></p>
+<span id="name-overview-of-two-simple-endp"></span><div id="Fig-Simple-Overview">
+<figure id="figure-1">
+            <div class="alignLeft art-text artwork" id="section-4.1.1-6.1">
+<pre>
++-----------------------+                   +-----------------------+
+| Endpoint              |                   | Endpoint              |
+|                       |                   |                       |
+| +-------------------+ |                   | +-------------------+ |
+| | Instance          | |                   | | Instance          | |
+| |                   | |                   | |                   | |
+| | +---------------+ | |                   | | +---------------+ | |
+| | | Instance      | | |                   | | | Instance      | | |
+| | | Configuration | | |                   | | | Configuration | | |
+| | +---------------+ | |                   | | +---------------+ | |
+| | +---------+       | |                   | | +---------+       | |
+| | | Context |&lt; - - - - - - - - - - - - - - - &gt;| Context |       | |
+| | +---------+       | |     Shared        | | +---------+       | |
+| +-------------------+ |     Context       | +-------------------+ |
+| +-------------------+ |                   | +-------------------+ |
+| |SCHC Functions     | |                   | SCHC Functions      | |
+| |                   | |                   |                     | |
+| | +-----+   +-----+ | |                   | | +-----+   +-----+ | |
+| | | C/D |   | F/R | | |                   | | | C/D |  | F/R  | | |
+| | +-----+   +-----+ | |                   | | +-----+   +-----+ | |
+| +-------------------+ |                   | +-------------------+ |
++-----------------------+                   +-----------------------+
+            ^                                           ^
+            |                                           |
+            ---------------------------------------------
+              SCHC Datagrams exchanged inside a Session
+
+</pre>
+</div>
+<figcaption><a href="#figure-1" class="selfRef">Figure 1</a>:
+<a href="#name-overview-of-two-simple-endp" class="selfRef">Overview of two simple Endpoints exchanging SCHC Datagrams</a>
+            </figcaption></figure>
+</div>
+<p id="section-4.1.1-7"><strong>Important notice</strong>: having the same Context is not sufficient to guarantee
+  the interoperability of SCHC operations between two Instances. The format of
+  the data obtained from the Parser when processing the headers must be
+  consistent on each Endpoint to allow the successful decompression. To ensure
+  interoperability, the Context may specify which Parser to use to delineate
+  the header fields, and/or which Data Model, such as the one defined in
+  <span>[<a href="#RFC9363" class="cite xref">RFC9363</a>]</span>.<a href="#section-4.1.1-7" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="multiple-instances-architecture">
+<section id="section-4.1.2">
+          <h4 id="name-multiple-instances-architec">
+<a href="#section-4.1.2" class="section-number selfRef">4.1.2. </a><a href="#name-multiple-instances-architec" class="section-name selfRef">Multiple Instances Architecture</a>
+          </h4>
+<p id="section-4.1.2-1">An Endpoint can host multiple Instances, each with its own Context and Instance
+Configuration.<a href="#section-4.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.1.2-2">When an Endpoint is supporting multiple Instances, the <strong>Instance Manager</strong> is
+  responsible for managing the lifecycle and configuration of these Instances.
+  Datagrams are routed to the appropriate Instance by the Dispatcher using
+  the Discriminator and admission rules based on information provided in the
+  Instance Configuration. The Dispatcher is a single point of decision for
+  packet forwarding within the Endpoint.<a href="#section-4.1.2-2" class="pilcrow">¶</a></p>
+<p id="section-4.1.2-3">In some deployments, the Discriminator is derived entirely from lower-layer
+context (e.g., a specific PPP link, an IPv6 address, or a UDP port).
+If external context is insufficient or unavailable, the Dispatcher may need an
+explicit Discriminator. For example, Datagrams can be encapsulated in a light
+transport protocol whose header contains a Session, Context, or Instance
+identifier, and can provide additional services such as integrity checking (CRC).<a href="#section-4.1.2-3" class="pilcrow">¶</a></p>
+<p id="section-4.1.2-4">The following figure illustrates the main components of an Endpoint supporting
+  multiple Instances and their interactions:<a href="#section-4.1.2-4" class="pilcrow">¶</a></p>
+<span id="name-overview-of-an-endpoints-ho"></span><div id="Fig-Multiple-Instances">
+<figure id="figure-2">
+            <div class="alignLeft art-text artwork" id="section-4.1.2-5.1">
+<pre>
+    +-------------------+         +----------------+
+    | Instance Manager  |         | SCHC Functions |
+    +-------------------+         +----------------+
+ manages lifecyle  | |                      ^
+ of Instances,     | |                      | compresses,
+ retrieve Contexts | +--------------------+ | decompresses,
+ and Configs       |                      | | etc.
+                   v                      v v
+        +-------------+             +-------------+
+     +-&gt;| Instance I1 |       ...   | Instance Ik |&lt;--------+
+     |  +-------------+             +-------------+         |
+     |   | |                         | |                    |
+     |   | |  +------------+         | |  +------------+    |
+     |   | +--| Context C1 |  ...    | +--| Context Ck |    |
+     |   |    +------------+         |    +------------+    |
+     |   |    +------------+         |    +------------+    |
+     |   +----| Config G1  |  ...    +----| Config Gk  |    |
+     |        +------------+              +------------+    |
+     |              |                         |             |
+     |   is applied |                         | is applied  |
+     |   to         |     +-------------+     | to          |
+     |              +----&gt;|             |&lt;----+             |
+     +-------------------&gt;| Dispatcher  |&lt;------------------+
+        dispatch packets  |             |  dispatch packets
+                          +-------------+
+                                ^ |
+                          admit | | reinject
+                                | v
+                          +---------------+
+                          | Network stack |
+                          +---------------+
+</pre>
+</div>
+<figcaption><a href="#figure-2" class="selfRef">Figure 2</a>:
+<a href="#name-overview-of-an-endpoints-ho" class="selfRef">Overview of an Endpoints hosting multiple Instances</a>
+            </figcaption></figure>
+</div>
+</section>
+</div>
+<div id="schc-configuration-provisioning-architecture">
+<section id="section-4.1.3">
+          <h4 id="name-schc-configuration-provisio">
+<a href="#section-4.1.3" class="section-number selfRef">4.1.3. </a><a href="#name-schc-configuration-provisio" class="section-name selfRef">SCHC configuration provisioning architecture</a>
+          </h4>
+<p id="section-4.1.3-1">Endpoints with Instances sharing a common Context may register to a <strong>Domain</strong>.<a href="#section-4.1.3-1" class="pilcrow">¶</a></p>
+<p id="section-4.1.3-2">When Contexts are provisioned dynamically, a <strong>Domain Manager</strong> is responsible
+  for this provisioning. within a Domain, the <strong>Endpoint Manager</strong> is in charge
+  of the on-boarding of participating Endpoints. Contexts are stored in 
+  the <strong>Context Repository</strong> and the <strong>Context Manager</strong> is in charge of the
+  synchronization of the instances' Contexts. Similarly, the <strong>Instance 
+  Configuration Manager</strong> is in charge of the deployment of the Instance-specific
+  configurations.<a href="#section-4.1.3-2" class="pilcrow">¶</a></p>
+<span id="name-overview-of-the-functions-o"></span><div id="Fig-Domain-Manager">
+<figure id="figure-3">
+            <div class="alignLeft art-text artwork" id="section-4.1.3-3.1">
+<pre>
+         +-----------------------------------------------------+
+         | Domain Manager                                      |
+         |                                                     |
+         |  +-------------+ +--------------+ +--------------+  |
+         |  |Endpoint     | |Context       | |Instance      |  |
+         |  |Manager      | |Manager       | |Configuration |  |
+         |  |             | |+------------+| |Manager       |  |
+         |  |             | || Context    || |              |  |
+         |  |             | || Repository || |              |  |
+         |  |             | |+------------+| |              |  |
+         |  +-------------+ +--------------+ +--------------+  |
+         |      ^                       ^       ^              |
+         +------|-----------------------|-------|--------------+
+                |                       |       |
+    Registration|   Context Provisioning|       |Configuration
+              +-|    and Synchronization|       |Distribution
+              | |                       |       |
+              v |                       |       |
++---------------|-------------------+   |       |
+| Endpoint      |                   |   |       |
+|               v                   |   |       |
+|  +------------------------+       |   |       |
+|  | Instance Manager       |       |   |       |
+|  +------------------------+       |   |       |
+|    ^  ^                           |   |       |
+|    |  |    +--------------------+ |   |       |
+|    |  +---&gt;| Instance 1         | |   |       |
+|    |       |                    | |   |       |
+|    |       | +--------------+   | |   |       |
+|    |       | |Context       |&lt;--------+       |
+|    |       | +--------------+   | |           |
+|    |       | +--------------+   | |           |
+|    |       | |Instance      |&lt;----------------+
+|    |       | |Configuration |   | |
+|    |       | +--------------+   | |
+|    |       +--------------------+ |
+|    |       +--------------------+ |
+|    +------&gt;| Instance 2         | |
+|            +--------------------+ |
++-----------------------------------+
+</pre>
+</div>
+<figcaption><a href="#figure-3" class="selfRef">Figure 3</a>:
+<a href="#name-overview-of-the-functions-o" class="selfRef">Overview of the functions of the Domain Manager</a>
+            </figcaption></figure>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="focus-on-core-components">
+<section id="section-4.2">
+        <h3 id="name-focus-on-core-components">
+<a href="#section-4.2" class="section-number selfRef">4.2. </a><a href="#name-focus-on-core-components" class="section-name selfRef">Focus on core components</a>
+        </h3>
+<div id="instance">
+<section id="section-4.2.1">
+          <h4 id="name-instance">
+<a href="#section-4.2.1" class="section-number selfRef">4.2.1. </a><a href="#name-instance" class="section-name selfRef">Instance</a>
+          </h4>
+<p id="section-4.2.1-1">An Instance is the fundamental component that runs a set of SCHC functionalities
+  as defined in <span>[<a href="#RFC8724" class="cite xref">RFC8724</a>]</span> hosted on an Endpoint. Its operation is defined by
+  an Instance Configuration and a Context. An Endpoint MAY execute several
+  Instances. Each Instance operates independently, with its own Context and
+  Instance Configuration. Instance may execute dynamic Context update
+  mechanisms and performance monitoring and reporting in complex scenarios.<a href="#section-4.2.1-1" class="pilcrow">¶</a></p>
+<div id="instance-configuration">
+<section id="section-4.2.1.1">
+            <h5 id="name-instance-configuration">
+<a href="#section-4.2.1.1" class="section-number selfRef">4.2.1.1. </a><a href="#name-instance-configuration" class="section-name selfRef">Instance Configuration</a>
+            </h5>
+<p id="section-4.2.1.1-1">The Instance Configuration specifies the local parameters of the Instance.<a href="#section-4.2.1.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.2.1.1-2">The Instance Configuration may indicate in a Manifest the set of required
+SCHC functionalities, such as:<a href="#section-4.2.1.1-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.2.1.1-3.1">
+                <p id="section-4.2.1.1-3.1.1">Header Compression and Decompression (C/D)<a href="#section-4.2.1.1-3.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.1.1-3.2">
+                <p id="section-4.2.1.1-3.2.1">Fragmentation and Reassembly (F/R)<a href="#section-4.2.1.1-3.2.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.1.1-3.3">
+                <p id="section-4.2.1.1-3.3.1">SCHClets (nodular subfunctions)<a href="#section-4.2.1.1-3.3.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+<p id="section-4.2.1.1-4">The Instance Configuration may also include the following parameters:<a href="#section-4.2.1.1-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.2.1.1-5.1">
+                <p id="section-4.2.1.1-5.1.1">Role of the Instance (e.g., Upside or Downside for asymetric Rules).<a href="#section-4.2.1.1-5.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.1.1-5.2">
+                <p id="section-4.2.1.1-5.2.1">Matching policy (e.g., first-match, best-match, etc.) to apply when multiple
+rules match a packet.<a href="#section-4.2.1.1-5.2.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.1.1-5.3">
+                <p id="section-4.2.1.1-5.3.1">Packet interception criteria (e.g., Stratum - the protocol headers that the
+SCHC Rules in the associated Context can address, Filters based on specific
+values or characteristics of packets, etc.)<a href="#section-4.2.1.1-5.3.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.1.1-5.4">
+                <p id="section-4.2.1.1-5.4.1">Dispatch information (e.g., how to identify the Instance for incoming
+packets, how to route packets to the appropriate Instance, etc.).<a href="#section-4.2.1.1-5.4.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+</section>
+</div>
+<div id="context">
+<section id="section-4.2.1.2">
+            <h5 id="name-context">
+<a href="#section-4.2.1.2" class="section-number selfRef">4.2.1.2. </a><a href="#name-context" class="section-name selfRef">Context</a>
+            </h5>
+<p id="section-4.2.1.2-1">The Context contains operational information shared between two or more
+Instances.<a href="#section-4.2.1.2-1" class="pilcrow">¶</a></p>
+<p id="section-4.2.1.2-2">For example, for Header Compression and Decompression (C/D) or Fragmentation
+  and Reassembly (F/R), the Context defines the set of C/D and F/R Rules - or
+  Set of Rules - describing the specific actions to be performed on the packets
+  using the corresponding SCHC functionalities, and, optionally, the Parser and
+  the Data Model to delineate and dissect the header fields.<a href="#section-4.2.1.2-2" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="endpoint">
+<section id="section-4.2.2">
+          <h4 id="name-endpoint">
+<a href="#section-4.2.2" class="section-number selfRef">4.2.2. </a><a href="#name-endpoint" class="section-name selfRef">Endpoint</a>
+          </h4>
+<p id="section-4.2.2-1">A network entity providing SCHC functionalities, and hosting the Instances
+that consist of a specific execution of one or more of these aforementioned
+functionalities.<a href="#section-4.2.2-1" class="pilcrow">¶</a></p>
+<div id="header-compression-and-decompression-cd">
+<section id="section-4.2.2.1">
+            <h5 id="name-header-compression-and-deco">
+<a href="#section-4.2.2.1" class="section-number selfRef">4.2.2.1. </a><a href="#name-header-compression-and-deco" class="section-name selfRef">Header Compression and Decompression (C/D)</a>
+            </h5>
+<p id="section-4.2.2.1-1">This component is responsible for compressing and decompressing headers
+  using the SCHC framework, as described in <span>[<a href="#RFC8724" class="cite xref">RFC8724</a>]</span>. It applies the rules
+  defined in the Context.<a href="#section-4.2.2.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.2.2.1-2">The C/D engine MUST expose the following interface:<a href="#section-4.2.2.1-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.2.2.1-3.1">
+                <p id="section-4.2.2.1-3.1.1"><code>compress(buffer, context, config)</code>: Compresses the provided buffer using the
+ Context and the Instance Configuration.<a href="#section-4.2.2.1-3.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.2.1-3.2">
+                <p id="section-4.2.2.1-3.2.1"><code>decompress(buffer, context, config)</code>: Decompresses the provided buffer using
+ the Context and the Instance Configuration.<a href="#section-4.2.2.1-3.2.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+<p id="section-4.2.2.1-4">Internally, on compression, the C/D engine:<a href="#section-4.2.2.1-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.2.2.1-5.1">
+                <p id="section-4.2.2.1-5.1.1">delineates the fields using the Parser and/or Data Model provided in the Context;<a href="#section-4.2.2.1-5.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.2.1-5.2">
+                <p id="section-4.2.2.1-5.2.1">chooses the appropriate compression Rule among candidate Rules from the Context
+based on the matching policy defined in the Instance Configuration;<a href="#section-4.2.2.1-5.2.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.2.1-5.3">
+                <p id="section-4.2.2.1-5.3.1">applies the compression Rule to the fields of the header(s);<a href="#section-4.2.2.1-5.3.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.2.1-5.4">
+                <p id="section-4.2.2.1-5.4.1">generates the compressed SCHC Datagram.
+In <span>[<a href="#RFC8724" class="cite xref">RFC8724</a>]</span>, a packet whose header has been compressed is called a SCHC
+Packet.<a href="#section-4.2.2.1-5.4.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+<p id="section-4.2.2.1-6">On decompression, the C/D engine:<a href="#section-4.2.2.1-6" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.2.2.1-7.1">
+                <p id="section-4.2.2.1-7.1.1">identifies the appropriate decompression Rule based on the RuleID stored in
+the SCHC Packet;<a href="#section-4.2.2.1-7.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.2.1-7.2">
+                <p id="section-4.2.2.1-7.2.1">applies the decompression Rule to reconstruct the original header;<a href="#section-4.2.2.1-7.2.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.2.1-7.3">
+                <p id="section-4.2.2.1-7.3.1">reconstructs and returns the original packet from the decompressed header
+and payload.<a href="#section-4.2.2.1-7.3.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+</section>
+</div>
+<div id="fragmentation-and-reassembly-fr">
+<section id="section-4.2.2.2">
+            <h5 id="name-fragmentation-and-reassembl">
+<a href="#section-4.2.2.2" class="section-number selfRef">4.2.2.2. </a><a href="#name-fragmentation-and-reassembl" class="section-name selfRef">Fragmentation and Reassembly (F/R)</a>
+            </h5>
+<p id="section-4.2.2.2-1">This component is responsible for fragmenting larger packets into smaller
+  fragments and reassembling them at the receiving end. It is optional feature
+  but recommended for scenarios where packet sizes may exceed the maximum
+  transmission unit (MTU) of the underlying network. In <span>[<a href="#RFC8724" class="cite xref">RFC8724</a>]</span>, the
+  pieces of a SCHC Packet that has been fragmented are called SCHC Fragments.<a href="#section-4.2.2.2-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="schclets">
+<section id="section-4.2.2.3">
+            <h5 id="name-schclets">
+<a href="#section-4.2.2.3" class="section-number selfRef">4.2.2.3. </a><a href="#name-schclets" class="section-name selfRef">SCHClets</a>
+            </h5>
+<p id="section-4.2.2.3-1">A SCHClet is a self-contained unit within the SCHC framework that implements
+  a specific SCHC function or a subset of SCHC operations. A SCHClet may
+  implement aspects defined in <span>[<a href="#RFC8724" class="cite xref">RFC8724</a>]</span> or functions from other related
+  SCHC RFCs, and MAY be combined with other SCHClets within an Instance, as
+  speficied in the Manifest in the Instance Configuration.<a href="#section-4.2.2.3-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="session">
+<section id="section-4.2.3">
+          <h4 id="name-session">
+<a href="#section-4.2.3" class="section-number selfRef">4.2.3. </a><a href="#name-session" class="section-name selfRef">Session</a>
+          </h4>
+<p id="section-4.2.3-1">As illustrated in the figure below, the Session is a communication session
+  between two or more Instances that share a common Context, i.e. they are
+  part of the same Domain.<a href="#section-4.2.3-1" class="pilcrow">¶</a></p>
+<span id="name-session-between-multiple-in"></span><div id="Fig-Session">
+<figure id="figure-4">
+            <div class="alignLeft art-text artwork" id="section-4.2.3-2.1">
+<pre>
+   Endpoint A                            Endpoint B
++--------------+                       +--------------+
+|   Instance   | &lt;----           ----&gt; |   Instance   |
++--------------+      \         /      +--------------+
+                       \       /
+                        Session
+                       /       \
++--------------+      /         \      +--------------+
+|   Instance   | &lt;----           ----&gt; |   Instance   |
++--------------+                       +--------------+
+   Endpoint C                            Endpoint D
+
+</pre>
+</div>
+<figcaption><a href="#figure-4" class="selfRef">Figure 4</a>:
+<a href="#name-session-between-multiple-in" class="selfRef">Session between multiple Instances</a>
+            </figcaption></figure>
+</div>
+</section>
+</div>
+<div id="domain">
+<section id="section-4.2.4">
+          <h4 id="name-domain">
+<a href="#section-4.2.4" class="section-number selfRef">4.2.4. </a><a href="#name-domain" class="section-name selfRef">Domain</a>
+          </h4>
+<p id="section-4.2.4-1">In the figure below, two Domains are represented, where Endpoint A and
+  Endpoint B host Instances belonging to Domain 1, and Endpoint B and
+  Endpoint C host Instances belonging to Domain 2. Instances from the same
+  Domain communicate through a Session. A Session Identifier, or Session ID,
+  may be used as a Discriminator to route the Datagrams to the correct
+  Instance (e.g., to distinguish between the two Instances of Endpoint B), 
+  and/or for management purpose.<a href="#section-4.2.4-1" class="pilcrow">¶</a></p>
+<span id="name-overview-of-multiple-domain"></span><div id="Fig-Domains">
+<figure id="figure-5">
+            <div class="alignLeft art-text artwork" id="section-4.2.4-2.1">
+<pre>
+  +------------------------------+      +------------------------------+
+  |      Domain Manager 1        |      |       Domain Manager 2       |
+  +------------------------------+      +------------------------------+
+          ^                   ^            ^               ^
+          |                   |            |               |
+          v                   v            v               v
+  +----------------+      +-------------------+      +---------------+
+  |   Endpoint A   |      |    Endpoint B     |      |   Endpoint C  |
++-----------------------------------------------+    |               |
+| | +-----------+  |      |   +-----------+   | |    |               |
+| | | Instance  |&lt;-----------&gt;| Instance  |   | |    |               |
+| | +-----------+  |      |   +-----------+   | |    |               |
++--------------------|--------------------------+    |               |
+  |                | |  +----------------------------------------------+
+  |                | |  | |   +-----------+   |      | +-----------+ | |
+  |                | |  | |   | Instance  |&lt;----------&gt;| Instance  | | |
+  |                | |  | |   +-----------+   |      | +-----------+ | |
+  |                | |  +-------------------------|--------------------+
+  |                | |    |                   |   |  |               |
+  +----------------+ |    +-------------------+   |  +---------------+
+                     |                            |
+                     |                            |
+                     +---&gt; Domain 1               +-&gt; Domain 2
+</pre>
+</div>
+<figcaption><a href="#figure-5" class="selfRef">Figure 5</a>:
+<a href="#name-overview-of-multiple-domain" class="selfRef">Overview of multiple Domains</a>
+            </figcaption></figure>
+</div>
+</section>
+</div>
+<div id="DatagramFormat">
+<section id="section-4.2.5">
+          <h4 id="name-datagram-format">
+<a href="#section-4.2.5" class="section-number selfRef">4.2.5. </a><a href="#name-datagram-format" class="section-name selfRef">Datagram Format</a>
+          </h4>
+<p id="section-4.2.5-1">A Datagram is the unit exchanged between SCHC Instances.<a href="#section-4.2.5-1" class="pilcrow">¶</a></p>
+<p id="section-4.2.5-2">It provides a unified representation for:<a href="#section-4.2.5-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.2.5-3.1">
+              <p id="section-4.2.5-3.1.1">compressed packets<a href="#section-4.2.5-3.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.2.5-3.2">
+              <p id="section-4.2.5-3.2.1">fragmented messages (fragments, acknowledgements, acknowledgement requests,
+...)<a href="#section-4.2.5-3.2.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-4.2.5-4">A Datagram is composed of:<a href="#section-4.2.5-4" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.2.5-5.1">
+              <p id="section-4.2.5-5.1.1">a RuleID<a href="#section-4.2.5-5.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.2.5-5.2">
+              <p id="section-4.2.5-5.2.1">the result of the SCHC operation (residue, fragment)<a href="#section-4.2.5-5.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-4.2.5-5.3">
+              <p id="section-4.2.5-5.3.1">the Payload<a href="#section-4.2.5-5.3.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+<p id="section-4.2.5-6">The result of the SCHC operation and the Payload may be empty.
+As stated in <span>[<a href="#RFC8724" class="cite xref">RFC8724</a>]</span>, a Datagram resulting from a compression operation is
+called a SCHC Packet, and a Datagram resulting from a fragmentation operation
+is called a Fragment.<a href="#section-4.2.5-6" class="pilcrow">¶</a></p>
+<span id="name-datagram-format-2"></span><div id="Fig-Datagram">
+<figure id="figure-6">
+            <div class="alignLeft art-text artwork" id="section-4.2.5-7.1">
+<pre>
++--------+------------------------+----------+
+| RuleID | Residue, Fragment, ... | Payload  |
++--------+------------------------+----------+
+</pre>
+</div>
+<figcaption><a href="#figure-6" class="selfRef">Figure 6</a>:
+<a href="#name-datagram-format-2" class="selfRef">Datagram Format</a>
+            </figcaption></figure>
+</div>
+<div id="control-header-for-advanced-use-cases">
+<section id="section-4.2.5.1">
+            <h5 id="name-control-header-for-advanced">
+<a href="#section-4.2.5.1" class="section-number selfRef">4.2.5.1. </a><a href="#name-control-header-for-advanced" class="section-name selfRef">Control Header for Advanced Use Cases</a>
+            </h5>
+<p id="section-4.2.5.1-1">In some deployments, it may be necessary to add information to the Datagram so
+that it can be properly routed to the correct Instance.<br>
+This information may be contained in a specific control structure, external to
+the Datagram, such as the header of an underlying transport protocol.<a href="#section-4.2.5.1-1" class="pilcrow">¶</a></p>
+<p id="section-4.2.5.1-2">This structure may be used to carry various types of information in order to
+provide functionalities such as:<a href="#section-4.2.5.1-2" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-4.2.5.1-3.1">
+                <p id="section-4.2.5.1-3.1.1">Multiplexing (Session, Instance, Context Identifier)<a href="#section-4.2.5.1-3.1.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.5.1-3.2">
+                <p id="section-4.2.5.1-3.2.1">Protection (Integrity)<a href="#section-4.2.5.1-3.2.1" class="pilcrow">¶</a></p>
+</li>
+              <li class="normal" id="section-4.2.5.1-3.3">
+                <p id="section-4.2.5.1-3.3.1">Metadata (Retain information that is lost when performing the SCHC operation,
+e.g., save the initial value of the EtherType field when it is changed to
+EtherType=SCHC)<a href="#section-4.2.5.1-3.3.1" class="pilcrow">¶</a></p>
+</li>
+            </ul>
+<p id="section-4.2.5.1-4">Example representation:<a href="#section-4.2.5.1-4" class="pilcrow">¶</a></p>
+<span id="name-schc-datagram-encapsulated-"></span><div id="Fig-Transport">
+<figure id="figure-7">
+              <div class="alignLeft art-text artwork" id="section-4.2.5.1-5.1">
+<pre>
++-------------+-----+---------------+
+| Instance ID | CRC | SCHC Datagram |
++-------------+-----+---------------+
+</pre>
+</div>
+<figcaption><a href="#figure-7" class="selfRef">Figure 7</a>:
+<a href="#name-schc-datagram-encapsulated-" class="selfRef">SCHC Datagram encapsulated into a transport protocol</a>
+              </figcaption></figure>
+</div>
+<p id="section-4.2.5.1-6"><strong>Important notice</strong>: The structure or transport protocol used to carry these
+control informations must be a standard format and/or protocol in order to
+ensure interoperability. Therefore, it might be desirable to design a new
+protocol tailored to the needs of SCHC, such as a lightweight version of UDP.
+Various header formats would then be defined to support the aforementioned
+functions.<a href="#section-4.2.5.1-6" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+</section>
+</div>
+<div id="deployment-models">
+<section id="section-5">
+      <h2 id="name-deployment-models">
+<a href="#section-5" class="section-number selfRef">5. </a><a href="#name-deployment-models" class="section-name selfRef">Deployment models</a>
+      </h2>
+<p id="section-5-1">In this section, we review the deployment scenarios considered in the SCHC 
+Working Group and match the terminology with the scenario characteristics.<a href="#section-5-1" class="pilcrow">¶</a></p>
+<div id="lpwan-deployment">
+<section id="section-5.1">
+        <h3 id="name-lpwan-deployment">
+<a href="#section-5.1" class="section-number selfRef">5.1. </a><a href="#name-lpwan-deployment" class="section-name selfRef">LPWAN deployment</a>
+        </h3>
+<p id="section-5.1-1">This section considers a typical LPWAN deployment where an IoT device communicates 
+  with a gateway or server using SCHC for header compression and decompression. 
+  The Instance's Stratum spans [IPv6, UDP, CoAP] --- meaning the Rules in its 
+  Context address headers across those three protocol layers. The Carrier Layer
+  (LPWAN link) adjacent below the Stratum's lower boundary carries the Discriminator
+  in a frame field such as the LoRaWAN frame port (fPort).<a href="#section-5.1-1" class="pilcrow">¶</a></p>
+<p id="section-5.1-2">In this setup, each device features a single SCHC Instance in a single Endpoint.
+  Each Instance is pre-configured with a static Context and Instance configuration.
+  The Discriminator is an explicit field in the LPWAN frame (e.g., fPort) and 
+  the Dispatcher is hardcoded in the network stack.<a href="#section-5.1-2" class="pilcrow">¶</a></p>
+<span id="name-lpwan-deployment-2"></span><div id="Fig-lpwan-deployment">
+<figure id="figure-8">
+          <div class="alignLeft art-text artwork" id="section-5.1-3.1">
+<pre>
+    Host A, IoT Device     Host B, Gateway/Server
+   +------------------+    +------------------+
+   |   Application A  |    |   Application B  |
+   +------------------+    +------------------+ -+
+   |       CoAP       |    |       CoAP       |  | Upper boundary: CoAP
+   +------------------+    +------------------+  |
+   |       UDP        |    |       UDP        |  |   Stratum
+   +------------------+    +------------------+  |
+   |       IPv6       |    |       IPv6       |  | Lower boundary: IPv6
+   +------------------+    +------------------+ -+
+   | LPWAN Link Layer |    | LPWAN Link Layer | - Carrier Layer,
+   +------------------+    +------------------+   discriminator: fPort
+   |  Physical Layer  |    |  Physical Layer  |
+   +------------------+    +------------------+
+           |                         |
+           +-------------------------+
+                    LPWAN link
+</pre>
+</div>
+<figcaption><a href="#figure-8" class="selfRef">Figure 8</a>:
+<a href="#name-lpwan-deployment-2" class="selfRef">LPWAN deployment</a>
+          </figcaption></figure>
+</div>
+</section>
+</div>
+<div id="lo-deployments">
+<section id="section-5.2">
+        <h3 id="name-6lo-deployments">
+<a href="#section-5.2" class="section-number selfRef">5.2. </a><a href="#name-6lo-deployments" class="section-name selfRef">6Lo deployments</a>
+        </h3>
+<p id="section-5.2-1">This section considers deployment scenarios as defined in <span>[<a href="#I-D.ietf-6lo-schc-15dot4" class="cite xref">I-D.ietf-6lo-schc-15dot4</a>]</span>.
+  The terminology is updated to reflect this of the current document.<a href="#section-5.2-1" class="pilcrow">¶</a></p>
+<p id="section-5.2-2">In a first deployment, a 6Lo Node (6LN) in a SCHC-Lo network commmunicates 
+  with an external host on the Internet. In this scenario, the 6LN is in direct 
+  communication with the 6Lo Border Router (6LBR). SCHC datagrams are only 
+  carried over the SCHC-Lo network, between the 6LN. The CoAP header and payload
+  are sent in clear (no encryption), and we assume that the SCHC datagram is 
+  small enough to fit in a single 802.15.4 frame.<a href="#section-5.2-2" class="pilcrow">¶</a></p>
+<span id="name-6lo-deployment-6lo-node-con"></span><div id="Fig-6lo-simple">
+<figure id="figure-9">
+          <div class="alignLeft art-text artwork" id="section-5.2-3.1">
+<pre>
+                  6LN                6LBR             External host
+
+             +- +--------+                              +--------+
+             |  |  CoAP  |                              |  CoAP  |
+             |  +--------+                              +--------+
+  I1 stratum |  |  UDP   |                              |  UDP   |
+             |  +--------+     +----------------+       +--------+
+             |  |  IPv6  |     |      IPv6      |       |  IPv6  |
+             +- +--------+     +----------------+       +--------+
+   Carrier      |  6lo   |     |  6lo   |       .       .        .
+                +--------+     +--------+       .       .        .
+                |802.15.4|     |802.15.4|       .       .        .
+                +--------+     +----------------+       ..........
+                    |               |        |               |
+                    +---------------+        +---------------+
+                     SCHC-Lo network              Internet
+</pre>
+</div>
+<figcaption><a href="#figure-9" class="selfRef">Figure 9</a>:
+<a href="#name-6lo-deployment-6lo-node-con" class="selfRef">6Lo deployment: 6Lo Node connected to an external host through a 6Lo Border Router</a>
+          </figcaption></figure>
+</div>
+<p id="section-5.2-4">In this scenario, the 6LN endpoint features a single Instance I1 that compresses
+  the IPv6, UDP and CoAP stratum. The Carrier Layer is the 6Lo adaptation layer 
+  which is materialized in frame by the dispatch byte.<a href="#section-5.2-4" class="pilcrow">¶</a></p>
+<p id="section-5.2-5">A datagram compressed by SCHC results in the following frame format:<a href="#section-5.2-5" class="pilcrow">¶</a></p>
+<span id="name-schc-lo-datagram"></span><div id="Fig-6lo-simple-datagram">
+<figure id="figure-10">
+          <div class="alignLeft art-text artwork" id="section-5.2-6.1">
+<pre>
++- - - - - -+------------------------+--------------+
+|           |   01000100   | Rule ID |   Residue    |
++- - - - - -+------------------------+--------------+
+  802.15.4  | 6Lo Dispatch |     SCHC Datagram      |
+   header   |   (1 byte)   |                        |
+</pre>
+</div>
+<figcaption><a href="#figure-10" class="selfRef">Figure 10</a>:
+<a href="#name-schc-lo-datagram" class="selfRef">SCHC-Lo Datagram</a>
+          </figcaption></figure>
+</div>
+<p id="section-5.2-7">In a second deployment, a 6LN communicates with an external host on the Internet.
+  In this scenario, the CoAP header is encrypted using DTLS. The 6LN Endpoint 
+  features two Instances I1 and I2. I1 compresses the CoAP header while I2 
+  compresses the UDP and IPv6 headers.<a href="#section-5.2-7" class="pilcrow">¶</a></p>
+<span id="name-6lo-deployment-6lo-node-conn"></span><div id="Fig-6lo-dtls">
+<figure id="figure-11">
+          <div class="alignLeft art-text artwork" id="section-5.2-8.1">
+<pre>
+                  6LN                6LBR             External host
+
+             +- +--------+                              +--------+
+I1 stratum - |  |  CoAP  |                              |  CoAP  |
+             +- +--------+                              +--------+
+                |  DTLS  |                              |  DTLS  |
+             +- +--------+                              +--------+
+             |  |  UDP   |                              |  UDP   |
+I2 stratum   |  +--------+     +----------------+       +--------+
+             |  |  IPv6  |     |      IPv6      |       |  IPv6  |
+             +- +--------+     +----------------+       +--------+
+   Carrier ---  |  6lo   |     |  6lo   |       .       .        .
+                +--------+     +--------+       .       .        .
+                |802.15.4|     |802.15.4|       .       .        .
+                +--------+     +----------------+       ..........
+                    |               |        |               |
+                    +---------------+        +---------------+
+                     SCHC-Lo network              Internet
+</pre>
+</div>
+<figcaption><a href="#figure-11" class="selfRef">Figure 11</a>:
+<a href="#name-6lo-deployment-6lo-node-conn" class="selfRef">6Lo deployment: 6Lo Node connected to an external host through a 6Lo Border Router. The CoAP is encrypted using DTLS</a>
+          </figcaption></figure>
+</div>
+<p id="section-5.2-9">The 6Lo Node endpoint features two Instances I1 and I2. I1 corresponding 
+Instance lives on the external host while I2 corresponding Instance lives on the
+6LBR.<a href="#section-5.2-9" class="pilcrow">¶</a></p>
+<p id="section-5.2-10">When the 6LN's CoAP application generates a datagram, that is a CoAP header and 
+  eventually a payload, The Dispatcher dispatches the datagram to Instance I1.
+  I1 builds a SCHC Datagram SD1 comprising a Rule ID and SCHC Residue, result of
+  the compression of the CoAP header and Payload. This SCHC Datagram is passed 
+  on to the DTLS layer which encrypts the SCHC Residue and then to UDP and IPv6. 
+  Once the IPv6 header is formed, the Dispatcher dispatches the datagram to 
+  Instance I2 which compresses the IPv6 and UDP header to form a SCHC Datagram 
+  SD2.<a href="#section-5.2-10" class="pilcrow">¶</a></p>
+<p id="section-5.2-11">Supposing a minimal size DTLS unified header (1byte), the 802.15.4 frame that is
+  transmitted on the SCHC-Lo network is structured as illustrated below.<a href="#section-5.2-11" class="pilcrow">¶</a></p>
+<span id="name-schc-lo-datagram-with-dtls"></span><div id="Fig-6lo-schclo-dtls">
+<figure id="figure-12">
+          <div class="alignLeft art-text artwork" id="section-5.2-12.1">
+<pre>
++- - - - -+--------+-------+-------+--------+---------------+----------+
+|         |  0x44  |Rule ID|Residue|  0x21  |Rule ID|Residue| Payload  |
++- - - - -+--------+-------+-------+--------+---------------+----------+
+ 802.15.4 |6Lo     | SCHC Datagram |  DTLS  | SCHC Datagram |
+  header  |Dispatch|      SD2      |unif.hdr|      SD1      |
+</pre>
+</div>
+<figcaption><a href="#figure-12" class="selfRef">Figure 12</a>:
+<a href="#name-schc-lo-datagram-with-dtls" class="selfRef">SCHC-Lo Datagram with DTLS</a>
+          </figcaption></figure>
+</div>
+<p id="section-5.2-13">When the 6LBR receives a 802.15.4 frame featuring the 6Lo Dispatch for SCHC, the
+  Dispatcher passe the frame to instance I2 relative on the 6LBR Endpoint. This 
+  Instance reconstructs the IPv6 and UDP headers that was compressed by I1. Once
+  decompressed, the frame is reinjected in the stack and further process by the 
+  IPv6 layer. The 6LBR then routes the IPv6 frame towards its destination, the 
+  external host.<a href="#section-5.2-13" class="pilcrow">¶</a></p>
+<p id="section-5.2-14">The external host receives a frame structured as follows:<a href="#section-5.2-14" class="pilcrow">¶</a></p>
+<span id="name-internet-datagram-with-dtls"></span><div id="Fig-6lo-internet-dtls">
+<figure id="figure-13">
+          <div class="alignLeft art-text artwork" id="section-5.2-15.1">
+<pre>
++- - - - -+--------+------|--------+---------------+----------+
+|         |  IPv6  | UDP  |  0x21  |Rule ID|Residue| Payload  |
++- - - - -+--------+------|--------+---------------+----------+
+ L2 layer |        |      |  DTLS  | SCHC Datagram |
+          |        |      |unif.hdr|      SD1      |
+</pre>
+</div>
+<figcaption><a href="#figure-13" class="selfRef">Figure 13</a>:
+<a href="#name-internet-datagram-with-dtls" class="selfRef">Internet Datagram with DTLS</a>
+          </figcaption></figure>
+</div>
+<p id="section-5.2-16">Once the Carrier Layer has finished processing the ingress datagram, the 
+  Dispatcher dispatches the SD1 SCHC Datagram to the corresponding instance, which
+  reconstructs the CoAP header. The CoAP header is then passed by the Dispatcher 
+  to the CoAP layer.<a href="#section-5.2-16" class="pilcrow">¶</a></p>
+</section>
+</div>
+</section>
+</div>
+<div id="operational-considerations">
+<section id="section-6">
+      <h2 id="name-operational-considerations">
+<a href="#section-6" class="section-number selfRef">6. </a><a href="#name-operational-considerations" class="section-name selfRef">Operational considerations</a>
+      </h2>
+<p id="section-6-1">Management, Data Models, SCHC Endpoint lifecycle (provisioning,
+context synchronization), Interoperability, Error handling, etc.<a href="#section-6-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="security-considerations">
+<section id="section-7">
+      <h2 id="name-security-considerations">
+<a href="#section-7" class="section-number selfRef">7. </a><a href="#name-security-considerations" class="section-name selfRef">Security Considerations</a>
+      </h2>
+<p id="section-7-1">For an architecture document, the security section must analyze:<a href="#section-7-1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7-2.1">
+          <p id="section-7-2.1.1">Risks specific to SCHC architecture:<a href="#section-7-2.1.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7-2.1.2.1">
+              <p id="section-7-2.1.2.1.1">Compromise or corruption of rules (SoR) and impact on the integrity/
+confidentiality of flows.<a href="#section-7-2.1.2.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7-2.1.2.2">
+              <p id="section-7-2.1.2.2.1">Synchronization drift between SoR/SoV and risk of denial of service 
+(dropped or misrouted packets).<a href="#section-7-2.1.2.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7-2.1.2.3">
+              <p id="section-7-2.1.2.3.1">Attacks on the Instance Manager (e.g., injection of malicious rules).<a href="#section-7-2.1.2.3.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7-2.1.2.4">
+              <p id="section-7-2.1.2.4.1">Interactions with the security mechanisms of the underlying layers
+(PPP, Ethernet, IPsec, OSCORE, etc.).<a href="#section-7-2.1.2.4.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+</li>
+        <li class="normal" id="section-7-2.2">
+          <p id="section-7-2.2.1">High-level mitigation measures expected in this architecture:<a href="#section-7-2.2.1" class="pilcrow">¶</a></p>
+<ul class="normal">
+<li class="normal" id="section-7-2.2.2.1">
+              <p id="section-7-2.2.2.1.1">Authentication and authorization of entities that manage rules.<a href="#section-7-2.2.2.1.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7-2.2.2.2">
+              <p id="section-7-2.2.2.2.1">Logging/auditing of SoR changes.<a href="#section-7-2.2.2.2.1" class="pilcrow">¶</a></p>
+</li>
+            <li class="normal" id="section-7-2.2.2.3">
+              <p id="section-7-2.2.2.3.1">Restoration and rollback of incorrect SCHC profiles.<a href="#section-7-2.2.2.3.1" class="pilcrow">¶</a></p>
+</li>
+          </ul>
+</li>
+      </ul>
+</section>
+</div>
+<div id="iana-considerations">
+<section id="section-8">
+      <h2 id="name-iana-considerations">
+<a href="#section-8" class="section-number selfRef">8. </a><a href="#name-iana-considerations" class="section-name selfRef">IANA Considerations</a>
+      </h2>
+<p id="section-8-1">This document has no IANA actions.<a href="#section-8-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="sec-combined-references">
+<section id="section-9">
+      <h2 id="name-references">
+<a href="#section-9" class="section-number selfRef">9. </a><a href="#name-references" class="section-name selfRef">References</a>
+      </h2>
+<div id="sec-normative-references">
+<section id="section-9.1">
+        <h3 id="name-normative-references">
+<a href="#section-9.1" class="section-number selfRef">9.1. </a><a href="#name-normative-references" class="section-name selfRef">Normative References</a>
+        </h3>
+<dl class="references">
+<dt id="RFC2119">[RFC2119]</dt>
+        <dd>
+<span class="refAuthor">Bradner, S.</span>, <span class="refTitle">"Key words for use in RFCs to Indicate Requirement Levels"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 2119</span>, <span class="seriesInfo">DOI 10.17487/RFC2119</span>, <time datetime="1997-03" class="refDate">March 1997</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc2119">https://www.rfc-editor.org/rfc/rfc2119</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8174">[RFC8174]</dt>
+        <dd>
+<span class="refAuthor">Leiba, B.</span>, <span class="refTitle">"Ambiguity of Uppercase vs Lowercase in RFC 2119 Key Words"</span>, <span class="seriesInfo">BCP 14</span>, <span class="seriesInfo">RFC 8174</span>, <span class="seriesInfo">DOI 10.17487/RFC8174</span>, <time datetime="2017-05" class="refDate">May 2017</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8174">https://www.rfc-editor.org/rfc/rfc8174</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8724">[RFC8724]</dt>
+        <dd>
+<span class="refAuthor">Minaburo, A.</span>, <span class="refAuthor">Toutain, L.</span>, <span class="refAuthor">Gomez, C.</span>, <span class="refAuthor">Barthel, D.</span>, and <span class="refAuthor">JC. Zuniga</span>, <span class="refTitle">"SCHC: Generic Framework for Static Context Header Compression and Fragmentation"</span>, <span class="seriesInfo">RFC 8724</span>, <span class="seriesInfo">DOI 10.17487/RFC8724</span>, <time datetime="2020-04" class="refDate">April 2020</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8724">https://www.rfc-editor.org/rfc/rfc8724</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8824">[RFC8824]</dt>
+      <dd>
+<span class="refAuthor">Minaburo, A.</span>, <span class="refAuthor">Toutain, L.</span>, and <span class="refAuthor">R. Andreasen</span>, <span class="refTitle">"Static Context Header Compression (SCHC) for the Constrained Application Protocol (CoAP)"</span>, <span class="seriesInfo">RFC 8824</span>, <span class="seriesInfo">DOI 10.17487/RFC8824</span>, <time datetime="2021-06" class="refDate">June 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8824">https://www.rfc-editor.org/rfc/rfc8824</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+<div id="sec-informative-references">
+<section id="section-9.2">
+        <h3 id="name-informative-references">
+<a href="#section-9.2" class="section-number selfRef">9.2. </a><a href="#name-informative-references" class="section-name selfRef">Informative References</a>
+        </h3>
+<dl class="references">
+<dt id="DRAFT-SCHCLET">[DRAFT-SCHCLET]</dt>
+        <dd>
+<span class="refAuthor">Pelov, A.</span>, <span class="refAuthor">Lampin, Q.</span>, and <span class="refAuthor">M. Dumay</span>, <span class="refTitle">"SCHClet - Modular Use of the SCHC Framework"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-schc-schclet-00</span>, <time datetime="2026-01-30" class="refDate">30 January 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-schc-schclet-00">https://datatracker.ietf.org/doc/html/draft-ietf-schc-schclet-00</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="I-D.ietf-6lo-schc-15dot4">[I-D.ietf-6lo-schc-15dot4]</dt>
+        <dd>
+<span class="refAuthor">Gomez, C.</span> and <span class="refAuthor">A. Minaburo</span>, <span class="refTitle">"Transmission of SCHC-compressed packets over IEEE 802.15.4 networks"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-6lo-schc-15dot4-12</span>, <time datetime="2026-02-20" class="refDate">20 February 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-6lo-schc-15dot4-12">https://datatracker.ietf.org/doc/html/draft-ietf-6lo-schc-15dot4-12</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="I-D.ietf-core-comi">[I-D.ietf-core-comi]</dt>
+        <dd>
+<span class="refAuthor">Veillette, M.</span>, <span class="refAuthor">Van der Stok, P.</span>, <span class="refAuthor">Pelov, A.</span>, <span class="refAuthor">Bierman, A.</span>, and <span class="refAuthor">C. Bormann</span>, <span class="refTitle">"CoAP Management Interface (CORECONF)"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-core-comi-21</span>, <time datetime="2026-03-02" class="refDate">2 March 2026</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-core-comi-21">https://datatracker.ietf.org/doc/html/draft-ietf-core-comi-21</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="I-D.ietf-intarea-schc-protocol-numbers">[I-D.ietf-intarea-schc-protocol-numbers]</dt>
+        <dd>
+<span class="refAuthor">Moskowitz, R.</span>, <span class="refAuthor">Card, S. W.</span>, <span class="refAuthor">Wiethuechter, A.</span>, and <span class="refAuthor">P. Thubert</span>, <span class="refTitle">"Protocol Numbers for SCHC"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-intarea-schc-protocol-numbers-02</span>, <time datetime="2024-04-08" class="refDate">8 April 2024</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-intarea-schc-protocol-numbers-02">https://datatracker.ietf.org/doc/html/draft-ietf-intarea-schc-protocol-numbers-02</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="I-D.ietf-schc-access-control">[I-D.ietf-schc-access-control]</dt>
+        <dd>
+<span class="refAuthor">Minaburo, A.</span>, <span class="refAuthor">Toutain, L.</span>, and <span class="refAuthor">I. Martinez</span>, <span class="refTitle">"SCHC Access Control"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-schc-access-control-00</span>, <time datetime="2023-12-13" class="refDate">13 December 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-schc-access-control-00">https://datatracker.ietf.org/doc/html/draft-ietf-schc-access-control-00</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="I-D.ietf-schc-over-ppp">[I-D.ietf-schc-over-ppp]</dt>
+        <dd>
+<span class="refAuthor">Thubert, P.</span>, <span class="refTitle">"SCHC over PPP"</span>, <span class="refContent">Work in Progress</span>, <span class="seriesInfo">Internet-Draft, draft-ietf-schc-over-ppp-00</span>, <time datetime="2023-07-25" class="refDate">25 July 2023</time>, <span>&lt;<a href="https://datatracker.ietf.org/doc/html/draft-ietf-schc-over-ppp-00">https://datatracker.ietf.org/doc/html/draft-ietf-schc-over-ppp-00</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC7950">[RFC7950]</dt>
+        <dd>
+<span class="refAuthor">Bjorklund, M., Ed.</span>, <span class="refTitle">"The YANG 1.1 Data Modeling Language"</span>, <span class="seriesInfo">RFC 7950</span>, <span class="seriesInfo">DOI 10.17487/RFC7950</span>, <time datetime="2016-08" class="refDate">August 2016</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc7950">https://www.rfc-editor.org/rfc/rfc7950</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC8376">[RFC8376]</dt>
+        <dd>
+<span class="refAuthor">Farrell, S., Ed.</span>, <span class="refTitle">"Low-Power Wide Area Network (LPWAN) Overview"</span>, <span class="seriesInfo">RFC 8376</span>, <span class="seriesInfo">DOI 10.17487/RFC8376</span>, <time datetime="2018-05" class="refDate">May 2018</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc8376">https://www.rfc-editor.org/rfc/rfc8376</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9011">[RFC9011]</dt>
+        <dd>
+<span class="refAuthor">Gimenez, O., Ed.</span> and <span class="refAuthor">I. Petrov, Ed.</span>, <span class="refTitle">"Static Context Header Compression and Fragmentation (SCHC) over LoRaWAN"</span>, <span class="seriesInfo">RFC 9011</span>, <span class="seriesInfo">DOI 10.17487/RFC9011</span>, <time datetime="2021-04" class="refDate">April 2021</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9011">https://www.rfc-editor.org/rfc/rfc9011</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9363">[RFC9363]</dt>
+        <dd>
+<span class="refAuthor">Minaburo, A.</span> and <span class="refAuthor">L. Toutain</span>, <span class="refTitle">"A YANG Data Model for Static Context Header Compression (SCHC)"</span>, <span class="seriesInfo">RFC 9363</span>, <span class="seriesInfo">DOI 10.17487/RFC9363</span>, <time datetime="2023-03" class="refDate">March 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9363">https://www.rfc-editor.org/rfc/rfc9363</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+<dt id="RFC9442">[RFC9442]</dt>
+      <dd>
+<span class="refAuthor">Zuniga, J.</span>, <span class="refAuthor">Gomez, C.</span>, <span class="refAuthor">Aguilar, S.</span>, <span class="refAuthor">Toutain, L.</span>, <span class="refAuthor">Cespedes, S.</span>, <span class="refAuthor">Wistuba, D.</span>, and <span class="refAuthor">J. Boite</span>, <span class="refTitle">"Static Context Header Compression (SCHC) over Sigfox Low-Power Wide Area Network (LPWAN)"</span>, <span class="seriesInfo">RFC 9442</span>, <span class="seriesInfo">DOI 10.17487/RFC9442</span>, <time datetime="2023-07" class="refDate">July 2023</time>, <span>&lt;<a href="https://www.rfc-editor.org/rfc/rfc9442">https://www.rfc-editor.org/rfc/rfc9442</a>&gt;</span>. </dd>
+<dd class="break"></dd>
+</dl>
+</section>
+</div>
+</section>
+</div>
+<div id="acknowledgments-numberedfalse">
+<section id="appendix-A">
+      <h2 id="name-acknowledgments-numberedfal">
+<a href="#appendix-A" class="section-number selfRef">Appendix A. </a><a href="#name-acknowledgments-numberedfal" class="section-name selfRef">Acknowledgments {numbered="false"}</a>
+      </h2>
+<p id="appendix-A-1">The authors would like to thank (in alphabetic order): Laurent Toutain.<a href="#appendix-A-1" class="pilcrow">¶</a></p>
+</section>
+</div>
+<div id="authors-addresses">
+<section id="appendix-B">
+      <h2 id="name-authors-addresses">
+<a href="#name-authors-addresses" class="section-name selfRef">Authors' Addresses</a>
+      </h2>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Alexander Pelov</span></div>
+<div dir="auto" class="left"><span class="org">IMT Atlantique</span></div>
+<div dir="auto" class="left"><span class="street-address">rue de la Chataigneraie</span></div>
+<div dir="auto" class="left"><span class="locality">35576 Cesson-Sevigne Cedex</span></div>
+<div dir="auto" class="left"><span class="country-name">France</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:alexander.pelov@imt-atlantique.fr" class="email">alexander.pelov@imt-atlantique.fr</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Pascal Thubert</span></div>
+<div dir="auto" class="left"><span class="locality">06330 Roquefort les Pins</span></div>
+<div dir="auto" class="left"><span class="country-name">France</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:pascal.thubert@gmail.com" class="email">pascal.thubert@gmail.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Ana Minaburo</span></div>
+<div dir="auto" class="left"><span class="org">Consultant</span></div>
+<div dir="auto" class="left"><span class="locality">35510 Cesson-Sevigne Cedex</span></div>
+<div dir="auto" class="left"><span class="country-name">France</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:anaminaburo@gmail.com" class="email">anaminaburo@gmail.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Quentin Lampin</span></div>
+<div dir="auto" class="left"><span class="org">Orange</span></div>
+<div dir="auto" class="left"><span class="street-address">Orange 3 Massifs - 22 Chemin du Vieux Chene</span></div>
+<div dir="auto" class="left">
+<span class="postal-code">38240</span> <span class="locality">Meylan</span>
+</div>
+<div dir="auto" class="left"><span class="country-name">France</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:quentin.lampin@orange.com" class="email">quentin.lampin@orange.com</a>
+</div>
+</address>
+<address class="vcard">
+        <div dir="auto" class="left"><span class="fn nameRole">Marion Dumay</span></div>
+<div dir="auto" class="left"><span class="org">Orange</span></div>
+<div dir="auto" class="left"><span class="street-address">Orange 3 Massifs - 22 Chemin du Vieux Chene</span></div>
+<div dir="auto" class="left">
+<span class="postal-code">38240</span> <span class="locality">Meylan</span>
+</div>
+<div dir="auto" class="left"><span class="country-name">France</span></div>
+<div class="email">
+<span>Email:</span>
+<a href="mailto:marion.dumay@orange.com" class="email">marion.dumay@orange.com</a>
+</div>
+</address>
+</section>
+</div>
+<script>const toc = document.getElementById("toc");
+toc.querySelector("h2").addEventListener("click", e => {
+  toc.classList.toggle("active");
+});
+toc.querySelector("nav").addEventListener("click", e => {
+  toc.classList.remove("active");
+});
+</script>
+</body>
+</html>
