@@ -1,14 +1,29 @@
-# sHC Minimal Architecture
+# SCHC Architecture
 
-This repository contains the IETF draft for the SCHC Architecture, which defines a minimal architecture for deploying the Static Context Header Compression and fragmentation (SCHC) framework. The draft is intended to provide guidance for implementers and operators on the essential components and their interactions required for effective SCHC operation.
+This repository contains the IETF draft `draft-ietf-schc-architecture`, which
+defines the terminology used throughout the documents of the SCHC Working
+Group and illustrates deployment scenarios that explain the essential concepts,
+components, and interactions of the SCHC architecture.
 
 ## Abstract
 
-Static Context Header Compression and fragmentation (SCHC) framework provides both a header compression mechanism and an optional fragmentation mechanism. This document defines a minimal architecture for SCHC deployments, providing guidance for implementers and operators on the essential components and their interactions required for effective SCHC operation.
+The SCHC framework provides both a header compression mechanism and an optional
+fragmentation mechanism originally designed for Low-Power Wide-Area Networks
+(LPWA). This document defines a generic architecture for SCHC deployments,
+applicable across diverse networking environments (LPWA, 6LoWPAN, PPP,
+Ethernet). It defines the essential architectural components and their
+interactions, provides guidance for implementers and operators, and describes
+illustrated deployment scenarios that clarify SCHC operation across both
+network-layer and application-layer Strata. The document also clarifies the
+two invocation modes: SCHC as a Network Service (Case A), using Dispatchers
+and Discriminators, and SCHC as an Application Service (Case B), invoked by
+the application pipeline.
 
 ## Building the Draft
 
-This draft uses [kramdown-rfc](https://github.com/cabo/kramdown-rfc) and [xml2rfc](https://github.com/ietf-tools/xml2rfc) for generating the various output formats.
+This draft uses [kramdown-rfc](https://github.com/cabo/kramdown-rfc) and
+[xml2rfc](https://github.com/ietf-tools/xml2rfc) for generating the various
+output formats.
 
 ### Prerequisites
 
@@ -31,17 +46,20 @@ pip install xml2rfc
 Use the provided Makefile to build the draft:
 
 ```bash
-# Generate TXT, HTML, and XML files
+# Generate all formats (markdown, TXT, HTML, XML, PDF)
 make
 
-# Generate all formats including PDF
-make complete
-
 # Generate specific format
+make markdown
 make txt
 make html
 make xml
 make pdf
+
+# Status variants (appended to draft version)
+make STATUS=wip   # work-in-progress (default)
+make STATUS=rc    # release candidate
+make STATUS=      # final release
 
 # Check if tools are installed
 make check-tools
@@ -56,35 +74,22 @@ make clean
 make help
 ```
 
-### Manual Generation
-
-You can also generate the files manually:
-
-```bash
-# Generate TXT file
-kdrfc draft-lampin-schc-minimal-architecture-00.md
-
-# Generate HTML file
-kdrfc --html draft-lampin-schc-minimal-architecture-00.md
-
-# Generate XML file
-kdrfc --xml draft-lampin-schc-minimal-architecture-00.md
-
-# Generate PDF file
-kdrfc --pdf draft-lampin-schc-minimal-architecture-00.md
-```
+The Makefile automatically fetches the latest draft version from the IETF
+Datatracker and appends the `STATUS` suffix (`wip`, `rc`, or none for
+release).
 
 ## Files
 
-- `schc-revised-architecture.md` - Main draft source in Markdown format
-- `Makefile` - Build automation
+- `revised-schc-architecture.md` - Main draft source in Markdown format
+- `Makefile` - Build automation with dynamic versioning
 - `README.md` - This file
-- `.gitignore` - Git ignore rules
 
 ## Contributing
 
-This is an IETF draft. Please follow the standard IETF process for contributions.
+This is an IETF WG draft. Please follow the standard IETF process for
+contributions (see the SCHC Working Group mailing list and agenda).
 
 ## License
 
-This document is subject to the rights, licenses and restrictions contained in BCP 78, and except as set forth therein, the authors retain all their rights.
+This document is subject to the rights, licenses and restrictions contained in
+BCP 78, and except as set forth therein, the authors retain all their rights.

@@ -1,18 +1,26 @@
 # Makefile for IETF draft generation using kramdown-rfc and xml2rfc
 
-# Variables
-DRAFT_NAME = revised-schc-architecture
-MARKDOWN_FILE = $(DRAFT_NAME).md
+# Status suffix: wip (default), rc, or empty for release
+STATUS ?= wip
+
+SOURCE_FILE = revised-schc-architecture
+MARKDOWN_FILE = $(SOURCE_FILE).md
+
+# Extract draft base name from markdown metadata (e.g., draft-ietf-schc-architecture)
+DRAFT_NAME = $(shell grep -E '^\s*docname:' $(MARKDOWN_FILE) | awk '{print $$2}')
+
+
+# Output files
 XML_FILE = $(DRAFT_NAME).xml
 TXT_FILE = $(DRAFT_NAME).txt
 HTML_FILE = $(DRAFT_NAME).html
 PDF_FILE = $(DRAFT_NAME).pdf
 
 # Default target
-all: txt html xml pdf
+all: markdown txt html xml pdf
 
 # Generate all formats
-complete: txt html xml pdf
+complete: markdown txt html xml pdf
 
 # Individual targets
 txt: $(TXT_FILE)
@@ -20,26 +28,31 @@ html: $(HTML_FILE)
 xml: $(XML_FILE)
 pdf: $(PDF_FILE)
 
-# Build rules
+# Build rules (kdrfc names outputs after the source file, so we rename)
 $(TXT_FILE): $(MARKDOWN_FILE)
 	@echo "Generating TXT file..."
 	kdrfc --txt $(MARKDOWN_FILE)
+	mv $(SOURCE_FILE).txt $(TXT_FILE)
 
 $(HTML_FILE): $(MARKDOWN_FILE)
 	@echo "Generating HTML file..."
 	kdrfc --html $(MARKDOWN_FILE)
+	mv $(SOURCE_FILE).html $(HTML_FILE)
 
 $(XML_FILE): $(MARKDOWN_FILE)
 	@echo "Generating XML file..."
 	kdrfc --xml $(MARKDOWN_FILE)
+	mv $(SOURCE_FILE).xml $(XML_FILE)
 
 $(PDF_FILE): $(MARKDOWN_FILE)
 	@echo "Generating PDF file using remote service..."
 	kdrfc --pdf --remote $(MARKDOWN_FILE)
+	mv $(SOURCE_FILE).pdf $(PDF_FILE)
 
 # Clean generated files
 clean:
-	rm -f $(TXT_FILE) $(HTML_FILE) $(XML_FILE) $(PDF_FILE)
+	@echo "Cleaning generated files for $(DRAFT_NAME)..."
+	rm -f $(MARKDOWN_OUT_FILE) $(XML_FILE) $(TXT_FILE) $(HTML_FILE) $(PDF_FILE)
 
 # Check if required tools are installed
 check-tools:
@@ -60,16 +73,22 @@ preview: $(HTML_FILE)
 # Help target
 help:
 	@echo "Available targets:"
-	@echo "  all       - Generate TXT, HTML, and XML files (default)"
+	@echo "  all       - Generate all formats (default)"
 	@echo "  complete  - Generate all formats including PDF"
 	@echo "  txt       - Generate TXT file only"
 	@echo "  html      - Generate HTML file only"
 	@echo "  xml       - Generate XML file only"
 	@echo "  pdf       - Generate PDF file only"
+	@echo "  markdown  - Copy source markdown with draft naming"
 	@echo "  clean     - Remove all generated files"
 	@echo "  check-tools - Check if required tools are installed"
 	@echo "  validate  - Validate the XML file"
 	@echo "  preview   - Open HTML file in browser (macOS)"
 	@echo "  help      - Show this help message"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make                     (uses default STATUS=wip)"
+	@echo "  make STATUS=rc           (for release candidate)"
+	@echo "  make STATUS=             (for final release)"
 
-.PHONY: all complete txt html xml pdf clean check-tools validate preview help
+.PHONY: all complete markdown txt html xml pdf clean check-tools validate preview help
