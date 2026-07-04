@@ -1,9 +1,6 @@
 # Makefile for IETF draft generation using kramdown-rfc and xml2rfc
 
-# Status suffix: wip (default), rc, or empty for release
-STATUS ?= wip
-
-SOURCE_FILE = revised-schc-architecture
+SOURCE_FILE = schc-architecture
 MARKDOWN_FILE = $(SOURCE_FILE).md
 
 # Extract draft base name from markdown metadata (e.g., draft-ietf-schc-architecture)
