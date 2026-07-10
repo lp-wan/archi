@@ -1,7 +1,7 @@
 # Makefile for IETF draft generation using kramdown-rfc and xml2rfc
 
 # Variables
-DRAFT_NAME = revised-schc-architecture
+DRAFT_NAME = draft-ietf-schc-architecture-06
 MARKDOWN_FILE = $(DRAFT_NAME).md
 XML_FILE = $(DRAFT_NAME).xml
 TXT_FILE = $(DRAFT_NAME).txt
