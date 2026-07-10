@@ -1,10 +1,10 @@
-# sHC Minimal Architecture
+# SCHC Architecture
 
-This repository contains the IETF draft for the SCHC Architecture, which defines a minimal architecture for deploying the Static Context Header Compression and fragmentation (SCHC) framework. The draft is intended to provide guidance for implementers and operators on the essential components and their interactions required for effective SCHC operation.
+This repository contains the IETF draft for the SCHC Architecture, which defines the architecture for deploying the Static Context Header Compression and fragmentation (SCHC) framework. The draft is intended to provide guidance for implementers and operators on the essential components and their interactions required for effective SCHC operation.
 
 ## Abstract
 
-Static Context Header Compression and fragmentation (SCHC) framework provides both a header compression mechanism and an optional fragmentation mechanism. This document defines a minimal architecture for SCHC deployments, providing guidance for implementers and operators on the essential components and their interactions required for effective SCHC operation.
+Static Context Header Compression and fragmentation (SCHC) framework provides both a header compression mechanism and an optional fragmentation mechanism. This document defines the architecture for SCHC deployments, providing guidance for implementers and operators on the essential components and their interactions required for effective SCHC operation.
 
 ## Building the Draft
 
