@@ -1,0 +1,253 @@
+--- rfc8724.txt	2020-04-01 00:00:00.000000000 +0000
++++ rfc8724-migrated.txt	2026-07-21 00:00:00.000000000 +0000
+@@ -28,7 +28,8 @@
+    SCHC compression is based on a common static context stored both in
+-   the LPWAN device and in the network infrastructure side.  This
++   the SCHC Endpoints participating in a SCHC Session (e.g., in the LPWAN
++   device and in the network infrastructure side).  This
+    document defines a generic header compression mechanism and its
+    application to compress IPv6/UDP headers.
+
+@@ -43,4 +44,5 @@
+    The SCHC header compression and fragmentation mechanisms are
+    independent of the specific LPWAN technology over which they are
+-   used.  This document defines generic functionalities and offers
++   used.  SCHC operations are executed by SCHC Instances hosted on
++   SCHC Endpoints.  This document defines generic functionalities and offers
+    flexibility with regard to parameter settings and mechanism choices.
+-   This document standardizes the exchange over the LPWAN between two
+-   SCHC entities.
++   This document standardizes the exchange over the LPWAN between two or
++   more SCHC Instances.
+
+@@ -219,16 +221,30 @@
+ 3.  LPWAN Architecture
+
+    LPWAN architectures are similar among them, but each LPWAN technology
+-   names architecture elements differently.  In this document, we use
+-   terminology from [RFC8376], which identifies the following entities
+-   in a typical LPWAN (see Figure 1):
++   names architecture elements differently.  This document aligns with the
++   SCHC Architecture [draft-ietf-schc-architecture-06] while grounding
++   examples in the terminology of [RFC8376], which identifies the following
++   entities in a typical LPWAN (see Figure 1):
+
+-   *  Devices (Dev) are the end-devices or hosts (e.g., sensors,
+-      actuators, etc.).  There can be a very high density of devices per
+-      Radio Gateway.
++   *  Devices (Dev) are the end-devices or hosts (e.g., sensors,
++      actuators, etc.). In the SCHC Architecture, a Device acts as a SCHC
++      Endpoint hosting one or more SCHC Instances (typically a single
++      Instance in simple LPWAN profiles) executing SCHC functions in the
++      Device role.
+
+    *  The Radio Gateway (RGW) is the endpoint of the constrained link.
+
+    *  The Network Gateway (NGW) is the interconnection node between the
+-      Radio Gateway and the Internet.
++      Radio Gateway and the Internet. On the network side, the NGW or an
++      associated server acts as a SCHC Endpoint hosting SCHC Instance(s)
++      executing SCHC functions in the Gateway/Infrastructure role.
+
+    *  The Application Server (App) is the endpoint of the application-
+-      level protocol on the Internet side.
++      level protocol on the Internet side, operating above the SCHC layer.
+
++   Communications between SCHC Instances on the Dev Endpoint and the NGW
++   Endpoint form a SCHC Session within a SCHC Domain. Lower-layer device
++   identifiers (such as DevEUI or link addresses) act as Discriminators
++   used by a Dispatcher component on the NGW Endpoint to route incoming
++   SCHC Datagrams to the correct SCHC Instance.
+
+@@ -248,30 +264,68 @@
+ 4.  Terminology
+
+    This section defines terminology and abbreviations used in this
+-   document.  It extends the terminology of [RFC8376].
++   document.  It extends the terminology of [RFC8376] and incorporates the
++   core terms from the SCHC Architecture [draft-ietf-schc-architecture-06].
+
+    The SCHC acronym is pronounced like "sheek" in English (or "chic" in
+    French).  Therefore, this document writes "a SCHC Packet" instead of
+    "an SCHC Packet".
+
+    App:     LPWAN Application Server, as defined by [RFC8376].  It runs
+             an application sending/receiving packets to/from the Dev.
+
+    AppIID:  Application Interface Identifier.  The IID that identifies
+             the App interface.
+
+    Compression Residue:  The bits that remain to be sent (beyond the
+             RuleID itself) after applying the SCHC compression.
+
+-   Context:  A set of Rules used to compress/decompress headers, or to
+-            fragment/reassemble a packet.
++   Context:  Operational information shared between two or more Instances
++            in a Domain, comprising a Set of Rules (SoR) and optional metadata
++            (such as Parser and Data Model descriptors).
+
+    Dev:     Device, as defined by [RFC8376].
+
+    DevIID:  Device Interface Identifier.  The IID that identifies the
+             Dev interface.
+
++   Discriminator: An information element (e.g., lower-layer device ID,
++            DevEUI, or UDP port) used by a Dispatcher to route SCHC Datagrams
++            to the appropriate SCHC Instance.
+
++   Dispatcher: A logical component of a SCHC Endpoint that routes incoming
++            SCHC Datagrams to the appropriate SCHC Instance based on defined
++            admission rules and Discriminators.
++
++   Domain:  A logical grouping of SCHC Instances that share a common set
++            of Contexts for SCHC operations.
+
++   Endpoint: A logical entity providing SCHC functionality by hosting one
++            or more SCHC Instances.
+
+    Downlink:  From the App to the Dev.
+
++   Instance: A logical component of a SCHC Endpoint that executes the actual
++            SCHC operations (C/D and F/R) using its assigned Context and
++            Instance Configuration.
+
+    L2:      Layer 2.  The immediate lower layer that SCHC interfaces
+             with, for example an underlying LPWAN technology.
+
+    L2 Word:  This is the minimum subdivision of payload data that the L2
+             will carry.
+
+    Padding:  Extra bits that may be appended by SCHC to a data unit that
+             it passes down to L2 for transmission.
+
+    Profile:  SCHC offers variations in the way it is operated, with a
+             number of parameters listed in Appendix D.  A Profile
+             indicates a particular setting of all these parameters.
+
+    Rule:    Part of the Context that describes how a packet is
+             compressed/decompressed or fragmented/reassembled, identified
+             by a RuleID.
+
+    RuleID:  Rule Identifier.  An identifier for a Rule within a Context.
+
+    SCHC:    Static Context Header Compression and fragmentation (SCHC),
+             a generic framework.
+
+    SCHC C/D:  SCHC Compressor/Decompressor function executed within a
+             SCHC Instance to achieve header compression/decompression.
+
+    SCHC F/R:  SCHC Fragmenter/Reassembler function executed within a
+             SCHC Instance to achieve fragmentation/reassembly of SCHC Packets.
+
+    SCHC Packet:  A packet whose header has been compressed by SCHC C/D.
+
++   Session: A communication session between two or more SCHC Instances that
++            share a common Context.
+
++   Set of Rules (SoR): The collection of C/D, F/R, and no-compression Rules
++            available in a Context.
+
++   Set of Variables (SoV): Runtime parameters and session variables (such as
++            fragmentation timers, retransmission counters, and bitmaps) that
++            change during SCHC operation.
+
+@@ -413,20 +467,32 @@
+ 5.2.  Functional Mapping
+
+    Figure 5 maps the functional elements of Figure 3 onto the LPWAN
+-   architecture elements of Figure 1.
++   architecture elements of Figure 1, aligned with SCHC Architecture -06.
+
+-           Dev                                               App
+-   +----------------+                               +----+ +----+ +----+
+-   | App1 App2 App3 |                               |App1| |App2| |App3|
+-   |                |                               |    | |    | |    |
+-   |       UDP      |                               |UDP | |UDP | |UDP |
+-   |      IPv6      |                               |IPv6| |IPv6| |IPv6|
+-   |                |                               |    | |    | |    |
+-   |SCHC C/D and F/R|                               |    | |    | |    |
+-   +--------+-------+                               +----+ +----+ +----+
+-            |  +---+     +---+    +----+    +----+    .      .      .
+-            +~ |RGW| === |NGW| == |SCHC| == |SCHC|..... Internet ....
+-               +---+     +---+    |F/R |    |C/D |
+-                                  +----+    +----+
++         Dev Endpoint                                        App
++   +----------------------+                         +----+ +----+ +----+
++   | App1  App2  App3     |                         |App1| |App2| |App3|
++   |       UDP / IPv6     |                         |UDP | |UDP | |UDP |
++   | +------------------+ |                         |IPv6| |IPv6| |IPv6|
++   | | SCHC Instance    | |                         +----+ +----+ +----+
++   | | (C/D and F/R)    | |                           .      .      .
++   +-+--------+---------+-+                           .      .      .
++              |  +---+     +-----------------------+  .      .      .
++              +~ |RGW| === | NGW Endpoint          |... Internet ....
++                 +---+     | Dispatcher            |
++                           | +-------------------+ |
++                           | | SCHC Instance(s)  | |
++                           | | (F/R and C/D)     | |
++                           | +-------------------+ |
++                           +-----------------------+
+
+                       Figure 5: Architectural Mapping
+
+    SCHC C/D and SCHC F/R functions are executed by SCHC Instances hosted on
+-   Endpoints located on both sides of the LPWAN transmission, hereafter
+-   called the "Dev side" and the "Network Infrastructure side".
++   Endpoints on both sides of the transmission (the Dev Endpoint and the
++   Network Infrastructure Endpoint). The communication between these Instances
++   constitutes a SCHC Session.
+
+    The operation in the Uplink direction is as follows. The Device
+    application uses IPv6 or IPv6/UDP protocols. Before sending the
+-   packets, the Dev compresses their headers using SCHC C/D; if the SCHC
++   packets, the Dev Instance compresses their headers using SCHC C/D; if the SCHC
+    Packet resulting from the compression needs to be fragmented by SCHC,
+-   SCHC F/R is performed (see Section 8). The resulting SCHC Fragments
+-   are sent to an LPWAN Radio Gateway (RGW), which forwards them to a
+-   Network Gateway (NGW). The NGW sends the data to a SCHC F/R for
+-   reassembly (if needed) and then to the SCHC C/D for decompression.
++   SCHC F/R is performed by the Instance. The resulting SCHC Fragments
++   are sent to an LPWAN Radio Gateway (RGW), which forwards them to a
++   Network Gateway (NGW). On the NGW Endpoint, a Dispatcher uses lower-layer
++   device metadata as a Discriminator to route the incoming Datagrams to the
++   appropriate SCHC Instance, which performs reassembly (if needed) and
++   decompression. After decompression, the packet is delivered to the App.
+
+@@ -461,25 +527,27 @@
+ 6.  RuleID
+
+    RuleIDs identify the Rules used for compression/decompression or for
+    fragmentation/reassembly.
+
+-   The scope of the RuleID of a compression/decompression Rule is the
+-   link between the SCHC C/D in a given Dev and the corresponding SCHC
+-   C/D in the Network Infrastructure side.  The scope of the RuleID of a
+-   fragmentation/reassembly Rule is the link between the SCHC F/R in a
+-   given Dev and the corresponding SCHC F/R in the Network
+-   Infrastructure side.  If such a link is bidirectional, the scope
+-   includes both directions.
++   The scope of a RuleID is the Context shared between the SCHC Instances
++   participating in a SCHC Session. The RuleID space is shared between
++   compression/decompression Rules and fragmentation/reassembly Rules
++   within that Context.
+
+-   The RuleIDs are therefore specific to the Context related to one Dev.
+-   Hence, multiple Dev instances, which refer to different Contexts, MAY
+-   reuse the same RuleID for different Rules.  On the Network
+-   Infrastructure side, in order to identify the correct Rule to be
+-   applied to Uplink traffic, the SCHC C/D or SCHC F/R needs to
+-   associate the RuleID with the Dev identifier.  Similarly, for
+-   Downlink traffic, the SCHC C/D or SCHC F/R on the Network
+-   Infrastructure side first needs to identify the destination Dev
+-   before looking for the appropriate Rule (and associated RuleID) in
+-   the Context of that Dev.
++   Because Contexts are bound to Instances and Sessions, different Instances
++   in a Domain MAY reuse the same RuleID values for different Rules in their
++   respective Contexts. On the Network Infrastructure side, an incoming
++   SCHC Datagram is first demultiplexed by the Endpoint's Dispatcher using a
++   Discriminator (such as the LPWAN Device Identifier or DevEUI) to select
++   the receiving SCHC Instance and its Context. Once the SCHC Instance is
++   selected, the RuleID contained in the Datagram is matched within that
++   Instance's Context. Similarly, for Downlink traffic, the sending Instance
++   selects the appropriate RuleID from the shared Context for the target
++   Session.

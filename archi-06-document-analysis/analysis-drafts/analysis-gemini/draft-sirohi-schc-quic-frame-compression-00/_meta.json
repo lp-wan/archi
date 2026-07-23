@@ -1,0 +1,13 @@
+{
+  "draft": "draft-sirohi-schc-quic-frame-compression-00",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 67016,
+  "started": "2026-07-10T14:26:00Z",
+  "ended": "2026-07-10T14:27:15Z",
+  "duration_seconds": 75,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

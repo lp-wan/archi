@@ -1,0 +1,127 @@
+diff -u draft-ietf-schc-icmpv6-compression-02.txt draft-ietf-schc-icmpv6-compression-02-migrated.txt
+--- draft-ietf-schc-icmpv6-compression-02.txt
++++ draft-ietf-schc-icmpv6-compression-02-migrated.txt
+@@ -18,3 +18,3 @@
+    This document describes how the ICMPv6 protocol can be integrated
+-   into the SCHC architecture.  It extends the YANG Data Model with new
++   into the SCHC Architecture.  It extends the YANG Data Model with new
+    field IDs specific to ICMPv6 headers.
+@@ -26,3 +26,3 @@
+    Finally, for constrained networks such as LPWAN, it introduces a
+-   proxy behavior, where a SCHC Core end-point may anticipate the device
++   proxy behavior, where a SCHC Core Endpoint may anticipate the device
+    reaction to incorrect messages.
+@@ -144,3 +144,3 @@
+    This document describes recommended compression of ICMPv6/IPv6
+-   messages (including header fields and structured payload) and extends
++   Datagrams (including header fields and structured payload) and extends
+    SCHC by specifying new Field Identifiers for ICMPv6 and two MO and
+@@ -150,3 +150,3 @@
+-   *  ICMPv6 messages initiated by SCHC End-Points.  They can be sent in
+-      their SCHC-compressed form, in ICMPv6 messages traffic.  This
++   *  ICMPv6 messages initiated by SCHC Endpoints.  They can be sent in
++      their SCHC-compressed form, in ICMPv6 Datagrams traffic.  This
+       includes error messages, as well as informational echo request/
+@@ -155,5 +155,5 @@
+-   *  ICMPv6 error messages returned from the Internet after End-Point
++   *  ICMPv6 error messages returned from the Internet after Endpoint
+       transmission.  The core SCHC forwards a compressed version of the
+-      error message to the End-Point, including if necessary a
++      error message to the Endpoint, including if necessary a
+       compressed payload.
+ 
+@@ -161,4 +161,4 @@
+-   *  Traffic coming from the Internet that would generate an error on
+-      the End-Point: if it can detect the situation, the SCHC Core
+-      directly responds with an ICMPv6 error message, acting as a
+-      surrogate to the End-Point.
++   *  Traffic coming from the Internet that would generate an error on
++      the Endpoint: if it can detect the situation, the SCHC Core
++      directly responds with an ICMPv6 error message, acting as a
++      surrogate to the Endpoint.
+@@ -184,6 +184,6 @@
+-   *  SCHC Core: SCHC End-Point located at the boundary of a regular IP
+-      network and a network that applies SCHC compression and
+-      fragmentation
+-
+-   *  SCHC Device: The other end of the SCHC instance formed with the
+-      SCHC core.
++   *  SCHC Core: A SCHC Endpoint hosting a SCHC Instance located at the boundary
++      of a regular IP network and a network that applies SCHC compression
++      and fragmentation.
++
++   *  SCHC Device: The other Endpoint in the SCHC Session established with the
++      SCHC Core.
+@@ -299,3 +299,3 @@
+-   To reduce the size of the SCHC message, the Payload can be elided
++   To reduce the size of the SCHC Datagram, the Payload can be elided
+    with the not-sent CDA instead of the value-sent CDA, or the new CDA
+@@ -432,3 +432,3 @@
+    can be elided if the direction is taken into account.  Identifier is
+    ignored and generated as 0 at decompression.  This implies that only
+-   one single ping can be launched at any given time on a device.
++   one single ping can be active at any given time per SCHC Session.
+@@ -484,3 +484,3 @@
+-   The transmission cost of the Echo Request message is therefore the
+-   size of the Rule Id + 3 bits and the data size increased of the
++   The transmission cost of the Echo Request Datagram is therefore the
++   size of the Rule ID + 3 bits and the data size increased of the
+    Payload residue size.  The rule ID Length can be chosen to avoid
+@@ -600,4 +600,4 @@
+-   The SCHC returning message contains the SCHC residue of the ICMPv6
+-   message and MAY contain the compressed original message contained in
+-   the ICMP message.  The compression can be done by the SCHC Core by
+-   reversing the direction as if this message was issued by the device.
++   The returning SCHC Datagram contains the SCHC residue of the ICMPv6
++   message and MAY contain the compressed original message contained in
++   the ICMP message.  The compression can be done by the SCHC Core by
++   reversing the transmission direction as if this message was issued by the device.
+@@ -607,4 +607,4 @@
+-   True if a Rule exists in the current Set of Rule to compress it.  The
++   True if a Rule exists in the current Set of Rules to compress it.  The
+    selection can either be done:
+ 
+-   *  in the same direction of the End-Point, this can be used to
++   *  in the same direction of transmission within the Session, this can be used to
+       compress a protocol encapsulated in the header.
+@@ -621,2 +621,2 @@
+-   *  in the reverse direction of the end point, as in an ICMPv6 error
++   *  in the reverse direction of the Session, as in an ICMPv6 error
+       message.
+@@ -630,3 +630,3 @@
+-   same direction as the End-Point, the reverse compression uses the
+-   opposite direction.
++   same direction of transmission as the Session, the reverse compression uses
++   the opposite direction.
+@@ -657,2 +657,2 @@
+-   The payload is viewed as a field.  An unsued field MUST not appear in
+-   the compressoin rules.
++   The payload is viewed as a field.  An unused field MUST NOT appear in
++   the compression rules.
+@@ -758,3 +758,3 @@
+    invoking (offending) packet that triggered this ICMPv6 error message.
+-   If the rule can be found, then the Rule Id is added at the end of the
++   If the rule can be found, then the Rule ID is added at the end of the
+    compressed ICMPv6 message.  Otherwise, the compressed packet ends
+@@ -818,3 +818,3 @@
+-   It also defines two new Macthing Operator identities:
++   It also defines two new Matching Operator identities:
+ 
+@@ -846,3 +846,3 @@
+-   included in the SCHC message as a variable length residue.  It
+-   contains the Rule ID used by the compression, the residue, the
++   included in the SCHC Datagram as a variable length residue.  It
++   contains the Rule ID used by the compression, the residue, the
+    payload and some padding bits since the variable length in it is in
+@@ -998,3 +998,3 @@
+-      "Macthing operator return true, if the TV matches a rule
+-       keeping UP and DOWN direction.";
++      "Matching operator returns true, if the TV matches a rule
++       keeping UP and DOWN direction.";
+   }
+@@ -1013,3 +1013,3 @@
+-      "Macthing operator return true, if the TV matches a rule
+-       reversing UP and DOWN direction.";
++      "Matching operator returns true, if the TV matches a rule
++       reversing UP and DOWN direction.";
+   }

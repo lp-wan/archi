@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-schc-over-ppp-00",
+  "agent": "claude",
+  "model": "default",
+  "host": "slug",
+  "pid": 28774,
+  "started": "2026-07-10T16:48:38Z",
+  "ended": "2026-07-10T16:54:04Z",
+  "duration_seconds": 326,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-schc-over-networks-prone-to-disruptions-03",
+  "agent": "claude",
+  "model": "default",
+  "host": "slug",
+  "pid": 41984,
+  "started": "2026-07-16T07:53:08Z",
+  "ended": "2026-07-16T08:04:20Z",
+  "duration_seconds": 672,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

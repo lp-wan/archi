@@ -1,0 +1,13 @@
+{
+  "draft": "draft-westerlund-schc-compute-address-00",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 67016,
+  "started": "2026-07-10T14:27:15Z",
+  "ended": "2026-07-10T14:28:15Z",
+  "duration_seconds": 60,
+  "exit_code": 0,
+  "deliverables_produced": 2,
+  "dry_run": false
+}

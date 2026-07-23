@@ -1,0 +1,342 @@
+--- rfc8824.txt
++++ rfc8824-schc-architecture-06.txt
+@@ Section 1 @@
+ [RFC8724] defines the SCHC framework, which includes a header
+ compression mechanism for LPWANs that is based on a static context.
+-Section 5 of [RFC8724] explains where compression and decompression
+-occur in the architecture.  The SCHC compression scheme assumes as a
+-prerequisite that both endpoints know the static context before
+-transmission.  The way the context is configured, provisioned, or
+-exchanged is out of this document's scope.
++Section 5 of [RFC8724] and Section 4 of [draft-ietf-schc-architecture-06]
++explain the SCHC architecture, components, and execution models.  The
++SCHC compression scheme assumes as a prerequisite that participating
++SCHC Instances share a static Context before transmission within a SCHC
++Session.  The way the Context is configured, provisioned, or synchronized
++across a Domain is out of this document's scope.
+
+ CoAP is an application protocol, so CoAP compression requires
+-installing common Rules between the two SCHC instances.  SCHC
++installing common Rules between the participating SCHC Instances.  SCHC
+ compression may apply at two different levels: at IP and UDP in the
+ LPWAN and another at the application level for CoAP.  These two
+ compression techniques may be independent.  Both follow the same
+ principle as that described in [RFC8724].  As different entities
+-manage the CoAP compression process at different levels, the SCHC
++manage the CoAP compression process at different levels (or Strata), the SCHC
+ Rules driving the compression/decompression are also different.
+ [RFC8724] describes how to use SCHC for IP and UDP headers.  This
+ document specifies how to apply SCHC compression to CoAP headers.
+
+ SCHC compresses and decompresses headers based on common contexts
+-between Devices.  The SCHC context includes multiple Rules.
++shared between SCHC Instances.  The SCHC Context includes multiple Rules.
+
+@@ Section 1.1 @@
+ 1.1.  Terminology
+
+    The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+    "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+    "OPTIONAL" in this document are to be interpreted as described in
+    BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+    capitals, as shown here.
+
++   This document also uses the architectural terminology defined in
++   [draft-ietf-schc-architecture-06], including Endpoint, Instance,
++   Session, Domain, Context, and Stratum.
+
+@@ Section 2 @@
+ 2.  SCHC Applicability to CoAP
+
+    SCHC compression for CoAP headers MAY be done in conjunction with the
+    lower layers (IPv6/UDP) or independently.  The SCHC adaptation
+-   layers, described in Section 5 of [RFC8724], may be used as shown in
+-   Figures 1, 2, and 3.
++   layers and architectural components, described in [draft-ietf-schc-architecture-06],
++   may be used as shown in Figures 1, 2, and 3.
+
+-   In the first example, Figure 1, a Rule compresses the complete header
+-   stack from IPv6 to CoAP.  In this case, the Device and the Network
+-   Gateway (NGW) perform SCHC C/D (SCHC Compression/Decompression; see
+-   [RFC8724]).  The application communicating with the Device does not
+-   implement SCHC C/D.
++   In the first example, Figure 1, a Rule compresses the complete header
++   stack from IPv6 to CoAP.  In this case, the Device Endpoint and the Network
++   Gateway (NGW) Endpoint host SCHC Instances performing SCHC C/D (SCHC
++   Compression/Decompression; see [RFC8724] and [draft-ietf-schc-architecture-06]).
++   The Application Endpoint communicating with the Device Endpoint does not
++   implement SCHC C/D.
+
+-         (Device)            (NGW)                              (App)
++         (Device Endpoint)   (NGW Endpoint)                     (App Endpoint)
+
+          +--------+                                           +--------+
+          |  CoAP  |                                           |  CoAP  |
+          +--------+                                           +--------+
+          |  UDP   |                                           |  UDP   |
+          +--------+     +----------------+                    +--------+
+          |  IPv6  |     |      IPv6      |                    |  IPv6  |
+          +--------+     +--------+-------+                    +--------+
+-         |  SCHC  |     |  SCHC  |       |                    |        |
++         |  SCHC  |     |  SCHC  |       |                    |        |
++         |Instance|     |Instance|       |                    |        |
+          +--------+     +--------+       +                    +        +
+          |  LPWAN |     | LPWAN  |       |                    |        |
+          +--------+     +--------+-------+                    +--------+
+              ((((LPWAN))))             ------   Internet  ------
+
+          Figure 1: Compression/Decompression at the LPWAN Boundary
+
+-   Figure 1 shows the use of SCHC header compression above Layer 2 in
+-   the Device and the NGW.  The SCHC layer receives non-encrypted
+-   packets and can apply compression Rules to all the headers in the
+-   stack.  On the other end, the NGW receives the SCHC packet and
+-   reconstructs the headers using the Rule and the Compression Residue.
+-   After the decompression, the NGW forwards the IPv6 packet toward the
+-   destination.  The same process applies in the other direction when a
+-   non-encrypted packet arrives at the NGW.  Thanks to the IP forwarding
+-   based on the IPv6 prefix, the NGW identifies the Device and
+-   compresses headers using the Device's Rules.
++   Figure 1 shows the use of SCHC header compression above Layer 2 in
++   the Device Endpoint and the NGW Endpoint.  The SCHC Instance on the
++   Device Endpoint receives non-encrypted packets and applies compression
++   Rules to all headers in the stack.  On the receiving side, the SCHC
++   Instance on the NGW Endpoint receives the SCHC Datagram and reconstructs
++   the headers using the Rule and the Compression Residue.  After
++   decompression, the NGW Endpoint forwards the IPv6 packet toward the
++   destination.  The same process applies in the other direction when a
++   non-encrypted packet arrives at the NGW Endpoint.  Thanks to the IP
++   forwarding based on the IPv6 prefix acting as a Discriminator, the
++   Dispatcher at the NGW selects the Device's SCHC Instance and compresses
++   headers using that Instance's Context.
+
+-   In the second example, Figure 2, SCHC compression is applied in the
+-   CoAP layer, compressing the CoAP header independently of the other
+-   layers.  The RuleID, Compression Residue, and CoAP payload are
+-   encrypted using a mechanism such as DTLS.  Only the other end (App)
+-   can decipher the information.  If needed, layers below use SCHC to
+-   compress the header as defined in [RFC8724] (represented by dotted
+-   lines in the figure).
++   In the second example, Figure 2, SCHC compression is applied at the
++   CoAP Stratum by a dedicated SCHC Instance, compressing the CoAP header
++   independently of the lower layers.  The RuleID, Compression Residue, and
++   CoAP payload are encrypted using a mechanism such as DTLS.  Only the
++   remote App Endpoint can decipher the information and process the
++   Datagram in its SCHC Instance.  If needed, lower layers use an
++   independent SCHC Instance to compress lower-layer headers as defined in
++   [RFC8724] and [draft-ietf-schc-architecture-06] (represented by dotted
++   lines in the figure).
+
+-   This use case needs an end-to-end context initialization between the
+-   Device and the application.  The context initialization is out of
+-   scope for this document.
++   This use case needs an end-to-end Context provisioning within a Domain
++   between the Device Endpoint and the App Endpoint.  Context management is
++   out of scope for this document.
+
+-         (Device)            (NGW)                               (App)
++         (Device Endpoint)   (NGW Endpoint)                      (App Endpoint)
+
+          +--------+                                           +--------+
+          |  CoAP  |                                           |  CoAP  |
+          +--------+                                           +--------+
+-         |  SCHC  |                                           |  SCHC  |
++         |  SCHC  |                                           |  SCHC  |
++         |Instance|                                           |Instance|
+          +--------+                                           +--------+
+          |  DTLS  |                                           |  DTLS  |
+          +--------+                                           +--------+
+          .  udp   .                                           .  udp   .
+          ..........     ..................                    ..........
+          .  ipv6  .     .      ipv6      .                    .  ipv6  .
+          ..........     ..................                    ..........
+          .  schc  .     .  schc  .       .                    .        .
+          ..........     ..........       .                    .        .
+          .  lpwan .     . lpwan  .       .                    .        .
+          ..........     ..................                    ..........
+              ((((LPWAN))))             ------   Internet  ------
+
+        Figure 2: Standalone CoAP End-to-End Compression/Decompression
+
+-   The third example, Figure 3, shows the use of Object Security for
+-   Constrained RESTful Environments (OSCORE) [RFC8613].  In this case,
+-   SCHC needs two Rules to compress the CoAP header.  A first Rule
+-   focuses on the Inner header.  The result of this first compression is
+-   encrypted using the OSCORE mechanism.  Then, a second Rule compresses
+-   the Outer header, including the OSCORE options.
++   The third example, Figure 3, shows the use of Object Security for
++   Constrained RESTful Environments (OSCORE) [RFC8613].  In this case,
++   SCHC uses two SCHC Instances (or SCHClets) operating at distinct Strata.
++   The first Instance operates at the Inner CoAP Stratum to compress the
++   Inner header.  The result of this first compression is encrypted using
++   the OSCORE mechanism.  Then, a second SCHC Instance operates at the Outer
++   CoAP Stratum to compress the Outer header, including the OSCORE options.
+
+-         (Device)            (NGW)                              (App)
++         (Device Endpoint)   (NGW Endpoint)                     (App Endpoint)
+
+          +--------+                                           +--------+
+          |  CoAP  |                                           |  CoAP  |
+          |  Inner |                                           |  Inner |
+          +--------+                                           +--------+
+-         |  SCHC  |                                           |  SCHC  |
+-         |  Inner |                                           |  Inner |
++         |  SCHC  |                                           |  SCHC  |
++         |Instance|                                           |Instance|
++         | (Inner)|                                           | (Inner)|
+          +--------+                                           +--------+
+          |  CoAP  |                                           |  CoAP  |
+          |  Outer |                                           |  Outer |
+          +--------+                                           +--------+
+-         |  SCHC  |                                           |  SCHC  |
+-         |  Outer |                                           |  Outer |
++         |  SCHC  |                                           |  SCHC  |
++         |Instance|                                           |Instance|
++         | (Outer)|                                           | (Outer)|
+          +--------+                                           +--------+
+          .  udp   .                                           .  udp   .
+          ..........     ..................                    ..........
+          .  ipv6  .     .      ipv6      .                    .  ipv6  .
+          ..........     ..................                    ..........
+          .  schc  .     .  schc  .       .                    .        .
+          ..........     ..........       .                    .        .
+          .  lpwan .     . lpwan  .       .                    .        .
+          ..........     ..................                    ..........
+              ((((LPWAN))))             ------   Internet  ------
+
+                  Figure 3: OSCORE Compression/Decompression
+
+-   In the case of several SCHC instances, as shown in Figures 2 and 3,
+-   the Rules may come from different provisioning domains.
++   In the case of several SCHC Instances coexisting on an Endpoint, as shown
++   in Figures 2 and 3, the Contexts and Rules may come from different
++   Domains managed by separate Domain Managers.
+
+    This document focuses on CoAP compression, as represented by the
+    dashed boxes in the previous figures.
+
+@@ Section 3 @@
+ 3.  CoAP Headers Compressed with SCHC
+
+    The use of SCHC over the CoAP header applies the same description and
+    compression/decompression techniques as the technique used for IP and
+    UDP, as explained in [RFC8724].  For CoAP, the SCHC Rules description
+    uses the direction information to optimize the compression by
+    reducing the number of Rules needed to compress headers.  The Field
+    Descriptor MAY define both request/response headers and TVs in the
+    same Rule, using the DI to indicate the header type.
+
+-   As for other header compression protocols, when the compressor does
+-   not find a correct Rule to compress the header, the packet MUST be
++   As for other header compression protocols, when the SCHC Instance does
++   not find a matching Rule to compress the header, the packet MUST be
+    sent uncompressed using the RuleID dedicated to this purpose, and
+    where the Compression Residue is the complete header of the packet.
+    See Section 6 of [RFC8724].
+
+@@ Section 7.2 @@
+ 7.2.  OSCORE Compression
+
+    OSCORE aims to solve the problem of end-to-end encryption for CoAP
+    messages.  Therefore, the goal is to hide the message as much as
+    possible while still enabling proxy operation.
+
+    Conceptually, this is achieved by splitting the CoAP message into an
+    Inner Plaintext and Outer OSCORE message.  The Inner Plaintext
+    contains sensitive information that is not necessary for proxy
+    operation.  However, it is part of the message that can be encrypted
+    until it reaches its end destination.  The Outer Message acts as a
+    shell matching the regular CoAP message format and includes all
+    options and information needed for proxy operation and caching.
+    Figure 5 below illustrates this analysis.
+
+...
+
+-   The SCHC compression scheme consists of compressing both the
+-   Plaintext before encryption and the resulting OSCORE message after
+-   encryption; see Figure 7.
+
+-   The OSCORE message translates into a segmented process where SCHC
+-   compression is applied independently in two stages, each with its
+-   corresponding set of Rules, with the Inner SCHC Rules and the Outer
+-   SCHC Rules.  This way, compression is applied to all fields of the
+-   original CoAP message.
++   The SCHC compression scheme consists of compressing both the
++   Plaintext before encryption and the resulting OSCORE message after
++   encryption; see Figure 7.
+
++   The OSCORE message translates into a segmented process where SCHC
++   compression is applied independently in two stages by distinct SCHC
++   Instances (or SCHClets) operating at different Strata, each with its
++   corresponding Context and Set of Rules: the Inner SCHC Instance and the
++   Outer SCHC Instance.  This way, compression is applied to all fields of
++   the original CoAP message.
+
+         Outer Message                             OSCORE Plaintext
+      +-+-+---+--------+---------------+          +-------+
+      |v|t|TKL|new code| Message ID    |          | code  |
+      +-+-+---+--------+---------------+....+     +-------+-----......+
+      | Token                               |     | Options (E)       |
+      +--------------------------------.....+     +-------+------.....+
+      | Options (IU)             |                | 0xFF  |
+      .                          .                +-------+-----------+
+      . OSCORE Option            .                |                   |
+      +------+-------------------+                | Payload           |
+      | 0xFF |                                    |                   |
+      +------+------------+                       +-------------------+
+      |  Ciphertext       |<---------\                      |
+      |                   |          |                      v
+      +-------------------+          |             +-----------------+
+              |                      |             |   Inner SCHC    |
+              v                      |             |    Instance     |
+        +-----------------+          |             +-----------------+
+        |   Outer SCHC    |          |                     |
+        |    Instance     |          |                     v
+        +-----------------+          |             +-------+
+              |                      |             |RuleID |
+              v                      |             +-------+-----------+
+        +--------+             +------------+      |Compression Residue|
+        |RuleID' |             | Encryption | <--  +----------+--------+
+        +--------+-----------+ +------------+      |                   |
+        |Compression Residue'|                     | Payload           |
+        +-----------+--------+                     |                   |
+        |  Ciphertext        |                     +-------------------+
+        |                    |
+        +--------------------+
+
+                    Figure 7: OSCORE Compression Diagram
+
+-   Note that since the corresponding endpoint can only decrypt the Inner
+-   part of the message, this endpoint will also have to implement Inner
+-   SCHC Compression/Decompression.
++   Note that since the corresponding destination Endpoint can only decrypt
++   the Inner part of the message, this Endpoint MUST host the Inner SCHC
++   Instance to perform Inner SCHC Decompression.
+
+@@ Section 9 @@
+ 9.  Security Considerations
+
+...
+
+    SCHC header compression Rules MUST remain tightly coupled between the
+-   compressor and the decompressor.  If the compression Rules get out of
+-   sync, a Compression Residue might be decompressed differently at the
+-   receiver than the initial message submitted to compression
+-   procedures.  Accordingly, any time the context Rules are updated on
+-   an OSCORE endpoint, that endpoint MUST trigger OSCORE key re-
++   compressor Instance and the decompressor Instance.  If the Context Rules
++   get out of sync across participating Instances in a Session, a Compression
++   Residue might be decompressed differently at the receiver than the
++   initial message submitted to compression procedures.  Accordingly, any time
++   the Context Rules are updated on an OSCORE Endpoint, that Endpoint MUST
++   trigger OSCORE key re-establishment.  Similar procedures may be appropriate
++   to signal Rule updates when other message-protection mechanisms are in use.
+
+@@ Section 10 @@
+ 10.  Normative References
+
++   [draft-ietf-schc-architecture-06]
++              Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and
++              M. Dumay, "Static Context Header Compression (SCHC)
++              Architecture", Work in Progress, Internet-Draft,
++              draft-ietf-schc-architecture-06, July 2026.

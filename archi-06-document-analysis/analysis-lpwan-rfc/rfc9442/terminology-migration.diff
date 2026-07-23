@@ -1,0 +1,209 @@
+# Terminology and Architectural Migration Diff for RFC 9442
+# Target Architecture: draft-ietf-schc-architecture-06
+
+--- rfc9442.txt (Section 1: Introduction)
++++ rfc9442-migrated.txt (Section 1: Introduction)
+@@ -99,6 +99,7 @@
+    The Generic Framework for Static Context Header Compression (SCHC)
+-   and Fragmentation specification [RFC8724] can be used in conjunction
+-   with any of the four LPWAN technologies described in [RFC8376].
++   and Fragmentation specification [RFC8724] and the SCHC Architecture
++   [draft-ietf-schc-architecture-06] can be used in conjunction with any of
++   the four LPWAN technologies described in [RFC8376].
+    These LPWANs have similar characteristics, such as star-oriented
+    topologies, network architecture, connected devices with built-in
+    applications, etc.
+
+--- rfc9442.txt (Section 2: Terminology)
++++ rfc9442-migrated.txt (Section 2: Terminology)
+@@ -141,4 +141,6 @@
+-   It is assumed that the reader is familiar with the terms and
+-   mechanisms defined in [RFC8376] and [RFC8724].  Also, it is assumed
+-   that the reader is familiar with Sigfox terminology [sigfox-spec].
++   It is assumed that the reader is familiar with the terms, concepts, and
++   architectural model defined in [RFC8376], [RFC8724], and
++   [draft-ietf-schc-architecture-06] (such as Endpoint, Instance, Context,
++   Set of Rules, Session, Set of Variables, Dispatcher, and Discriminator).
++   Also, it is assumed that the reader is familiar with Sigfox terminology
++   [sigfox-spec].
+
+--- rfc9442.txt (Section 3: SCHC over Sigfox)
++++ rfc9442-migrated.txt (Section 3: SCHC over Sigfox)
+@@ -155,3 +155,3 @@
+-   Contexts need to be stored and pre-configured on both ends.  This can
+-   be done either by using a provisioning protocol, by out-of-band
+-   means, or by pre-provisioning them (e.g., at manufacturing time).
++   Contexts (containing the Set of Rules) need to be stored and pre-configured
++   on the participating SCHC Instances. This can be done either by using a
++   provisioning protocol, by out-of-band means, or by pre-provisioning them
++   (e.g., at manufacturing time).
+
+--- rfc9442.txt (Section 3.1: Network Architecture)
++++ rfc9442-migrated.txt (Section 3.1: Network Architecture)
+@@ -170,57 +170,64 @@
+ 3.1.  Network Architecture
+
+-   Figure 1 represents the architecture for Compression/Decompression
+-   (C/D) and Fragmentation/Reassembly (F/R) based on the terminology
+-   defined in [RFC8376], where the Radio Gateway (RGW) is a Sigfox Base
+-   Station and the Network Gateway (NGW) is the Sigfox cloud-based
+-   Network.
++   Figure 1 represents the architecture for Compression/Decompression
++   (C/D) and Fragmentation/Reassembly (F/R) based on [RFC8376] and
++   [draft-ietf-schc-architecture-06], where the Radio Gateway (RGW) is a
++   Sigfox Base Station and the Network Gateway (NGW) is the Sigfox
++   cloud-based Network.
+
+-   Sigfox Device                                           Application
+- +----------------+                                     +--------------+
+- | APP1 APP2 APP3 |                                     |APP1 APP2 APP3|
+- +----------------+                                     +--------------+
+- |   UDP  |       |                                     |     |  UDP   |
+- |  IPv6  |       |                                     |     | IPv6   |
+- +--------+       |                                     |     +--------+
+- | SCHC C/D & F/R |                                     |              |
+- |                |                                     |              |
+- +-------+--------+                                     +--------+-----+
+-         $                                                       .
+-         $   +---------+     +--------------+     +---------+    .
+-         $   |         |     |   Network    |     | Network |    .
+-         +~~ |Sigfox BS|     |   Gateway    |     |  SCHC   |    .
+-             |  (RGW)  | === |    (NGW)     | ... |C/D & F/R|.....
+-             |         |     | Sigfox Cloud |     |         |   IP-based
+-             +---------+     +--------------+     +---------+   Network
+- ------- Uplink message ------>
+-                                        <------- Downlink message ------
+- Legend:
+- $, ~ : Radio link
+- = : Internal Sigfox Network
+- . : External IP-based Network
++   Sigfox Device Endpoint                                  Application
++ +----------------+                                     +--------------+
++ | APP1 APP2 APP3 |                                     |APP1 APP2 APP3|
++ +----------------+                                     +--------------+
++ |   UDP  |       |                                     |     |  UDP   |
++ |  IPv6  |       |                                     |     | IPv6   |
++ +--------+       |                                     |     +--------+
++ | SCHC Instance  |                                     |              |
++ | (Device Role)  |                                     |              |
++ +-------+--------+                                     +--------+-----+
++         $                                                       .
++         $   +---------+     +--------------+     +---------+    .
++         $   |         |     |   Network    |     | Network |    .
++         +~~ |Sigfox BS|     |   Gateway    |     | SCHC    |    .
++             |  (RGW)  | === |    (NGW)     | ... | Endpoint|.....
++             |         |     | Sigfox Cloud |     |Instance |   IP-based
++             +---------+     +--------------+     +---------+   Network
++ ------- Uplink Datagram ------>
++                                     <------- Downlink Datagram ------
++ Legend:
++ $, ~ : Radio link
++ = : Internal Sigfox Network
++ . : External IP-based Network
+
+                     Figure 1: Network Architecture
+
+    In the case of the global Sigfox network, RGWs (or Base Stations) are
+    distributed over multiple countries wherever the Sigfox LPWAN service
+    is provided.  The NGW (or cloud-based Sigfox Core Network) is a
+    single entity that connects to all RGWs (Sigfox Base Stations) in the
+    world, hence providing a global single star Network topology.
+
+-   The Sigfox Device sends application packets that are compressed and/
+-   or fragmented by a SCHC C/D + F/R to reduce header size and/or
+-   fragment the packet.  The resulting SCHC message is sent over a layer
+-   two (L2) Sigfox frame to the Sigfox Base Stations, which then forward
+-   the SCHC message to the NGW.  The NGW then delivers the SCHC message
+-   and associated gathered metadata to the Network SCHC C/D + F/R.
++   The Sigfox Device hosts a SCHC Endpoint containing a SCHC Instance in
++   the Device role. It sends application packets that are compressed and/
++   or fragmented by its SCHC Instance to reduce header size and/or
++   fragment the packet.  The resulting SCHC Datagram is sent over a layer
++   two (L2) Sigfox frame to the Sigfox Base Stations, which then forward
++   the SCHC Datagram to the NGW.  The NGW then delivers the SCHC Datagram
++   and associated gathered metadata to the Network SCHC Endpoint.
+
+-   The Sigfox cloud-based Network communicates with the Network SCHC C/D
+-   + F/R for compression/decompression and/or for fragmentation/
+-   reassembly.  The Network SCHC C/D + F/R shares the same set of Rules
+-   as the device SCHC C/D + F/R.  The Network SCHC C/D + F/R can be
+-   collocated with the NGW or it could be located in a different place,
+-   as long as a tunnel or secured communication is established between
+-   the NGW and the SCHC C/D + F/R functions.  After decompression and/or
+-   reassembly, the packet can be forwarded over the Internet to one (or
+-   several) LPWAN Application Server(s) (App(s)).
++   The Network SCHC Endpoint hosts one or more SCHC Instances executing
++   in the Network role. A Dispatcher on the Network SCHC Endpoint uses the
++   Device ID provided in the Sigfox metadata callback as a Discriminator
++   to route incoming SCHC Datagrams to the appropriate SCHC Instance.
++   Each SCHC Session between a Device Instance and a Network Instance
++   shares a common Context containing a Set of Rules (SoR), while
++   maintaining its own Set of Variables (SoV) for per-session fragmentation
++   and reassembly state. The Network SCHC Endpoint can be collocated with
++   the NGW or located remotely, as long as a secure tunnel is established
++   between the NGW and the Network SCHC Endpoint. After decompression
++   and/or reassembly, the packet is forwarded over the Internet to one (or
++   several) LPWAN Application Server(s) (App(s)).
+
+-   The SCHC C/D + F/R processes are bidirectional, so the same
+-   principles are applicable on both Uplink (UL) and Downlink (DL).
++   The SCHC C/D + F/R processes are bidirectional, so the same
++   principles apply to both Uplink (UL) and Downlink (DL) SCHC Sessions.
+
+--- rfc9442.txt (Section 3.2: Uplink)
++++ rfc9442-migrated.txt (Section 3.2: Uplink)
+@@ -245,4 +245,4 @@
+-   Messages sent from the device to the Network are delivered by the
+-   Sigfox cloud-based Network to the Network SCHC C/D + F/R through a
+-   callback/API with the following information:
++   Messages sent from the device Instance to the Network Instance are
++   delivered by the Sigfox cloud-based Network to the Network SCHC
++   Endpoint through a callback/API with the following information:
+@@ -263,4 +263,6 @@
+-   The Device ID is a globally unique identifier assigned to the device,
+-   which is included in the Sigfox header of every message.
++   The Device ID is a globally unique identifier assigned to the device,
++   which is included in the Sigfox header of every message. In the SCHC
++   Architecture, the Device ID serves as the Discriminator used by the
++   Network SCHC Endpoint Dispatcher to select the correct SCHC Instance
++   and associated Context.
+
+--- rfc9442.txt (Section 3.4: SCHC Rules)
++++ rfc9442-migrated.txt (Section 3.4: SCHC Rules)
+@@ -358,8 +358,11 @@
+ 3.4.  SCHC Rules
+
+-   The RuleID MUST be included in the SCHC header.  The total number of
+-   Rules to be used directly affects the RuleID field size, and
+-   therefore the total size of the fragmentation header.  For this
+-   reason, it is RECOMMENDED to keep the number of Rules that are
+-   defined for a specific device to the minimum possible.
++   The RuleID MUST be included in the SCHC header of the SCHC Datagram.
++   The RuleID is evaluated within the Context of the selected Instance.
++   The total number of Rules in the Set of Rules (SoR) directly affects
++   the RuleID field size, and therefore the total size of the fragmentation
++   header.  For this reason, it is RECOMMENDED to keep the number of Rules
++   that are defined in the Context for a specific Instance to the minimum
++   possible.
+
+--- rfc9442.txt (Section 3.5: Fragmentation)
++++ rfc9442-migrated.txt (Section 3.5: Fragmentation)
+@@ -375,5 +375,9 @@
+    The SCHC specification [RFC8724] defines a generic fragmentation
+    functionality that allows sending data packets or files larger than
+    the maximum size of a Sigfox payload.  The functionality also defines
+    a mechanism to reliably send multiple messages by allowing to
+-   selectively resend any lost fragments.
++   selectively resend any lost fragments.  In the SCHC Architecture
++   [draft-ietf-schc-architecture-06], active fragmentation parameters,
++   timers, window states, and bitmaps are maintained as the per-session
++   Set of Variables (SoV) within a SCHC Session.
+
+--- rfc9442.txt (Section 8.1: Normative References)
++++ rfc9442-migrated.txt (Section 8.1: Normative References)
+@@ -1700,0 +1701,5 @@
++   [draft-ietf-schc-architecture-06]
++              Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and M.
++              Dumay, "Static Context Header Compression (SCHC) Architecture",
++              Work in Progress, Internet-Draft, draft-ietf-schc-architecture-06,
++              July 2026.

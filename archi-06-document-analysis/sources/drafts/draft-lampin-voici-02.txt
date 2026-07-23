@@ -1,0 +1,1008 @@
+
+
+
+
+SCHC Working Group                                             Q. Lampin
+Internet-Draft                                                    Orange
+Intended status: Informational                              26 June 2026
+Expires: 28 December 2026
+
+
+                                 VOICI
+                         draft-lampin-voici-02
+
+Abstract
+
+   The Static Context Header Compression (SCHC) framework identified the
+   need for a minimal transport encapsulation that provides Session
+   multiplexing when extrinsic Discriminators are insufficient.  This
+   document specifies a Link Multiplexer (VOICI) that addresses those
+   SCHC-driven requirements while remaining general enough to
+   accommodate other compression mechanisms and uncompressed payloads.
+   The encapsulation is designed for minimal overhead, reducing to 1
+   byte in the common case (7 inline Session IDs), while supporting
+   optional integrity protection and original EtherType/port recovery.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 28 December 2026.
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+
+
+
+Lampin                  Expires 28 December 2026                [Page 1]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
+   2.  Requirements  . . . . . . . . . . . . . . . . . . . . . . . .   4
+     2.1.  Requirements driven by SCHC . . . . . . . . . . . . . . .   4
+     2.2.  Requirements driven by multi-mechanism and uncompressed
+           payloads  . . . . . . . . . . . . . . . . . . . . . . . .   4
+   3.  Gap Analysis  . . . . . . . . . . . . . . . . . . . . . . . .   4
+     3.1.  MPLS  . . . . . . . . . . . . . . . . . . . . . . . . . .   4
+     3.2.  UDP Encapsulation . . . . . . . . . . . . . . . . . . . .   5
+     3.3.  IP Protocol Number and SCHC Ethertype . . . . . . . . . .   5
+     3.4.  QUIC  . . . . . . . . . . . . . . . . . . . . . . . . . .   5
+     3.5.  Summary . . . . . . . . . . . . . . . . . . . . . . . . .   6
+     3.6.  Encoding Within SCHC Datagram . . . . . . . . . . . . . .   7
+   4.  Integration within SCHC framework . . . . . . . . . . . . . .   7
+   5.  Header Format . . . . . . . . . . . . . . . . . . . . . . . .   7
+     5.1.  Fields  . . . . . . . . . . . . . . . . . . . . . . . . .   9
+     5.2.  Minimal Header  . . . . . . . . . . . . . . . . . . . . .  11
+     5.3.  Header Size Summary . . . . . . . . . . . . . . . . . . .  11
+     5.4.  Header Field Reference  . . . . . . . . . . . . . . . . .  12
+   6.  Session ID Allocation . . . . . . . . . . . . . . . . . . . .  13
+     6.1.  P2P Deployments . . . . . . . . . . . . . . . . . . . . .  13
+     6.2.  Star Topologies . . . . . . . . . . . . . . . . . . . . .  13
+     6.3.  Mesh and Other Topologies . . . . . . . . . . . . . . . .  13
+     6.4.  Relay Remapping . . . . . . . . . . . . . . . . . . . . .  13
+   7.  Content Mechanism Identification  . . . . . . . . . . . . . .  13
+     7.1.  Registration of New Mechanisms  . . . . . . . . . . . . .  14
+   8.  Integrity Protection  . . . . . . . . . . . . . . . . . . . .  14
+     8.1.  CRC Scope . . . . . . . . . . . . . . . . . . . . . . . .  14
+     8.2.  CRC Algorithm . . . . . . . . . . . . . . . . . . . . . .  14
+     8.3.  Relationship to ULP Checksums . . . . . . . . . . . . . .  14
+     8.4.  Limitations . . . . . . . . . . . . . . . . . . . . . . .  14
+   9.  Interaction with Protocol Numbers . . . . . . . . . . . . . .  14
+     9.1.  Over Ethertype  . . . . . . . . . . . . . . . . . . . . .  15
+     9.2.  Over IP Protocol Number . . . . . . . . . . . . . . . . .  15
+     9.3.  Over UDP  . . . . . . . . . . . . . . . . . . . . . . . .  15
+   10. Security Considerations . . . . . . . . . . . . . . . . . . .  15
+     10.1.  Session Hijacking  . . . . . . . . . . . . . . . . . . .  15
+     10.2.  Integrity Limitations  . . . . . . . . . . . . . . . . .  16
+     10.3.  Flag Bit Manipulation  . . . . . . . . . . . . . . . . .  16
+     10.4.  CI Manipulation  . . . . . . . . . . . . . . . . . . . .  16
+     10.5.  Denial of Service  . . . . . . . . . . . . . . . . . . .  16
+     10.6.  Replay Attacks . . . . . . . . . . . . . . . . . . . . .  16
+   11. IANA Considerations . . . . . . . . . . . . . . . . . . . . .  16
+
+
+
+Lampin                  Expires 28 December 2026                [Page 2]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+     11.1.  Content Identifier Registry  . . . . . . . . . . . . . .  16
+     11.2.  Session ID Space . . . . . . . . . . . . . . . . . . . .  17
+     11.3.  Future Extensions  . . . . . . . . . . . . . . . . . . .  17
+   12. References  . . . . . . . . . . . . . . . . . . . . . . . . .  17
+     12.1.  Normative References . . . . . . . . . . . . . . . . . .  17
+     12.2.  Informative References . . . . . . . . . . . . . . . . .  18
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  18
+
+1.  Introduction
+
+   The SCHC framework [SCHC] provides header compression and optional
+   fragmentation based on static contexts shared between Endpoints.  In
+   the common deployment -- a single Instance per Endpoint over a single
+   link -- the mapping between the link and the Instance is trivial: all
+   Datagrams on the link belong to that one Instance, and no
+   multiplexing mechanism is needed.
+
+   However, two deployment scenarios require a mechanism to distinguish
+   multiple Sessions over a shared link:
+
+   *  An Endpoint hosts multiple Instances serving different Domains or
+      tenants.
+
+   *  Multiple Sessions share an Ethernet segment or IPv6 link.
+
+   These requirements were first identified by the SCHC architecture
+   [SCHC-ARCH] for the case of SCHC-compressed Datagrams.  But the need
+   is broader than SCHC alone.  Operator and industrial deployments
+   often carry a mix of traffic types on the same constrained link:
+   SCHC-compressed Datagrams from devices that use static Contexts;
+   Datagrams from other mechanisms; and uncompressed management or
+   diagnostic traffic that bypasses compression.  In all of these cases,
+   transport-level multiplexing, and optional integrity are desirable.
+
+   This document specifies a Link Multiplexer (VOICI) that satisfies the
+   requirements identified for SCHC while remaining general enough for
+   other compression mechanisms.  The VOICI header carries a Session ID
+   for multiplexing, a Content Identifier for dispatching the Datagram
+   to the correct handler, and optional integrity protection.  The
+   encapsulation is designed for minimal overhead, reducing to 1 byte in
+   the common case (inline Session IDs 0-6 with 2-bit Content
+   Identifier).
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+
+
+Lampin                  Expires 28 December 2026                [Page 3]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+2.  Requirements
+
+   The requirements below are organized into two groups.  Requirements
+   1-3 were first identified by the SCHC architecture [SCHC-ARCH] for
+   the specific case of SCHC-compressed Datagrams.  Requirements 4-5
+   were added when the scope was broadened to encompass other
+   compression mechanisms and uncompressed payloads.
+
+2.1.  Requirements driven by SCHC
+
+   1.  *Session identification*: A mechanism to distinguish Sessions and
+       route Datagrams to the correct processing handler (for example, a
+       SCHC Instance).  The identifier (Session ID) is locally
+       significant to the link.
+
+   2.  *Original EtherType/port recovery (optional)*: A mechanism to
+       carry the original EtherType or UDP port number when the carrier
+       uses the SCHC EtherType or SCHC UDP port.  This is needed when
+       the payload is decompressed so that the receiver can restore the
+       original framing layer after decompression.
+
+   3.  *Integrity protection (optional)*: A mechanism to detect
+       corruption of the Datagram, including the Session ID and the
+       compressed residue.
+
+2.2.  Requirements driven by multi-mechanism and uncompressed payloads
+
+   1.  *Content identification*: A mechanism to identify how the
+       Datagram payload is encoded when the link carries Datagrams from
+       multiple mechanisms (for example, SCHC, uncompressed).  This
+       allows the receiver to dispatch the Datagram to the correct
+       decompressor without inspecting its contents.
+
+   2.  *Layer independence*: The encapsulation MUST operate over any
+       link layer that carries compressed traffic, whether identified by
+       an Ethertype, IP Protocol Number, or UDP port [SCHC-PROTO-NUMS].
+
+3.  Gap Analysis
+
+   Several existing mechanisms can provide multiplexing or labeling.
+   This section analyzes their suitability for SCHC and identifies the
+   gap that VOICI fills.
+
+3.1.  MPLS
+
+   MPLS labels provide efficient multiplexing and are widely deployed in
+   operator networks.  However:
+
+
+
+
+Lampin                  Expires 28 December 2026                [Page 4]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+   *  MPLS adds 4 bytes per label, which may be excessive for highly
+      constrained deployments.
+
+   *  MPLS is not available on all link types relevant to SCHC (LPWAN,
+      PPP, low-speed serial links).
+
+   *  MPLS provides no integrity protection.
+
+3.2.  UDP Encapsulation
+
+   UDP is commonly used for Internet traversal and NAT traversal.  The
+   UDP source port can carry a Session ID:
+
+   *  The UDP header is 8 bytes.
+
+   *  Features a 16 bits Checksum.
+
+   *  Using the UDP source port as Session ID is fragile in the presence
+      of NAT (port remapping) and port exhaustion (65535 limit shared
+      with other applications).
+
+   *  UDP is only available above IP.
+
+3.3.  IP Protocol Number and SCHC Ethertype
+
+   The SCHC IP Protocol Number and Ethertype [SCHC-PROTO-NUMS] identify
+   SCHC traffic at the respective layers but do not provide:
+
+   *  Session multiplexing (one protocol number or Ethertype per link,
+      not per Session).
+
+   *  Integrity protection.
+
+   They are necessary to identify SCHC traffic but insufficient for
+   multiplexing.
+
+3.4.  QUIC
+
+   QUIC [RFC9000] is a multiplexed, UDP-based transport that provides
+   stream multiplexing, reliability, flow control, and mandatory
+   encryption via TLS 1.3.  While QUIC satisfies multiplexing and
+   integrity requirements, it is generally infeasible for SCHC target
+   deployments:
+
+   *  QUIC operates exclusively over UDP, requiring a full IP stack.
+
+
+
+
+
+
+Lampin                  Expires 28 December 2026                [Page 5]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+   *  The mandatory TLS 1.3 handshake and AEAD encryption require
+      cryptographic hardware or sufficient memory that constrained
+      endpoints may not possess.
+
+   *  The minimum AEAD ciphertext size (16 bytes for AES-128-GCM)
+      combined with the TLS record and QUIC headers results in a per-
+      packet overhead over 32 bytes.
+
+3.5.  Summary
+
+    +==============+==============+===========+==========+===========+
+    | Mechanism    | Multiplexing | Integrity | Overhead | Link      |
+    |              |              |           |          | Coverage  |
+    +==============+==============+===========+==========+===========+
+    | Ethertype    | No           | No        | 0 bytes  | IEEE 802  |
+    |              |              |           |          | only      |
+    +--------------+--------------+-----------+----------+-----------+
+    | MPLS         | Yes          | No        | 4+ bytes | Ethernet, |
+    |              |              |           |          | IP        |
+    +--------------+--------------+-----------+----------+-----------+
+    | IP Protocol  | No           | No        | 0 bytes  | IP only   |
+    | Num          |              |           |          |           |
+    +--------------+--------------+-----------+----------+-----------+
+    | UDP Protocol | No           | Yes       | 8 bytes  | over UDP  |
+    | Num          |              |           |          | only      |
+    +--------------+--------------+-----------+----------+-----------+
+    | UDP Port     | Yes          | Yes       | 8 bytes  | over UDP  |
+    |              |              |           |          | only      |
+    +--------------+--------------+-----------+----------+-----------+
+    | QUIC         | Yes          | Yes       | 32+      | over QUIC |
+    |              |              |           | bytes    | only      |
+    +--------------+--------------+-----------+----------+-----------+
+    | *VOICI*      | *Yes*        | *Opt.*    | *1 byte* | *Any*     |
+    +--------------+--------------+-----------+----------+-----------+
+
+              Table 1: Comparison of multiplexing mechanisms
+
+   VOICI fills the gap by providing multiplexing, integrity, content
+   mechanism identification, and original EtherType/port recovery with
+   minimal overhead.  The comparison is summarized in Table 1.
+
+
+
+
+
+
+
+
+
+
+
+Lampin                  Expires 28 December 2026                [Page 6]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+3.6.  Encoding Within SCHC Datagram
+
+   Encoding session or version information inside the SCHC rules or rule
+   results would couple transport-layer concerns (multiplexing, version
+   negotiation) to compression-layer concerns (what to compress, how to
+   parse the residue).  A separate encapsulation keeps the SCHC datagram
+   focused on compression results and allows the transport header to be
+   added or removed without modifying the compression strategy or the
+   Context/Rules.
+
+   Furthermore, when multiple compression mechanisms share the same
+   link, an inner-field approach would require every mechanism to
+   reserve space for the same routing metadata, reducing compression
+   efficiency.  VOICI places this metadata in a single, mechanism-
+   agnostic header.
+
+4.  Integration within SCHC framework
+
+   VOICI integrates at the carrier layer using the SCHC Ethertype and
+   IP/UDP protocol numbers defined in [SCHC-PROTO-NUMS].  When
+   multiplexing is required, these values identify VOICI traffic on the
+   wire.  On deployments where explicit multiplexing is not needed,
+   i.e., provided by the supporting lower layers, VOICI is optional.
+   The use of VOICI is part of the Endpoint configuration.
+
+   On the sender side, the VOICI module prepends its header to the
+   Datagram and replaces the original EtherType, IP Protocol Number, or
+   UDP port number with the corresponding SCHC Ethertype or IP/UDP
+   protocol number.  If the original framing information must be
+   preserved for later restoration, the Original EtherType/Port flag (O)
+   is set and the field is populated.
+
+   On the receiver side, packets identified by the SCHC Ethertype or IP/
+   UDP protocol number are handed to the VOICI dispatcher.  The VOICI
+   module parses the header, uses the Session ID and CI field to route
+   the Datagram to the correct processing handler, strips its own
+   header, and optionally restores the original EtherType, IP Protocol
+   Number, or UDP port number before passing the reconstituted frame to
+   upper layers.
+
+5.  Header Format
+
+
+
+
+
+
+
+
+
+
+Lampin                  Expires 28 December 2026                [Page 7]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+    0                   1                   2
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3   bits
+   +-+-+-+---+-----+ - - - - - - - - - - - - - - - +
+   |V|O|I|CI | SSS |         Session ID (long)     |
+   +-+-+-+---+-----+ - - - - - - - - - - - - - - - +
+   +- - - - - - - - - - - - - - - -+
+   |              CRC              | (optional, present if I=1)
+   +- - - - - - - - - - - - - - - -+
+   +- - - - - - - - - - - - - - - -+ (optional, present if O=1,
+   |    Original EtherType/Port    |  2B for Ethertype or UDP port,
+   +- - - - - - - - - - - - - - - -+  1B for IPv6 Next Header)
+
+                           Figure 1: VOICI Header
+
+   The V-O-I flags (3 bits), CI field (2 bits), and the SSS field (3
+   bits) are always present.  The SSS field uses a uniform encoding
+   rule: values 0-6 represent an inlined value in the first byte, while
+   7 triggers a LEB128 variable-length integer in the following byte(s)
+   with offset +7.  For Unprocessed/Raw and SCHC, SSS encodes the
+   Session ID (SID = SSS or SID = LEB128_val + 7).  For the Extended CI
+   mechanism, SSS encodes the Extended CI value.  For Reserved CI
+   values, the interpretation is defined by the future profile.  The CRC
+   (2 bytes) is present when I=1.  The Original EtherType/Port (1-2
+   bytes) is present when O=1.
+
+   The Datagram payload follows immediately after the last header field.
+
+   *Parsing order:*
+
+   1.  Read byte 0; extract V, O, I, CI, SSS.
+
+   2.  If CI indicates Reserved: a.  The Datagram MUST be discarded.
+
+   3.  If CI indicates Unprocessed/Raw or SCHC (CI in {0, 1}): a.
+       Decode SSS as the Session ID:
+
+       *  If SSS < 7: SID = SSS (1-byte header).
+
+       *  If SSS == 7: read a LEB128 integer from following byte(s); SID
+          = LEB128_val + 7.
+
+   4.  If CI indicates Extended CI (CI == 3): a.  Decode SSS as the
+       Extended CI value:
+
+       *  If SSS < 7: Ext_CI = SSS + 3 (1-byte header so far).
+
+
+
+
+
+
+Lampin                  Expires 28 December 2026                [Page 8]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+       *  If SSS == 7: read a LEB128 integer from following byte(s);
+          Ext_CI = LEB128_val + 10. b.  Read the Session ID as a LEB128
+          integer from the following byte(s).
+
+   5.  If I=1, read 2-byte CRC and compute expected CRC over all bytes
+       read so far (flag byte, Extended CI bytes if CI=3, Session ID),
+       Original EtherType/Port (if O=1), and the Datagram payload; drop
+       frame if CRC is invalid.
+
+   6.  If O=1, read Original EtherType/Port field (2 bytes for Ethernet/
+       UDP, 1 byte for IPv6 Next Header).
+
+   7.  Pass remaining buffer to the identified handler and recover
+       original/content.
+
+   8.  If O=1, restore original Ethertype or Port number and return
+       processed frame to original handler.
+
+5.1.  Fields
+
+   *  *V (1 bit):* VOICI header format version.  V=0 for this draft.
+      V=1 for future VOICI revisions.
+
+   *  *O (1 bit):* Original EtherType/Port present.  When set, the
+      Original EtherType/Port field is present, carrying the EtherType,
+      IP Next Header, or UDP port number that was replaced by the VOICI
+      EtherType, VOICI IP Protocol Number, or VOICI UDP port.  The field
+      is interpreted as an EtherType when VOICI is carried over a link-
+      layer transport (for example, IEEE 802 Ethertype), as a Next
+      Header if carried over IP, and as a UDP port when VOICI is carried
+      in a UDP payload.  This restoration is an VOICI responsibility;
+      the Content Mechanism does not need to manage framing recovery and
+      dispatching to original handler.
+
+   *  *I (1 bit):* Integrity flag.  When set, a CRC-16 field is present
+      and covers the Session ID through the end of the datagram.  When
+      clear, no integrity check is carried.
+
+   *  *CI (2 bits):* Content Identifier.  Identifies the mechanism used
+      for the datagram payload.  VOICI profiles register new CI values
+      as needed.
+
+      The initial CI assignments are:
+
+
+
+
+
+
+
+
+Lampin                  Expires 28 December 2026                [Page 9]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+                  +====+================================+
+                  | CI | Content Mechanism              |
+                  +====+================================+
+                  | 0  | Unprocessed / raw              |
+                  +----+--------------------------------+
+                  | 1  | SCHC                           |
+                  +----+--------------------------------+
+                  | 2  | Reserved for future mechanisms |
+                  +----+--------------------------------+
+                  | 3  | Extended CI                    |
+                  +----+--------------------------------+
+
+                      Table 2: Initial CI assignments
+
+   Profiles that register a new CI value MUST specify the mechanism and
+   its parameters.
+
+   *  *SSS (3 bits):* Session ID prefix (for Unprocessed/Raw and SCHC)
+      or Extended CI value (for Extended CI).  The SSS field uses an
+      inline/extended encoding:
+
+      -  *SSS in 0..6:* The value is inlined in the first byte.
+
+         o  For Unprocessed/Raw or SCHC: SID = SSS.  Header is 1 byte
+            (unless O=1 or I=1).
+
+         o  For Extended CI: Ext_CI = SSS + 3.  A Session ID follows as
+            a LEB128 integer.
+
+      -  *SSS = 7:* A LEB128 variable-length integer follows.
+
+         o  For Unprocessed/Raw or SCHC: read LEB128 value; SID =
+            LEB128_val + 7.
+
+         o  For Extended CI: read LEB128 value; Ext_CI = LEB128_val +
+            10.  If SSS was inline (0-6), the Session ID follows
+            immediately after the first byte.  If SSS was 7, the Session
+            ID follows immediately after the LEB128 integer.
+
+      This gives 7 inline values in the 1-byte form, with continuous
+      extension to 16-bit values via LEB128.
+
+   *  *Session ID (variable length):* Identifies the logical session
+      that owns this Datagram.  When a mechanism is registered with
+      VOICI, the mechanism profile assigns Session IDs and registers
+      them with the VOICI instance.  The receiver VOICI uses the Session
+      ID to dispatch the Datagram to the correct handler -- for SCHC,
+      the handler is an SCHC Instance; for Unprocessed/Raw, the handler
+
+
+
+Lampin                  Expires 28 December 2026               [Page 10]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+      is the raw dispatch path.  The Session ID space (0-65535) is local
+      to the link over which VOICI is carried and to the Content
+      Mechanism.
+
+      For CI values 00, 01 (Unprocessed/Raw and SCHC), the Session ID is
+      derived from the SSS field as described in the parsing order (SID
+      = SSS for inline values, SID = LEB128_val + 7 for extended
+      values).  For Extended CI, the Session ID follows the Extended CI
+      value as a LEB128 integer.
+
+      The LEB128 encoding follows [DWARF]: - If the value is less than
+      128, a single byte is used (MSB = 0).  - If the value is 128 or
+      greater, two bytes are used (first byte MSB = 1).  - No values
+      larger than 16 bits (65535) are supported.
+
+      The receiver reads the Session ID by inspecting the most
+      significant bit of each LEB128 byte: if the MSB is 1, the next
+      byte is part of the value; if 0, the byte is the last.
+
+   *  *CRC (16 bits, optional):* Present when I=1.  CRC-16/CCITT-FALSE
+      over the flag byte (V-O-I-CI-SSS), the Extended CI value bytes (if
+      CI=3), the Session ID, the Original EtherType/Port field (if O=1),
+      and the entire Datagram payload.
+
+   *  *Original EtherType/Port (1-2 bytes, optional):* Present when O=1.
+      Carries the EtherType or UDP port number that was replaced by the
+      VOICI carrier.  The field is interpreted as an EtherType when
+      VOICI is carried over a link-layer transport (for example, IEEE
+      802 Ethertype) and as a UDP port when VOICI is carried in a UDP
+      payload.
+
+5.2.  Minimal Header
+
+   When no optional fields are needed (V=0, O=0, I=0) and the SSS field
+   encodes an inline value (0-6), the VOICI header reduces to a single
+   byte:
+
+    0 1 2 3 4 5 6 7   bit
+   +-+-+-+---+-----+
+   |V|O|I|CI |S S S| (inline value, 1 byte)
+   +-+-+-+---+-----+
+
+                  Figure 2: Minimal VOICI Header (1 byte)
+
+5.3.  Header Size Summary
+
+   VOICI header sizes for various configurations (Unprocessed/Raw and
+   SCHC):
+
+
+
+Lampin                  Expires 28 December 2026               [Page 11]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+    +====================+===+===+===+=========+===========+==========+
+    | Configuration      | V | O | I | SSS 0-6 | SSS 7-133 | SSS 134+ |
+    +====================+===+===+===+=========+===========+==========+
+    | Session ID only    | 0 | 0 | 0 | 1 B     | 2 B       | 3 B      |
+    +--------------------+---+---+---+---------+-----------+----------+
+    | + CRC              | 0 | 0 | 1 | 3 B     | 4 B       | 5 B      |
+    +--------------------+---+---+---+---------+-----------+----------+
+    | + Orig.            | 0 | 1 | 0 | 3 B     | 4 B       | 5 B      |
+    | EtherType/UDP Port |   |   |   |         |           |          |
+    +--------------------+---+---+---+---------+-----------+----------+
+    | + Orig.  IP Next   | 0 | 1 | 0 | 2 B     | 3 B       | 4 B      |
+    | Header             |   |   |   |         |           |          |
+    +--------------------+---+---+---+---------+-----------+----------+
+    | All fields         | 0 | 1 | 1 | 4-5 B   | 5-6 B     | 6-7 B    |
+    +--------------------+---+---+---+---------+-----------+----------+
+
+         Table 3: VOICI header size summary (Unprocessed/Raw, SCHC)
+
+   Extended CI (CI=3) adds the Extended CI value and a LEB128 Session
+   ID; the minimum is 2 bytes (flag byte + 1-byte Session ID, SSS
+   inline), growing to 6 bytes (SSS=7 with 2-byte LEB128 Ext_CI + 2-byte
+   LEB128 SID).
+
+5.4.  Header Field Reference
+
+   +=============+========+===========================================+
+   | Field       | Size   | Description                               |
+   +=============+========+===========================================+
+   | V           | 1 bit  | VOICI header version                      |
+   +-------------+--------+-------------------------------------------+
+   | O           | 1 bit  | Original EtherType/Port presence          |
+   +-------------+--------+-------------------------------------------+
+   | I           | 1 bit  | CRC presence                              |
+   +-------------+--------+-------------------------------------------+
+   | CI          | 2 bits | Content Identifier                        |
+   +-------------+--------+-------------------------------------------+
+   | SSS         | 3 bits | Inline value (SID or Extended CI, 0-6)    |
+   +-------------+--------+-------------------------------------------+
+   | Extended CI | 0-2 B  | Extended CI value (inline or LEB128 + 10) |
+   +-------------+--------+-------------------------------------------+
+   | Session ID  | 0-2 B  | Session identifier (inline, LEB128+7, or  |
+   |             |        | raw)                                      |
+   +-------------+--------+-------------------------------------------+
+   | Original    | 1-2 B  | EtherType, Next Header, or UDP port (if   |
+   | ET/Port     |        | O=1)                                      |
+   +-------------+--------+-------------------------------------------+
+   | CRC         | 2 B    | Integrity check (if I=1)                  |
+   +-------------+--------+-------------------------------------------+
+
+
+
+Lampin                  Expires 28 December 2026               [Page 12]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+                   Table 4: VOICI header field summary
+
+6.  Session ID Allocation
+
+   The Session ID is locally significant to the link.  Allocation
+   strategies depend on the deployment topology:
+
+6.1.  P2P Deployments
+
+   Session IDs MAY be negotiated between peers during Session
+   establishment, or assigned by the Domain Manager during provisioning.
+   Session ID 0 is a valid Session ID (no reserved values).
+
+6.2.  Star Topologies
+
+   The Network Gateway assigns Session IDs and communicates them to
+   Devices during provisioning.  The Gateway maintains the Session ID to
+   handler mapping.
+
+6.3.  Mesh and Other Topologies
+
+   Session IDs MAY be assigned by a Network or Domain Manager, or
+   negotiated between peers.
+
+6.4.  Relay Remapping
+
+   A relay or gateway translating between links MAY remap Session IDs.
+   The Session ID space is local to each link segment; there is no
+   requirement for global uniqueness.
+
+7.  Content Mechanism Identification
+
+   The CI field provides content mechanism identification.  VOICI at the
+   receiver uses the CI and Session ID values to dispatch the Datagram
+   to the correct handler without inspecting the Datagram contents.
+
+   This is needed when a link carries Datagrams from multiple mechanisms
+   simultaneously.  Common scenarios include:
+
+   *  A gateway that receives both SCHC-compressed Datagrams and
+      Management and diagnostic traffic that bypasses compression
+      entirely.
+
+   *  Future registrations of additional mechanisms via new CI values.
+
+
+
+
+
+
+
+Lampin                  Expires 28 December 2026               [Page 13]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+7.1.  Registration of New Mechanisms
+
+   Profiles that register a new CI value MUST specify the mechanism and
+   its parameters.  Implementations that encounter a CI value they do
+   not recognize MUST drop the Datagram.
+
+8.  Integrity Protection
+
+   The I flag and CRC field provide optional integrity protection for
+   the Datagram.
+
+8.1.  CRC Scope
+
+   The CRC covers the VOICI header and the Datagram payload, excluding
+   the CRC field itself.  Specifically, the CRC is computed over the
+   base header byte (V-O-I-CI-SSS), the Extended CI LEB128 bytes (if
+   CI=3 and SSS=7), the Session ID, the Original EtherType/Port field
+   (if O=1), and the entire Datagram payload.
+
+8.2.  CRC Algorithm
+
+   CRC-16/CCITT-FALSE (polynomial 0x1021, initial value 0xFFFF, no
+   reflection, no final XOR) is used.  This is the same algorithm used
+   in many constrained network protocols (for example, Bluetooth, CAN
+   bus).
+
+8.3.  Relationship to ULP Checksums
+
+   Some compression strategies elide Upper Layer Protocol (ULP)
+   checksums (for example, UDP checksum) to reduce residue size.  On
+   links where the underlying transport does not guarantee datagram
+   integrity, this makes the VOICI CRC the sole integrity mechanism.
+   Profiles MUST specify whether ULP checksum elision is permitted and,
+   if so, whether the VOICI CRC is mandatory to compensate.
+
+8.4.  Limitations
+
+   The CRC provides integrity (corruption detection) but NOT
+   authentication.  An attacker can compute a valid CRC for a forged
+   Datagram.  Authentication must be provided by the underlying
+   transport or a higher-layer security mechanism.
+
+9.  Interaction with Protocol Numbers
+
+   The protocol numbers defined in [SCHC-PROTO-NUMS] identify VOICI
+   traffic on the wire.  The VOICI header follows the carrier header and
+   provides Session multiplexing, Content Mechanism dispatch, and
+   optional integrity protection.
+
+
+
+Lampin                  Expires 28 December 2026               [Page 14]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+       +------------------+
+       |  Payload         |  (content mechanism determined by CI)
+       +------------------+
+       |  VOICI Header    |  (variable length, 1-7 bytes)
+       +------------------+
+       |  Carrier Header  |  (Ethertype / IP Protocol / UDP)
+       +------------------+
+       |  ...             |  (link layer or lower IP)
+       +------------------+
+
+                        Figure 3: VOICI Layer Stack
+
+   The CI field identifies the mechanism (CI=0: unprocessed; CI=1: SCHC;
+   other values: future registrations).
+
+9.1.  Over Ethertype
+
+   The SCHC Ethertype identifies VOICI-encapsulated traffic.  When O=1,
+   the Original EtherType/Port field carries the replaced EtherType
+   value.
+
+9.2.  Over IP Protocol Number
+
+   The SCHC IP Protocol Number identifies VOICI-encapsulated traffic.
+   The VOICI header follows the IPv6 header (or the IPv6 extension
+   containing the protocol number).  When O=1, the Original EtherType/
+   Port field carries the replaced IPv6 Next Header value.
+
+9.3.  Over UDP
+
+   The SCHC UDP port identifies VOICI-encapsulated traffic carried in
+   the UDP payload.  The UDP header provides its own checksum, which may
+   make the VOICI CRC redundant.  When O=1, the Original EtherType/Port
+   field carries the replaced UDP destination port number.
+
+10.  Security Considerations
+
+10.1.  Session Hijacking
+
+   If Session IDs are predictable, an attacker could inject Datagrams
+   with a forged Session ID to redirect traffic to a different handler.
+   Session IDs SHOULD be randomly generated or derived from a secure key
+   exchange.  In star topologies where the Domain Manager assigns
+   Session IDs, the assigned values SHOULD be cryptographically random
+   rather than sequential or otherwise predictable.
+
+
+
+
+
+
+Lampin                  Expires 28 December 2026               [Page 15]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+10.2.  Integrity Limitations
+
+   The CRC provides corruption detection but not authentication.  An
+   attacker with link access can forge Datagrams with valid CRCs.
+   Authentication must be provided by the underlying transport (for
+   example, IPsec, TLS) or a higher-layer mechanism (for example,
+   OSCORE).
+
+10.3.  Flag Bit Manipulation
+
+   When the I flag is set, the CRC covers the flag byte, making flag bit
+   flipping detectable at the cost of a CRC failure.  When I=0, flipping
+   the O flag (0 to 1) would cause the receiver to consume payload bytes
+   as an Original EtherType/Port field.  Higher-layer authentication is
+   recommended for adversarial environments.
+
+10.4.  CI Manipulation
+
+   When the I flag is set, the CRC covers the CI field, making
+   manipulation detectable.  When I=0, an attacker can flip the CI field
+   to dispatch the Datagram to a wrong handler, causing decompression
+   errors or potential information leakage if the wrong decompressor
+   produces interpretable output.
+
+10.5.  Denial of Service
+
+   An attacker could inject Datagrams with invalid Session IDs, causing
+   the receiver to waste resources on lookup failures.  Implementations
+   SHOULD rate-limit Session ID lookup failures.
+
+10.6.  Replay Attacks
+
+   VOICI carries no sequence number or timestamp.  An attacker with link
+   access could replay previously captured Datagrams.  For SCHC's
+   primary use cases (sensor telemetry, periodic reporting), replayed
+   Datagrams carry stale data that is not harmful.  Deployments
+   requiring replay protection SHOULD use a higher-layer mechanism (for
+   example, OSCORE, DTLS) or the underlying transport.
+
+11.  IANA Considerations
+
+11.1.  Content Identifier Registry
+
+   This document requests the creation of a "Content Identifier (CI)"
+   registry.  The initial entries are:
+
+
+
+
+
+
+Lampin                  Expires 28 December 2026               [Page 16]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+               +=======+===================+===============+
+               | Value | Content Mechanism | Reference     |
+               +=======+===================+===============+
+               | 0     | Unprocessed / raw | This document |
+               +-------+-------------------+---------------+
+               | 1     | SCHC [SCHC]       | [SCHC]        |
+               +-------+-------------------+---------------+
+               | 2     | Reserved          | --            |
+               +-------+-------------------+---------------+
+               | 3     | Extended CI       | This document |
+               +-------+-------------------+---------------+
+
+                    Table 5: Initial CI registry entries
+
+   New CI values are assigned per [RFC8126] "Specification Required"
+   policy.
+
+11.2.  Session ID Space
+
+   The Session ID space is locally significant to the link and Content
+   Mechanism.  No IANA assignment is required.
+
+11.3.  Future Extensions
+
+   The VOICI header allows for future extensions.  New flags or fields
+   would be introduced through a subsequent revision of this document,
+   with IANA registry updates.  Existing implementations that encounter
+   unrecognized flag combinations MUST treat the unrecognized flags as
+   zero and process the header according to their supported flags.  For
+   the CI field, implementations that encounter a CI value they do not
+   recognize MUST drop the Datagram.
+
+12.  References
+
+12.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/rfc/rfc2119>.
+
+   [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
+              Writing an IANA Considerations Section in RFCs", BCP 26,
+              RFC 8126, DOI 10.17487/RFC8126, June 2017,
+              <https://www.rfc-editor.org/rfc/rfc8126>.
+
+
+
+
+
+
+Lampin                  Expires 28 December 2026               [Page 17]
+
+Internet-Draft                    VOICI                        June 2026
+
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/rfc/rfc8174>.
+
+   [SCHC]     Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and JC.
+              Zuniga, "SCHC: Generic Framework for Static Context Header
+              Compression and Fragmentation", RFC 8724,
+              DOI 10.17487/RFC8724, April 2020,
+              <https://www.rfc-editor.org/rfc/rfc8724>.
+
+12.2.  Informative References
+
+   [DWARF]    Dwarf Standards Committee, "DWARF Debugging Information
+              Format", Web https://dwarfstd.org/documentation/,
+              <https://dwarfstd.org/documentation/>.
+
+   [RFC9000]  Iyengar, J., Ed. and M. Thomson, Ed., "QUIC: A UDP-Based
+              Multiplexed and Secure Transport", RFC 9000,
+              DOI 10.17487/RFC9000, May 2021,
+              <https://www.rfc-editor.org/rfc/rfc9000>.
+
+   [SCHC-ARCH]
+              Pelov, A., Thubert, P., and A. Minaburo, "Static Context
+              Header Compression (SCHC) Architecture", Work in Progress,
+              Internet-Draft, draft-ietf-schc-architecture-05, 17
+              October 2025, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-schc-architecture-05>.
+
+   [SCHC-PROTO-NUMS]
+              Moskowitz, R., Thubert, P., Gomez, C., Minaburo, A., and
+              M. Blanchet, "Protocol Numbers for SCHC", Work in
+              Progress, Internet-Draft, draft-ietf-schc-protocol-
+              numbers-06, 23 December 2025,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
+              protocol-numbers-06>.
+
+Author's Address
+
+   Quentin Lampin
+   Orange
+   Orange 3 Massifs - 22 Chemin du Vieux Chene
+   38240 Meylan
+   France
+   Email: quentin.lampin@orange.com
+
+
+
+
+
+
+
+Lampin                  Expires 28 December 2026               [Page 18]

@@ -1,0 +1,247 @@
+# Author-facing consolidated migration diff for draft-ietf-schc-8824-update-09
+
+Source: copied from the most complete available terminology migration diff (Gemini). Consolidated analysis records any source disagreements.
+
+--- Section 1 ---
+@@ -202,3 +202,4 @@
+    Since CoAP is an application-layer protocol, compressing CoAP headers
+-   requires installing common Rules between the two SCHC instances.
++   requires installing a common Context containing Rules shared between the
++   communicating SCHC Instances within a Session.
+
+--- Section 2 ---
+@@ -364,5 +364,5 @@
+    SCHC compression for CoAP headers MAY be done in conjunction with the
+-   lower layers (IPv6/UDP) or independently.  The SCHC adaptation layers
+-   described in Section 5 of [RFC8724] may be used as shown in Figure 1,
+-   Figure 2, and Figure 3 below.
++   lower layers (IPv6/UDP) or independently.  The SCHC architecture
++   described in [draft-ietf-schc-architecture] is used to model these
++   deployments, where SCHC Instances reside within logical Endpoints.
+
+@@ -369,6 +369,8 @@
+    In the first example depicted in Figure 1, a Rule compresses the
+    complete header stack from IPv6 to CoAP.  In this case, the Device
+-   and the Network Gateway (NGW) perform SCHC Compression/Decompression
+-   (SCHC C/D), see [RFC8724]).  The application communicating with the
+-   Device does not implement SCHC C/D.
++   and the Network Gateway (NGW) each host an Endpoint with a SCHC
++   Instance.  These Instances share a common Context and communicate
++   using a Session.  The application communicating with the Device does
++   not implement SCHC C/D and does not participate in the SCHC Session.
+
+@@ -399,10 +401,10 @@
+    Figure 1 shows the use of SCHC header compression above Layer 2 in
+-   the Device and the NGW.  The SCHC layer receives non-encrypted
+-   packets and can apply compression Rules to all the headers in the
+-   stack.  On the other end, the NGW receives the SCHC packet and
+-   reconstructs the headers using the Rule and the Compression Residue.
+-   After the decompression, the NGW forwards the IPv6 packet toward the
+-   destination.  The same process applies in the other direction when a
+-   non-encrypted packet arrives at the NGW.  Thanks to the IP forwarding
+-   based on the IPv6 prefix, the NGW identifies the Device and
+-   compresses headers using the Device's Rules.
++   the Device and the NGW.  The SCHC Instance receives non-encrypted
++   packets and applies the matching Rule from its Context.  On the other
++   end, the decompressing SCHC Instance receives the SCHC Datagram,
++   routes it to the correct Instance using the Dispatcher, and
++   reconstructs the headers using the Rule and the Compression Residue.
++   After the decompression, the NGW forwards the IPv6 packet toward the
++   destination.  The same process applies in the other direction when a
++   non-encrypted packet arrives at the NGW.  Thanks to the IP forwarding
++   based on the IPv6 prefix, the NGW Dispatcher identifies the target
++   Instance and compresses headers using the associated Context.
+
+@@ -410,11 +412,12 @@
+    In the second example depicted in Figure 2, SCHC compression is
+    applied in the CoAP layer, compressing the CoAP header independently
+    of the other layers.  The RuleID, Compression Residue, and CoAP
+-   payload are encrypted using a mechanism such as DTLS [RFC9147].  Only
+-   the other end (App) can decipher the information.  If needed, layers
+-   below use SCHC to compress the header as defined in [RFC8724]
+-   (represented by dotted lines in the figure).
+-
+-   This use case needs an end-to-end context initialization between the
+-   Device and the application.  The context initialization is out of
+-   scope for this document.
++   payload are encrypted using a mechanism such as DTLS [RFC9147].  Only
++   the receiving Instance on the App side can decompress the message.
++   If needed, layers below use separate SCHC Instances and Sessions to
++   compress the lower-layer headers (represented by dotted lines in the
++   figure).
++
++   This use case needs an end-to-end Session and Context initialization
++   between the Device Instance and the Application Instance.  The context
++   initialization is out of scope for this document.
+
+@@ -453,7 +456,8 @@
+    The third example depicted in Figure 3 shows the use of the security
+-   protocol OSCORE [RFC8613].  In this case, SCHC needs two Rules to
+-   compress the CoAP header.  A first Rule focuses on the Inner header.
+-   The result of this first compression is encrypted using OSCORE.
+-   Then, a second Rule compresses the Outer header including the CoAP
+-   option OSCORE.
++   protocol OSCORE [RFC8613].  In this case, two distinct SCHC Instances
++   operating at different Strata on the same Endpoint are used to compress
++   the CoAP headers.  A first Instance (Inner SCHC Instance) compresses
++   the Inner header.  The result of this first compression is encrypted
++   using OSCORE.  Then, a second Instance (Outer SCHC Instance) compresses
++   the Outer header including the CoAP option OSCORE.
+
+@@ -487,4 +491,4 @@
+-   In the case of several SCHC instances as shown in Figure 2 and
+-   Figure 3, the Rules may come from different provisioning domains.
++   In the case of several SCHC Instances as shown in Figure 2 and
++   Figure 3, the Instances operate independently.  The associated
++   Contexts may belong to different Domains.
+
+--- Section 9 ---
+@@ -2555,27 +2555,29 @@
+ 9.  CoAP Header Compression with Proxies
+
+    This section defines how SCHC Compression/Decompression is performed
+-   when CoAP proxies are deployed.  The following refers to the origin
+-   client and origin server as application endpoints.
++   when CoAP proxies are deployed.  The origin client, proxy, and origin
++   server are logical CoAP nodes, each hosting one or more SCHC Endpoints.
+
+    Note that SCHC Compression/Decompression of CoAP headers is not
+    necessarily used between each pair of hops in the communication
+    chain.  For example, if a proxy is deployed between an origin client
+    and an origin server, SCHC might be used on the communication leg
+    between the origin client and the proxy, but not on the communication
+    leg between the proxy and the origin server.
+
+ 9.1.  Without End-to-End Security
+
+    In the case that OSCORE is not used end-to-end between client and
+-   server, the SCHC processing occurs hop-by-hop, by relying on SCHC
+-   Rules that are consistently shared between two adjacent hops.
++   server, the SCHC processing occurs hop-by-hop, by establishing separate
++   Sessions and sharing Contexts between adjacent hops.
+
+    In particular, SCHC is used as defined below:
+
+-   *  The sender application endpoint compresses the CoAP message, by
+-      using the SCHC Rules that it shares with the next hop towards the
+-      recipient application endpoint.  The resulting, compressed message
+-      is sent to the next hop towards the recipient application
+-      endpoint.
++   *  The sender physical node hosts a SCHC Endpoint with an Instance
++      that compresses the CoAP message using the Context of the Session
++      it shares with the next hop.  The resulting SCHC Datagram is sent
++      to the next hop.
+
+-   *  Each proxy decompresses the incoming compressed message, by using
+-      the SCHC Rules that it shares with the (previous hop towards the)
+-      sender application endpoint.
++   *  The proxy hosts a SCHC Endpoint with two distinct Instances:
++      an ingress Instance for the Session with the previous hop, and
++      an egress Instance for the Session with the next hop.
++
++      The proxy ingress Instance decompresses the incoming SCHC Datagram
++      using the Context shared with the previous hop.
+
+-      Then, the proxy compresses the CoAP message to be forwarded, by
+-      using the SCHC Rules that it shares with the (next hop towards
+-      the) recipient application endpoint.
++      The proxy forwarding logic processes the decompressed CoAP message
++      (e.g., performing mapping or option removal).  The egress Instance
++      then compresses the forwarded CoAP message using the Context
++      shared with the next hop.  The resulting SCHC Datagram is sent to
++      the next hop.
+
+-      The resulting, compressed message is sent to the (next hop towards
+-      the) recipient application endpoint.
++   *  The recipient physical node hosts a SCHC Endpoint with an Instance
++      that decompresses the incoming SCHC Datagram using the Context of
++      the Session it shares with the previous hop.
+
+-   *  The recipient application endpoint decompresses the incoming
+-      compressed message, by using the SCHC Rules that it shares with
+-      the previous hop towards the sender application endpoint.
+
+ 9.2.  With End-to-End Security
+
+    In the case that OSCORE is used end-to-end between client and server
+    (see Section 8.2), the following applies.
+
+    The SCHC processing occurs end-to-end as to the Inner SCHC
+-   Compression/Decompression, by relying on Inner SCHC Rules that are
+-   consistently shared between the two application endpoints acting as
+-   OSCORE endpoints and sharing the used OSCORE Security Context.
++   Compression/Decompression, by relying on an end-to-end Session and
++   Context shared between the Inner Instances on the two application
++   endpoints.
+
+    Instead, the SCHC processing occurs hop-by-hop as to the Outer SCHC
+-   Compression/Decompression, by relying on Outer SCHC Rules that are
+-   consistently shared between two adjacent hops.
++   Compression/Decompression, by relying on hop-by-hop Sessions and
++   Contexts shared between Outer Instances on adjacent hops.
+
+    In particular, SCHC is used as defined below:
+
+-   *  The sender application endpoint performs the Inner SCHC
+-      Compression on the original CoAP message, by using the Inner SCHC
+-      Rules that it shares with the recipient application endpoint.
++   *  The sender application endpoint performs the Inner SCHC
++      Compression on the original CoAP message, using the Context of the
++      end-to-end Session shared with the recipient.
+
+-      Following the AEAD Encryption of the compressed input obtained
+-      from the previous step, the sender application endpoint performs
+-      the Outer SCHC Compression on the resulting OSCORE-protected
+-      message, by using the Outer SCHC Rules that it shares with the
+-      next hop towards the recipient application endpoint.
++      Following the AEAD Encryption of the compressed input obtained
++      from the previous step, the sender performs the Outer SCHC
++      Compression on the resulting OSCORE-protected message, using the
++      Context of the hop-by-hop Session shared with the next hop.  The
++      resulting SCHC Datagram is sent to the next hop.
+
+-      The resulting, compressed message is sent to the next hop towards
+-      the recipient application endpoint.
++   *  Each proxy performs the Outer SCHC Decompression on the incoming
++      SCHC Datagram, using the Context of the Session shared with the
++      previous hop.
+
+-   *  Each proxy performs the Outer SCHC Decompression on the incoming
+-      compressed message, by using the SCHC Rules that it shares with
+-      the (previous hop towards the) sender application endpoint.
++      Then, the proxy performs the Outer SCHC Compression of the OSCORE-
++      protected message to be forwarded, using the Context of the
++      Session shared with the next hop.  The resulting SCHC Datagram is
++      sent to the next hop.
+
+-      Then, the proxy performs the Outer SCHC Compression of the OSCORE-
+-      protected message to be forwarded, by using the SCHC Rules that it
+-      shares with the (next hop towards the) recipient application
+-      endpoint.
++   *  The recipient application endpoint performs the Outer SCHC
++      Decompression on the incoming SCHC Datagram, using the Context of
++      the Session shared with the previous hop.
+
+-      The resulting, compressed message is sent to the (next hop towards
+-      the) recipient application endpoint.
+-
+-   *  The recipient application endpoint performs the Outer SCHC
+-      Decompression on the incoming compressed message, by using the
+-      Outer SCHC Rules that it shares with the previous hop towards the
+-      sender application endpoint.
+-
+-      Then, the recipient application endpoint performs the AEAD
+-      Decryption of the OSCORE-protected message obtained from the
+-      previous step.
+-
+-      Finally, the recipient application endpoint performs the Inner
+-      SCHC Decompression on the compressed input obtained from the
+-      previous step, by using the Inner SCHC Rules that it shares with
+-      the sender application endpoint.  The result is the original CoAP
+-      message produced by the sender application endpoint.
++      Then, the recipient performs the AEAD Decryption of the OSCORE-
++      protected message obtained from the previous step.
++
++      Finally, the recipient performs the Inner SCHC Decompression on
++      the compressed input, using the Context of the end-to-end Session
++      shared with the sender.  The result is the original CoAP message.

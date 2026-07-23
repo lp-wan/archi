@@ -1,0 +1,13 @@
+{
+  "draft": "draft-corneo-schc-ctx-mgmt-00",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 67016,
+  "started": "2026-07-10T14:22:49Z",
+  "ended": "2026-07-10T14:24:10Z",
+  "duration_seconds": 81,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

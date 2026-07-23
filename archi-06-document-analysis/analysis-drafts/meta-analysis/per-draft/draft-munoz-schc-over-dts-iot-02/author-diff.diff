@@ -1,0 +1,185 @@
+# Author-facing consolidated migration diff for draft-munoz-schc-over-dts-iot-02
+
+Source: copied from the most complete available terminology migration diff (Gemini). Consolidated analysis records any source disagreements.
+
+--- Section 2.3 (Lines 537-542)
+-   Unlike the other fragmentation processes defined in [RFC8724], the
+-   fragmentation and defragmentation processes of ARQ-FEC mode are
+-   divided into two sub-processes: the assembler sub-process and the
+-   transporter sub-process.  Figure 4 shows the architecture of the
+-   fragmentation and defragmentation processes at the sender and
+-   receiver.
++   Unlike the other fragmentation processes defined in [RFC8724], the
++   fragmentation and defragmentation processes of the F/R function in the
++   SCHC Instance are divided into two sub-processes: the assembler
++   sub-process and the transporter sub-process.  Figure 4 shows the
++   architecture of the fragmentation and defragmentation processes at the
++   sender and receiver.
+
+--- Section 2.3 (Lines 564-567)
+-   sub-process has collected sufficient symbols to enable decoding, the
+-   transporter sub-process terminates the fragmentation session and
+-   forwards the coded data structure to the decoding process.
++   sub-process has collected sufficient symbols to enable decoding, the
++   transporter sub-process terminates the fragmentation transaction and
++   forwards the coded data structure to the decoding process.
+
+--- Section 2.3.1.2.3 (Lines 816-821)
+-   *  If all blocks are marked as decodeable, the assembler sub-process
+-      must notify the signaling sub-process that the coded data
+-      structure contains enough symbols and the fragmentation session
+-      may end.
++   *  If all blocks are marked as decodeable, the assembler sub-process
++      must notify the signaling sub-process that the coded data
++      structure contains enough symbols and the fragmentation transaction
++      may end.
+
+--- Section 2.3.2 (Lines 951-953)
+-   Each Profile MUST specify which RuleID value(s) corresponds to SCHC
+-   F/R messages operating in this mode.
++   Each Profile MUST specify which RuleID value(s) in the Context
++   corresponds to SCHC F/R messages operating in this mode.
+
+--- Section 2.3.2 (Lines 971-978)
+-   For each active pair of RuleID and DTag values, the sender MUST
+-   maintain: * one Attempts counter, * one Retransmission Timer, * one S
+-   Attempts counter, and * one S Timer
+-
+-   For each active pair of RuleID and DTag values, the receiver MUST
+-   maintain: * one Inactivity Timer, and * one Attempts counter.
++   For each active pair of RuleID and DTag values, the sender MUST
++   maintain within its Set of Variables (SoV): * one Attempts counter,
++   * one Retransmission Timer, * one S Attempts counter, and * one S Timer
++
++   For each active pair of RuleID and DTag values, the receiver MUST
++   maintain within its Set of Variables (SoV): * one Inactivity Timer,
++   and * one Attempts counter.
+
+--- Section 2.3.2.1 (Lines 981-986)
+-   At the beginning of the fragmentation of a encoded SCHC packet, the
+-   sender MUST select the values for RuleID and DTag for this encoded
+-   SCHC packet.  In addition, the sender MUST initialise the Attempts
+-   counter and the S Attempts counter to 0 for these RuleID and DTag
+-   values.
++   At the beginning of the fragmentation of an encoded SCHC packet, the
++   sender MUST select the values for RuleID and DTag for this encoded
++   SCHC packet.  In addition, the sender MUST initialise the Attempts
++   counter and the S Attempts counter to 0 in the Set of Variables (SoV)
++   for these RuleID and DTag values.
+
+--- Section 2.3.2.1 (Lines 1020-1033)
+-   *  If the sender receives a SCHC ACK containing the field W=11 and
+-      C=1, then the All-1 SCHC was successfully received, the receiver
+-      has enough symbols, and the sender can terminate the fragmentation
+-      session.
+-
+-   *  If the sender receives a SCHC ACK containing the C=0 field, then
+-      the All-1 was successfully received, the receiver does not have
+-      enough symbols, and the bitmap contains the tiles that must be
+-      retransmitted.  At this point, the sender must retransmit all lost
+-      tiles and wait for a SCHC ACK confirming the end of the session.
++   *  If the sender receives a SCHC ACK containing the field W=11 and
++      C=1, then the All-1 SCHC was successfully received, the receiver
++      has enough symbols, and the sender can terminate the fragmentation
++      transaction.
++
++   *  If the sender receives a SCHC ACK containing the C=0 field, then
++      the All-1 was successfully received, the receiver does not have
++      enough symbols, and the bitmap contains the tiles that must be
++      retransmitted.  At this point, the sender must retransmit all lost
++      tiles and wait for a SCHC ACK confirming the end of the
++      fragmentation transaction.
+
+--- Section 2.3.2.1 (Lines 1097-1100)
+-   *  If the W field is set to 11 and the C bit is set to 1, the sender
+-      MUST terminate the fragmentation session.
++   *  If the W field is set to 11 and the C bit is set to 1, the sender
++      MUST terminate the fragmentation transaction.
+
+--- Section 2.3.2.2 (Lines 1133-1144)
+-   When the reassembler receives a SCHC fragment with a RuleID that is
+-   not currently being processed, then:
+-
+-   *  The receiver MUST start a process to assemble a new encoded SCHC
+-      Packet with that RuleID,
+-
+-   *  the receiver MUST start an Inactivity Timer and an Attempts
+-      counter to 0 for that RuleID, and
++   When the reassembler receives a SCHC fragment with a RuleID that is
++   not currently being processed, then:
++
++   *  The receiver MUST start a process to assemble a new encoded SCHC
++      Packet with that RuleID,
++
++   *  the receiver MUST start an Inactivity Timer and an Attempts
++      counter to 0 in the Set of Variables (SoV) for that RuleID and DTag,
++      and
+
+--- Section 2.3.2.2 (Lines 1170-1175)
+-   sufficient symbols have been collected to enable decoding, the
+-   transporter sub-process MUST send a SCHC Compound ACK with the W
+-   field set to 3 and the C field set to 1, and terminate the
+-   fragmentation session.  Otherwise, the transporter sub-process MUST
++   sufficient symbols have been collected to enable decoding, the
++   transporter sub-process MUST send a SCHC Compound ACK with the W
++   field set to 3 and the C field set to 1, and terminate the
++   fragmentation transaction.  Otherwise, the transporter sub-process MUST
+
+--- Section 2.3.2.2 (Lines 1197-1208)
+-   Fragmentation session concludes when:
+-
+-   *  a Sender-Abort has been received, or
+-
+-   *  the Inactivity Timer has expired, or
+-
+-   *  the Attempts counter has exceeded MAX_ACK_REQUESTS, or
+-
+-   *  an All-1 SCHC message is sent with the W field set to 3 and the C
+-      field set to 1.
++   Fragmentation transaction concludes when:
++
++   *  a Sender-Abort has been received, or
++
++   *  the Inactivity Timer has expired, or
++
++   *  the Attempts counter has exceeded MAX_ACK_REQUESTS, or
++
++   *  an All-1 SCHC message is sent with the W field set to 3 and the C
++      field set to 1.
+
+--- Section 2.3.2.2.1 (Lines 1209-1215)
+-2.3.2.2.1.  Matrix-Specific Behavior
+-
+-   When the first SCHC fragment of a fragmentation session is received,
+-   the first tile carries the S parameter.  This parameter is extracted
+-   by the transporter sub-process and provided to the assembler sub-
+-   process.
++2.3.2.2.1.  Matrix-Specific Behavior
++
++   When the first SCHC fragment of a fragmentation transaction is
++   received, the first tile carries the S parameter.  This parameter is
++   extracted by the transporter sub-process and provided to the assembler
++   sub-process.
+
+--- Section 6 (Appendix A) (Lines 1313-1314)
+-    |  |             |               Send All-1
+-    |  |   Wait x    |               Attempts = 0;
+-    |  | session ACK |               set rtx_timer
++    |  |             |               Send All-1
++    |  |   Wait x    |               Attempts = 0;
++    |  | transaction |               set rtx_timer
++    |  |     ACK     |
+
+--- Section 8.3.1.1 (Appendix C) (Lines 1746-1750)
+-   1.  Process the received fragments according to the SCHC header
+-       (identify Rule ID, begin the fragmentation session).
++   1.  Process the received fragments according to the SCHC header
++       (identify Rule ID, begin the fragmentation transaction).
+
+--- Section 8.3.1.2 (Appendix C) (Lines 1766-1768)
+-   1.  Place any received tiles into an empty C-Stream while the
+-       fragmentation session is active.  Tiles are placed in their
+-       corresponding order according to the interleaving parameter.
++   1.  Place any received tiles into an empty C-Stream while the
++       fragmentation transaction is active.  Tiles are placed in their
++       corresponding order according to the interleaving parameter.

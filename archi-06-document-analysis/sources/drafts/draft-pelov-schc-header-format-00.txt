@@ -1,0 +1,616 @@
+
+
+
+
+Network Working Group                                           A. Pelov
+Internet-Draft                                            IMT Atlantique
+Intended status: Standards Track                            23 June 2026
+Expires: 25 December 2026
+
+
+                           SCHC Header Format
+                   draft-pelov-schc-header-format-00
+
+Abstract
+
+   The SCHC architecture separates a SCHC Control Header from a SCHC
+   Data Header but leaves the format of the Control Header, the RuleID
+   encoding, and the Discriminator deployment-specific.  A node that
+   handles a SCHC datagram without being a Compression/Decompression
+   endpoint - a segment boundary, firewall, classifier, or capture tool
+   - therefore cannot delineate the datagram.  This document defines the
+   SCHC Header Format: a small, named description of a SCHC datagram's
+   framing - the RuleID encoding and the Control Header type - that can
+   be conveyed in band (self-describing) or fixed out of band (by an RFC
+   binding it to a demux point, by configuration, or by a signalling
+   protocol such as ICMPv6-SEC).  It defines the self-describing Shape
+   Tag wire format and establishes the SCHC RuleID Encodings and SCHC
+   Control-Header Types registries.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 25 December 2026.
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+
+
+
+
+Pelov                   Expires 25 December 2026                [Page 1]
+
+Internet-Draft                SCHC-HDR-FMT                     June 2026
+
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   2
+   2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   3
+   3.  SCHC Header Format  . . . . . . . . . . . . . . . . . . . . .   3
+   4.  RuleID Encodings  . . . . . . . . . . . . . . . . . . . . . .   4
+   5.  Control-Header Types  . . . . . . . . . . . . . . . . . . . .   5
+     5.1.  Control Header Composition  . . . . . . . . . . . . . . .   6
+   6.  Conveying and Binding a Header Format . . . . . . . . . . . .   6
+     6.1.  Binding to a Demux Point  . . . . . . . . . . . . . . . .   6
+   7.  Shape Tag (Self-Describing Wire Format) . . . . . . . . . . .   7
+   8.  Applicability . . . . . . . . . . . . . . . . . . . . . . . .   8
+   9.  Scope and Deferred Work . . . . . . . . . . . . . . . . . . .   8
+   10. Security Considerations . . . . . . . . . . . . . . . . . . .   9
+   11. IANA Considerations . . . . . . . . . . . . . . . . . . . . .   9
+     11.1.  SCHC RuleID Encodings  . . . . . . . . . . . . . . . . .   9
+     11.2.  SCHC Control-Header Types  . . . . . . . . . . . . . . .   9
+   12. References  . . . . . . . . . . . . . . . . . . . . . . . . .   9
+     12.1.  Normative References . . . . . . . . . . . . . . . . . .   9
+     12.2.  Informative References . . . . . . . . . . . . . . . . .  10
+   Appendix A.  Proposed Architecture Hook . . . . . . . . . . . . .  10
+   Acknowledgements  . . . . . . . . . . . . . . . . . . . . . . . .  11
+   Author's Address  . . . . . . . . . . . . . . . . . . . . . . . .  11
+
+1.  Introduction
+
+   The SCHC architecture [SCHC-ARCH] separates a SCHC Control Header
+   (multiplexing, integrity, OAM, routing) from a SCHC Data Header (a
+   RuleID followed by rule content: a compression residue or a
+   fragment).  It leaves the Control Header format and the Discriminator
+   encoding deployment-specific, and SCHC [RFC8724] does not fix the
+   RuleID size.
+
+   This is invisible to a Compression/Decompression (C/D) endpoint,
+   which holds the Context.  It is a problem for any other node that
+   must read a datagram it does not decompress: a segment boundary that
+   admits traffic [I-D.pelov-icmpv6-sec], a firewall, a classifier, an
+   accounting function, or a capture tool.  Such a node needs a
+   description of the framing in order to delineate the datagram.
+
+
+
+Pelov                   Expires 25 December 2026                [Page 2]
+
+Internet-Draft                SCHC-HDR-FMT                     June 2026
+
+
+   The same description is also a specification tool.  A document that
+   standardizes SCHC over a lower layer - SCHC over Ethernet, over UDP/
+   IP, or over another demux point - uses the Header Format and its
+   registries to fix that layer's framing precisely and in a common
+   vocabulary, instead of restating RuleID and Control Header
+   conventions ad hoc (Section 6.1).
+
+   This document defines the SCHC Header Format, the self-describing
+   Shape Tag wire format, and the two small registries they draw on.
+   Wire encodings for future self-delimiting RuleID schemes, a data
+   model, and protocol bindings are companion work (Section 9).
+
+2.  Terminology
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+   This document reuses SCHC Control Header, SCHC Data Header, RuleID,
+   Dispatcher, Discriminator, Instance, Context, and Session from
+   [SCHC-ARCH], and Compression/Decompression (C/D) from [RFC8724].
+
+   SCHC Header Format:  The reusable, structural description of a SCHC
+      datagram's framing - the RuleID encoding and the Control Header
+      type.  It is registrable and not tied to any one deployment, and
+      describes structure only: not the rule content, and not fields a
+      Control Header already defines (such as integrity).
+
+   SCHC Shape:  A SCHC Header Format instantiated for a specific
+      Context: the Header Format together with a Context reference.  At
+      a minimum a Shape lets a holder delineate the datagram's RuleID
+      and any Control Header present; it may also resolve to the full
+      Context (the rule definitions), but need not.  How a Shape
+      resolves to a full Context is left to future revisions of this
+      document.  "Header Format" is the structural, normative term;
+      "Shape" is its instantiation.
+
+3.  SCHC Header Format
+
+   A SCHC Header Format has two elements:
+
+
+
+
+
+
+
+
+
+Pelov                   Expires 25 December 2026                [Page 3]
+
+Internet-Draft                SCHC-HDR-FMT                     June 2026
+
+
+     +==========+===================================================+
+     | Element  | Meaning                                           |
+     +==========+===================================================+
+     | RuleID   | How the RuleID at the head of the Data Header is  |
+     | encoding | delimited, from the SCHC RuleID Encodings         |
+     |          | registry (Section 4).                             |
+     +----------+---------------------------------------------------+
+     | Control  | Which Control Header accompanies the Data Header, |
+     | Header   | from the SCHC Control-Header Types registry       |
+     | type     | (Section 5); "none" means no Control Header.      |
+     +----------+---------------------------------------------------+
+
+                                 Table 1
+
+   A node that holds a Header Format can delineate the datagram - locate
+   and delimit the RuleID and any Control Header present (the Control-
+   Header type may be "none") - without decompressing the residue or
+   being a C/D endpoint.  This delineation is the minimum a Shape
+   guarantees.  A Shape MAY additionally resolve to the full Context -
+   the rule definitions that let the RuleID and residue be interpreted -
+   but is not required to, and the in-band means of carrying or
+   referencing a full Context is left to future revisions of this
+   document.  Apart from any such resolution, the rule content stays
+   private to the C/D endpoints.
+
+   A Header Format has no integrity, multiplexing, or other control-
+   plane element of its own; those are defined by the Control Header
+   (for example, VOICI [VOICI] carries its own integrity field).  The
+   RuleID encoding and Control Header type are structural and
+   registrable.  A Context reference is part of a Shape, not part of the
+   Header Format; when a protocol carries a Shape, the Context reference
+   syntax is defined by that protocol or deployment profile.
+
+4.  RuleID Encodings
+
+        +======+=================+===============+===============+
+        | Code | Name            | Parameters    | Reference     |
+        +======+=================+===============+===============+
+        | 0    | fixed           | length (bits) | This document |
+        +------+-----------------+---------------+---------------+
+        | 1    | context-defined | none          | This document |
+        +------+-----------------+---------------+---------------+
+
+                  Table 2: Initial SCHC RuleID Encodings
+
+   Length and delimitation are independent.  Three kinds arise:
+
+
+
+
+
+Pelov                   Expires 25 December 2026                [Page 4]
+
+Internet-Draft                SCHC-HDR-FMT                     June 2026
+
+
+   *  fixed (code 0): a fixed number of bits, given by a length
+      parameter; the encoding implied by existing SCHC profiles
+      [RFC8724].
+
+   *  context-defined (code 1): variable length with no in-band rule,
+      delimited only by a node holding the Context, which may define the
+      RuleID space arbitrarily.
+
+   *  self-delimiting variable: variable length, delimited in band (for
+      example a prefix or length code), so a node parses it from the
+      encoding alone.
+
+   Fixed and context-defined need nothing beyond their name to be
+   specified and are defined here: fixed takes a length parameter;
+   context-defined carries no in-band structure at all, so there is no
+   wire encoding to define.  Self-delimiting encodings each require a
+   concrete in-band scheme and are registered individually (codes 2 and
+   above, Section 9).
+
+   Naming the context-defined encoding does not make the RuleID
+   locatable by an intermediary; it states the opposite - that the
+   datagram cannot be delineated without the Context, so a node lacking
+   it MUST treat the Data Header as opaque.  Fixed and self-delimiting
+   encodings provide locatability, on which RuleID-based admission
+   [I-D.pelov-icmpv6-sec] depends.
+
+5.  Control-Header Types
+
+              +======+=======+==============+===============+
+              | Type | Name  | Kind         | Reference     |
+              +======+=======+==============+===============+
+              | 0    | none  | terminal     | This document |
+              +------+-------+--------------+---------------+
+              | 1    | VOICI | multiplexing | [VOICI]       |
+              +------+-------+--------------+---------------+
+
+                 Table 3: Initial SCHC Control-Header Types
+
+   Type 0 (none) is a bare Data Header.  Type 1 (VOICI) is the VOICI
+   Control Header [VOICI], which multiplexes content on a link.  Further
+   types are added only when a concrete Control Header exists; for
+   example, a future terminal Control Header could carry an admission
+   credential for a using protocol such as ICMPv6-SEC
+   [I-D.pelov-icmpv6-sec], whose wire format and credential lifecycle
+   that protocol would define.
+
+
+
+
+
+
+Pelov                   Expires 25 December 2026                [Page 5]
+
+Internet-Draft                SCHC-HDR-FMT                     June 2026
+
+
+5.1.  Control Header Composition
+
+   Each Control Header type is either multiplexing or terminal.  A
+   multiplexing Control Header (such as VOICI) carries content that MAY
+   itself begin with one terminal Control Header, named by a Shape Tag
+   (Section 7); VOICI does this by selecting shaped SCHC through its
+   Content Identifier.  A terminal Control Header (such as none) is
+   followed directly by the Data Header.
+
+   To keep parsing bounded and forbid self-referential framing:
+
+   *  A multiplexing Control Header MUST NOT contain another
+      multiplexing Control Header; in particular, a VOICI Control Header
+      MUST NOT be stacked within another VOICI.
+
+   *  A terminal Control Header MUST NOT be followed by a further
+      Control Header.
+
+   The maximum Control Header depth is therefore two: one multiplexing
+   header carrying one terminal header.  A future terminal Control
+   Header, when present, is the inner content of a multiplexing Control
+   Header (VOICI) or stands alone when none is, so a 1-octet minimal
+   VOICI is preserved for plain SCHC.
+
+6.  Conveying and Binding a Header Format
+
+   A node comes to hold a Header Format in one of two ways.
+
+   Self-describing (in band):  A Shape Tag (Section 7) at the front of
+      the datagram yields the Header Format directly.  Suited to open or
+      heterogeneous paths.
+
+   Explicit (out of band):  The Header Format is fixed separately - by
+      an RFC that binds it to a demux point, by configuration, or by a
+      signalling protocol such as ICMPv6-SEC [I-D.pelov-icmpv6-sec].  A
+      signalled Shape SHOULD carry its structural Header Format by a
+      spec-resolvable identifier and the Context reference by value, so
+      a receiver need not perform a round trip to act on it.
+
+6.1.  Binding to a Demux Point
+
+   A demux point - an EtherType, IP protocol number, or UDP port
+   [I-D.ietf-schc-protocol-numbers] - identifies a datagram as SCHC but
+   not its Header Format.  The specification that defines use of a demux
+   point fixes the Control Header that immediately follows it (control-
+   first encapsulation order), and either fixes the RuleID encoding as
+   well or delegates it to the Session and Context and leaves the Data
+   Header opaque to intermediaries.  Several Header Formats on one demux
+
+
+
+Pelov                   Expires 25 December 2026                [Page 6]
+
+Internet-Draft                SCHC-HDR-FMT                     June 2026
+
+
+   point require a discriminator; a Control Header such as VOICI can
+   serve as that discriminator, and MAY also signal through it whether a
+   Shape Tag follows (for example a VOICI Content Identifier value for
+   SCHC-with-Tag distinct from one for SCHC).  Additional demux
+   codepoints SHOULD NOT be spent to express Header Format variants.
+
+   For example, an "SCHC over Ethernet" specification could fix
+   EtherType=SCHC to mean that a VOICI Control Header follows, fixing
+   the RuleID encoding in the same document when on-link nodes must read
+   the RuleID, or resolving it per Session through VOICI otherwise.
+
+7.  Shape Tag (Self-Describing Wire Format)
+
+   In self-describing conveyance, a Shape Tag at the front of the
+   datagram carries the structural part of the Header Format inline, so
+   a node delineates the datagram with no out-of-band knowledge.  The
+   demux point (Section 6.1) indicates whether a Shape Tag is present;
+   in explicit conveyance no Shape Tag is carried and the Header Format
+   is known out of band.  The Shape Tag does not carry the Context
+   reference, which is resolved separately (for example through the
+   Control Header or the RuleID).
+
+   Shape Tag:
+     CHT : 1 octet, Control-Header Type
+     RIE : 1 octet, RuleID Encoding
+     Params, per RIE:
+       fixed           -> 1 octet: RuleID length in bits
+       context-defined -> none
+       self-delimiting -> as that encoding's scheme defines
+
+                            Figure 1: Shape Tag
+
+   A node parses the Shape Tag by reading the Control-Header-Type (CHT)
+   octet, the RuleID-Encoding (RIE) octet, and any Params, then parses
+   the Control Header (per its type) and the Data Header.  A node that
+   does not recognize the Control-Header-Type or the RuleID-Encoding
+   MUST treat the remainder of the datagram as opaque.
+
+   Figure 1 is the full form, used when the Control-Header type is not
+   otherwise known - for example a bare SCHC datagram on an open path
+   (two to three octets in the common case).  When the Control-Header
+   type is already known from context - in particular when a Control
+   Header signals through its own discriminator that a Tag follows, such
+   as a VOICI Content Identifier distinguishing SCHC-with-Tag from SCHC
+   (Section 6.1) - the Control-Header-Type octet is omitted and the Tag
+   reduces to the RuleID-Encoding octet and its Params (one to two
+   octets).
+
+
+
+
+Pelov                   Expires 25 December 2026                [Page 7]
+
+Internet-Draft                SCHC-HDR-FMT                     June 2026
+
+
+   A datagram uses a Shape Tag when it needs to self-identify its Header
+   Format, such as on open or heterogeneous paths.  Constrained
+   deployments fix the Header Format out of band (Section 6.1) and carry
+   no Tag.  A more compact packing MAY be defined later; this document
+   specifies the octet-aligned form above.
+
+8.  Applicability
+
+   A Header Format serves any node that must read a SCHC datagram
+   without decompressing it: admission at a segment boundary
+   [I-D.pelov-icmpv6-sec], firewalling or ACLs on RuleID or Context,
+   traffic classification, load-balancing to the right Instance,
+   accounting, and capture/diagnostics.  Exposing a Header Format also
+   exposes which Contexts a node carries; see Section 10.
+
+   It also serves at specification time.  A document standardizing SCHC
+   over a lower layer - for example SCHC over Ethernet - fixes that
+   layer's framing by reference to the named RuleID encodings and
+   Control-Header types and the registries defined here (Section 6.1),
+   so different lower-layer bindings describe their framing in one
+   vocabulary rather than each inventing its own.
+
+9.  Scope and Deferred Work
+
+   Out of scope, left to companion work:
+
+   *  The wire definition of self-delimiting RuleID encodings (RuleID
+      Encodings code 2 and above); fixed and context-defined are defined
+      here.
+
+   *  The wire format of any future terminal Control Header (such as one
+      carrying an admission credential) and that credential's lifecycle.
+
+   *  In-band resolution of a Shape to a full Context (the rule
+      definitions); this document requires only that a Header Format
+      delineate the RuleID and any Control Header present.
+
+   *  A YANG data model for the Header Format (anticipated beside
+      [RFC9363]).
+
+   *  Any change to SCHC compression, fragmentation, or rule semantics
+      [RFC8724].
+
+
+
+
+
+
+
+
+
+Pelov                   Expires 25 December 2026                [Page 8]
+
+Internet-Draft                SCHC-HDR-FMT                     June 2026
+
+
+10.  Security Considerations
+
+   A Header Format describes which Contexts a node is prepared to parse,
+   which can reveal operational metadata and assist probing, as
+   discussed for segment metadata in [I-D.pelov-icmpv6-sec].
+   Deployments SHOULD disclose only the Header Format a receiver needs.
+
+   An integrity field provided by a Control Header, such as a CRC, gives
+   corruption detection, not authentication: an attacker can compute a
+   valid checksum for a forged datagram [VOICI].  Neither a Header
+   Format nor a checksum is an admission credential; any credential and
+   its lifecycle are defined by the using protocol
+   [I-D.pelov-icmpv6-sec], not here.
+
+11.  IANA Considerations
+
+11.1.  SCHC RuleID Encodings
+
+   IANA is requested to create the "SCHC RuleID Encodings" registry with
+   the entries in Table 2 (0 = fixed and 1 = context-defined, This
+   document).  Codes 2-255 are assigned by Specification Required
+   [RFC8126]; a registration MUST define how a RuleID under the encoding
+   is delimited and which parameters it takes.
+
+11.2.  SCHC Control-Header Types
+
+   IANA is requested to create the "SCHC Control-Header Types" registry
+   with the entries in Table 3 (0 = none, This document; 1 = VOICI,
+   [VOICI]).  Each entry records whether the type is multiplexing or
+   terminal (Section 5.1).  Values 2-255 are assigned by Specification
+   Required [RFC8126]; a registration MUST reference a concrete Control
+   Header specification and state whether it is multiplexing or
+   terminal.
+
+12.  References
+
+12.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+
+
+
+
+Pelov                   Expires 25 December 2026                [Page 9]
+
+Internet-Draft                SCHC-HDR-FMT                     June 2026
+
+
+   [RFC8724]  Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and JC.
+              Zuniga, "SCHC: Generic Framework for Static Context Header
+              Compression and Fragmentation", RFC 8724,
+              DOI 10.17487/RFC8724, April 2020,
+              <https://www.rfc-editor.org/info/rfc8724>.
+
+12.2.  Informative References
+
+   [I-D.ietf-schc-protocol-numbers]
+              Moskowitz, R., Thubert, P., Gomez, C., Minaburo, A., and
+              M. Blanchet, "Protocol Numbers for SCHC", Work in
+              Progress, Internet-Draft, draft-ietf-schc-protocol-
+              numbers-06, 23 December 2025,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
+              protocol-numbers-06>.
+
+   [I-D.pelov-icmpv6-sec]
+              Pelov, A., "Secure ICMPv6 Messages for Network Segment
+              Characterization", Work in Progress, Internet-Draft,
+              draft-pelov-icmpv6-sec-00, 24 July 2025,
+              <https://datatracker.ietf.org/doc/html/draft-pelov-icmpv6-
+              sec-00>.
+
+   [RFC8126]  Cotton, M., Leiba, B., and T. Narten, "Guidelines for
+              Writing an IANA Considerations Section in RFCs", BCP 26,
+              RFC 8126, DOI 10.17487/RFC8126, June 2017,
+              <https://www.rfc-editor.org/info/rfc8126>.
+
+   [RFC9363]  Minaburo, A. and L. Toutain, "A YANG Data Model for Static
+              Context Header Compression (SCHC)", RFC 9363,
+              DOI 10.17487/RFC9363, March 2023,
+              <https://www.rfc-editor.org/info/rfc9363>.
+
+   [SCHC-ARCH]
+              lp-wan SCHC Architecture Design Team, "SCHC Architecture",
+              2026, <https://github.com/lp-wan/archi/blob/designteam/
+              revised-schc-architecture.md>.
+
+   [VOICI]    Lampin, Q., "VOICI: A Link Multiplexer for SCHC and Mixed
+              Payloads", Work in Progress, Internet-Draft, draft-lampin-
+              voici-00, 2026, <https://github.com/quentinlampin/draft-
+              lampin-schc-voici>.
+
+Appendix A.  Proposed Architecture Hook
+
+   Offered for insertion into the SCHC architecture [SCHC-ARCH], so that
+   the architecture references this document rather than absorbing its
+   mechanism:
+
+
+
+Pelov                   Expires 25 December 2026               [Page 10]
+
+Internet-Draft                SCHC-HDR-FMT                     June 2026
+
+
+      The format of the SCHC Control Header, the RuleID encoding, and
+      the encoding of the Discriminator are deployment-specific.  A node
+      that processes a SCHC datagram without being a C/D endpoint for it
+      - a segment boundary, firewall, classifier, or capture tool -
+      requires a description of the datagram's framing (the RuleID
+      encoding and the Control Header type) in order to delineate it.
+      Such a description is a SCHC Header Format, specified in draft-
+      pelov-schc-header-format.  It may be self-describing in band or
+      fixed out of band, including by an RFC that binds it to a demux
+      point such as an EtherType.
+
+Acknowledgements
+
+   This document grew out of discussion of admission for ICMPv6-SEC, of
+   the VOICI link multiplexer, and of the revised SCHC architecture.
+
+Author's Address
+
+   Alexander Pelov
+   IMT Atlantique
+   2bis rue de la Chataigneraie
+   35536 Cesson-Sevigne
+   France
+   Email: alexander.pelov@imt-atlantique.fr
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Pelov                   Expires 25 December 2026               [Page 11]

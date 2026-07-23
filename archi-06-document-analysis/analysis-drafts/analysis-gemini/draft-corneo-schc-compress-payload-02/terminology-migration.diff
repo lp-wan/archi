@@ -1,0 +1,205 @@
+diff -u a/draft-corneo-schc-compress-payload-02.txt b/draft-corneo-schc-compress-payload-02.txt
+--- a/draft-corneo-schc-compress-payload-02.txt
++++ b/draft-corneo-schc-compress-payload-02.txt
+@@ -17,7 +17,7 @@
+    This document describes techniques to adapt the SCHC framework
+    (RFC8724), used for header compression, to also compress and
+-   decompress payload of specific protocols.  To this end, this document
++   decompress structured data payloads of specific protocols.  To this end, this document
+    defines a new matching operator, equal-template, to check equality of
+    field values with respect to a user-defined template, and a payload
+    keyword to be used as Field IDentifier (FID) to signal the presence
+@@ -122,7 +122,8 @@
+    The main purpose of this document is to extend the SCHC framework
+    [RFC8724] to compress and decompress structured data payloads, e.g.,
+-   JSON [RFC8259], reusing the same compression and decompression
+-   machinery originally designed for protocol headers.
++   JSON [RFC8259], reusing the same compression and decompression
++   machinery (C/D engine) originally designed for protocol headers.
++   This payload compression is executed within a SCHC Session by SCHC
++   Instances sharing a Context that defines the rules, Parser, and Data Model.
+ 
+    This document defines the equal-template Matching Operator (MO),
+-   which enables a SCHC compressor to match a field value against a
+-   user-defined template and extract only the variable parts as
+-   compression residue.  Templates may include positional variables and
+-   functions to address common patterns in structured data.
++   which enables a compressing SCHC Instance to match a field value
++   against a user-defined template and extract only the variable parts
++   as compression residue.  Templates may include positional variables
++   and functions to address common patterns in structured data.
+ 
+    Additionally, this document defines the payload keyword for use in
+@@ -150,7 +151,7 @@
+ 
+    *  Template-based compression: Payload compression utilizing a pre-
+-      shared model that only requires the values that are changing in
+-      the payload.
++      shared model (defined in the Context) that only requires the values
++      that are changing in the payload.
+ 
+    *  Template variable: A template variable can be used as a
+@@ -183,7 +184,8 @@
+ 
+    The equal-template MO MUST perform the following steps:
++   <<BLOCKED: depends on unaccepted Architecture change — see verdicts.md>>
+ 
+-   1.  Parse the template specified in the TV to identify the fixed
+-       portions and the positions of template variables (see
+-       Section 3.1) and functions (see Section 3.2).
++   1.  The C/D engine of the compressing SCHC Instance parses the template
++       specified in the TV to identify the fixed portions and the positions
++       of template variables (see Section 3.1) and functions (see Section 3.2).
+ 
+    2.  Compare the fixed portions of the template against the
+@@ -200,6 +202,6 @@
+    4.  If all fixed portions match, the MO evaluates to true and the
+        extracted values are passed to the Compression/Decompression
+-       Action (CDA).  If any fixed portion does not match, the MO
+-       evaluates to false and the rule MUST NOT be applied.
++       Action (CDA).  If any fixed portion does not match, the MO
++       evaluates to false and the rule MUST NOT be applied.
+ 
+ 2.2.  Residue Encoding
+@@ -207,6 +209,7 @@
+    When the equal-template MO evaluates to true, the extracted values
+-   MUST be encoded in the compression residue in the order determined by
+-   their positional identifiers (i.e., $1 before $2, and so on).
++   MUST be encoded by the C/D engine in the compression residue in the
++   order determined by their positional identifiers (i.e., $1 before $2,
++   and so on).
+ 
+    Each positional template variable MUST specify the length of the
+@@ -216,9 +219,9 @@
+    be right-padded with zeros to fill the declared length.
+ 
+-   Upon decompression, the decompressor MUST strip trailing zero bytes
+-   from each extracted value before reconstructing the payload.  This is
+-   safe because the equal-template MO operates on textual
+-   representations where the null byte (0x00) is not a valid character.
++   Upon decompression, the decompressing SCHC Instance MUST strip trailing
++   zero bytes from each extracted value before reconstructing the payload.
++   This is safe because the equal-template MO operates on textual
++   representations where the null byte (0x00) is not a valid character.
+ 
+-   The decompressor uses this fixed length to unambiguously parse the
+-   residue.  This approach keeps the length information co-located with
+-   the template variable it describes and does not require changes to
+-   the SCHC rule structure defined in [RFC8724].
++   The decompressing SCHC Instance uses this fixed length to unambiguously
++   parse the residue.  This approach keeps the length information
++   co-located with the template variable it describes and does not
++   require changes to the SCHC rule structure defined in [RFC8724].
+ 
+@@ -250,5 +253,6 @@
+    If the equal-template MO evaluates to false for a given rule, the
+-   SCHC compressor MUST proceed to evaluate the next rule in the rule
+-   set, as specified in Section 7.2 of [RFC8724].  If no rule matches,
+-   the packet MUST be sent uncompressed.
++   compressing SCHC Instance MUST proceed to evaluate the next rule in the
++   Set of Rules (SoR), as specified in Section 7.2 of [RFC8724], and guided
++   by the matching policy in the Instance Configuration.  If no rule
++   matches, the packet MUST be sent uncompressed.
+ 
+ 3.2.1.  Repetition Count
+@@ -324,8 +328,9 @@
+    The number of repetitions is not known a-priori from the template and
+-   varies per payload.  The compressor MUST infer the number of
+-   repetitions by matching the template against the field value, and
+-   MUST encode this count as the first byte of the residue for the
+-   $repeat() block, as an unsigned 8-bit integer.  The decompressor MUST
+-   read this count first, then extract the positional variable values
+-   for each repetition in sequence.
++   varies per payload.  The compressing SCHC Instance MUST infer the
++   number of repetitions by matching the template against the field value,
++   and MUST encode this count as the first byte of the residue for the
++   $repeat() block, as an unsigned 8-bit integer.  The decompressing SCHC
++   Instance MUST read this count first, then extract the positional variable
++   values for each repetition in sequence.
+ 
+    For the example above with two repetitions, the residue is structured
+@@ -351,6 +356,6 @@
+    A repetition count of zero is valid.  In this case, the residue for
+    the $repeat() block contains only the count byte (0x00), and the
+-   decompressor MUST reconstruct an empty sequence, retaining only the
+-   surrounding fixed portions of the template.  However, a repetition
+-   count of zero is discouraged as it likely indicates a misconfigured
+-   rule or an unexpected payload structure.
++   decompressing SCHC Instance MUST reconstruct an empty sequence,
++   retaining only the surrounding fixed portions of the template.  However,
++   a repetition count of zero is discouraged as it likely indicates a
++   misconfigured rule or an unexpected payload structure.
+ 
+@@ -398,3 +404,5 @@
+    This section defines the keyword payload that MUST be used whenever
+-   payload compression is needed.  In such cases, the keyword payload
+-   MUST be specified in the Field IDentifier (FID).
++   payload compression is needed.  In such cases, the keyword payload
++   MUST be specified in the Field IDentifier (FID) of the rules.
++   The Parser and Data Model in the Context are responsible for identifying
++   and delineating payload fields matching the payload FID.
+ 
+    When payload compression is performed by individually specifying one
+@@ -451,12 +459,14 @@
+ 
+-   When a SCHC node computes the rule above, the payload keyword in the
+-   FID signals the node that application data needs to be compressed.
+-   Specifically, the equal-template MO triggers the SCHC node to check
+-   for equality between the current field value and the template
+-   provided in the TV.  Upon matching, the residue is sent (or
+-   retrieved) over the network.  For the payload above, the residue
+-   contains the repetition count (0x02, 1 byte) followed by the values
+-   -11 and -13, each padded to 4 bytes.
++   When a SCHC Instance computes the rule above, the payload keyword in
++   the FID signals the Instance that application data needs to be compressed,
++   using the Parser defined in the Context.
++   Specifically, the equal-template MO triggers the C/D engine of the
++   SCHC Instance to check for equality between the current field value
++   and the template provided in the TV.  Upon matching, the residue is
++   sent (or retrieved) over the network within the Session.  For the payload
++   above, the residue contains the repetition count (0x02, 1 byte) followed
++   by the values -11 and -13, each padded to 4 bytes.
+ 
+    Please notice that the algorithm used to perform template matching is
+-   implementation-specific, provided that the result is equivalent to
+-   the matching procedure defined in Section 2.
++   implementation-specific, provided that the result is equivalent to the
++   matching procedure executed by the Instance's C/D engine.
+ 
+@@ -481,10 +491,11 @@
+ 
+-   The FIDs in the rule above carry semantics that can be used by the
+-   SCHC node to perform successful compression and decompression.
+-   Considering the first field of the above rule, application/json
+-   signals the decompressor which media type is being reconstructed.
++   The FIDs in the rule above carry path semantics mapped by the Parser
++   and Data Model in the Context, which are used by the SCHC Instance to
++   perform successful compression and decompression.
++   Considering the first field of the above rule, application/json
++   signals the decompressing SCHC Instance which media type is being
++   reconstructed.
+    The subsequent numerical identifier, 1, represents the object the
+    compressed field belongs to.  Finally, the last value encoded in the
+-   FID is the name of the JSON object, id.  Moreover, the target value
+-   (TV) corresponds to the value of the structured data field, and not
+-   to the name.
++   FID is the name of the JSON object, id.  Moreover, the target value
++   (TV) corresponds to the value of the structured data field, and not
++   to the name.
+ 
+    In the second field of the above rule, the TV is omitted as the send
+-   CDA implies that the decompressor reads the received residue.
+-   However, in this case, the decompressor knows that the residue must
+-   be assigned to the JSON field specified in the FID, value in this
+-   case.
++   CDA implies that the decompressing SCHC Instance reads the received
++   residue.  However, in this case, the decompressing Instance knows that
++   the residue must be assigned to the JSON field specified in the FID,
++   value in this case.
+ 
+    Please notice that the semantics of the FID described above are not
+-   normative.  Semantic-specific details of the FID are left to
+-   implementations as this document only mandates the payload keyword.
++   normative.  Semantic-specific details of the FID and parser integration
++   are left to Instance configurations as this document only mandates the
++   payload keyword.

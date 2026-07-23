@@ -1,0 +1,728 @@
+
+
+
+
+SCHC                                                   R. Moskowitz, Ed.
+Internet-Draft                                            HTT Consulting
+Intended status: Standards Track                              P. Thubert
+Expires: 26 June 2026                                                   
+                                                                C. Gomez
+                                                                     UPC
+                                                             A. Minaburo
+                                                              Consultant
+                                                            MB. Blanchet
+                                                                Viagenie
+                                                        23 December 2025
+
+
+                       Protocol Numbers for SCHC
+                  draft-ietf-schc-protocol-numbers-06
+
+Abstract
+
+   This document requests an Internet Protocol Number, an Ethertype
+   assignment, a CCSDS (Consultative Committee for Space Data Systems)
+   Encapsulation Number, and well known ports for SCHC.  The SCHC
+   architecture, the SCHC instance establishment, and the SCHC
+   compression/decompression processes are simplified when SCHC is
+   easily recognised.  Well-known protocol and port numbers are needed.
+   The Internet Protocol Number request is so that SCHC can be used for
+   IP independent of other transports such as UDP and ESP.  The
+   Ethertype and the CCSDS Encapsulation Number are to support generic
+   use of native SCHC over any IEEE 802 technology and CCSDS link layer
+   technology, respectively, for IP and non-IP protocols.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 26 June 2026.
+
+
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                  [Page 1]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+Copyright Notice
+
+   Copyright (c) 2025 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
+   2.  Terms and Definitions . . . . . . . . . . . . . . . . . . . .   4
+     2.1.  Requirements Terminology  . . . . . . . . . . . . . . . .   4
+   3.  SCHC Protocol Number Use Cases  . . . . . . . . . . . . . . .   4
+     3.1.  Basic use case for SCHC as an Internet Protocol Number  .   4
+     3.2.  Basic use case for SCHC as an Ethertype . . . . . . . . .   5
+     3.3.  Basic use case for SCHC as a UDP port . . . . . . . . . .   5
+     3.4.  Basic Use case for SCHC over connection-oriented
+           communication . . . . . . . . . . . . . . . . . . . . . .   6
+     3.5.  Basic use case for SCHC over Space Links  . . . . . . . .   6
+     3.6.  SCHC Port Numbers and protocol number as identifiers  . .   7
+   4.  Internet Protocol Number for SCHC . . . . . . . . . . . . . .   7
+   5.  Ethertype for SCHC  . . . . . . . . . . . . . . . . . . . . .   8
+   6.  Transport Port Numbers for SCHC . . . . . . . . . . . . . . .   8
+   7.  CCSDS Encapsulation Number for SCHC . . . . . . . . . . . . .   8
+   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .   8
+     8.1.  IANA Internet Protocol Number Registry Update . . . . . .   8
+     8.2.  IANA Ethertype Request  . . . . . . . . . . . . . . . . .   9
+   9.  Security Considerations . . . . . . . . . . . . . . . . . . .   9
+   10. References  . . . . . . . . . . . . . . . . . . . . . . . . .   9
+     10.1.  Normative References . . . . . . . . . . . . . . . . . .   9
+     10.2.  Informative References . . . . . . . . . . . . . . . . .   9
+   Acknowledgments . . . . . . . . . . . . . . . . . . . . . . . . .  12
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  13
+
+
+
+
+
+
+
+
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                  [Page 2]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+1.  Introduction
+
+   The Static Context Header Compression (SCHC) Architecture
+   [schc-architecture] originally envisioned SCHC used at the Network
+   layer to enable IPv6 over selected Low-Power Wide Area Networking
+   (LPWAN) radio technologies, encompassing IP and Transport, by the
+   network provider.  Then SCHC would be used by the application; this
+   would include any security envelope.
+
+   In the evolution of SCHC, compression and fragmentation are available
+   at any layer.  After applying SCHC, the protocol information is
+   reduced to a RuleID and the compression residue (if any).  We need to
+   identify SCHC to recognise when a protocol header has been compressed
+   by SCHC.
+
+   The identifier to be used depends on the protocol/layer in the stack
+   where SCHC is applied.  The identifier has to be unambiguous to
+   ensure correct SCHC processing at the receiver side; it could be a
+   protocol number or port number.
+
+   This approach breaks down when dealing with Diet ESP [diet-esp].
+   When Next Header is ESP, it is challenging for the ESP process to
+   determine if an incoming ESP payload is regular ESP [RFC4303] or a
+   diet ESP payload.  Careful allocation of the incoming SPI
+   [ikev2-diet-esp] can mitigate this and have an implicit SCHC header,
+   but it is not sound protocol design.  If the Next Header in the IP
+   header were SCHC, not ESP, a clear segregation of incoming traffic is
+   directly supportable.
+
+   Additionally, SCHC can then be the Next Header within the ESP header
+   with 'regular' SCHC rules for processing this content.  This approach
+   will greatly simplify [diet-esp].
+
+   DTLS 1.3 [RFC9147] adds further complications.  DTLS 1.3 headers
+   themselves are typically already very compressed and SCHC would not
+   provide much value compressing the DTLS header.  But the UDP header
+   in front of DTLS would benefit with a separate compression from the
+   IP Header compression.  Where it is possible with ESP's SPI to
+   mitigate inbound packet processing challenges implicit SCHC would
+   generate, DTLS header does not safely even provide this and a SCHC IP
+   or UDP number is necessary to separate traffic for SCHC processing.
+
+   New IETF work has started with the SCHC WG that is chartered to:
+
+   |  provide specifications for the application of SCHC over underlying
+   |  layers, where underlying layers include but are not limited to UDP
+   |  tunnels, IP, PPP, and Ethernet, as well as the use of SCHC by
+   |  upper-layer protocols.
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                  [Page 3]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+   To achieve its charter, the SCHC working group needs the allocations
+   that are requested in this document.
+
+   These issues carry over to IP Header compression if SCHC were
+   available as an Ethertype (for IEEE 802 networking) and if SCHC were
+   available as a TCP/UDP port number (for the application layer).  At
+   each layer, SCHC solves a problem that protocol designers, using
+   constrained networks, currently have to design around.
+
+2.  Terms and Definitions
+
+2.1.  Requirements Terminology
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+3.  SCHC Protocol Number Use Cases
+
+3.1.  Basic use case for SCHC as an Internet Protocol Number
+
+   A mobile node, or network, may use different links over a period of
+   time.  In some cases the node has multiple interfaces and, in theory,
+   could tune the compression to each interface.  In other cases, it is
+   the whole network that is mobile and individual nodes have no
+   "knowledge" of which link with what characteristics is actively
+   handling the traffic.  In either case, the node administrator is
+   aware that some links are constrained and use of SCHC compression is
+   highly recommended.
+
+   One example is an Uncrewed Aircraft (UA) that uses different links
+   over the duration of an operation (i.e., flight).
+
+   *  Operation starts using a vertiport's WiFi service.
+
+   *  On gaining altitude, UA transitions to a Cellular service.
+
+   *  On gaining more altitude, UA transitions to a constrained 700MHz
+      UHF service.
+
+   *  On approach to destination vertiport, link transition is reversed.
+
+   The UA could use SCHC compression only on the UHF link, but this may
+   complicate the implementation.
+
+
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                  [Page 4]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+   A more complex example is an Uncrewed Cargo Aircraft that has
+   multiple avionics systems, all Ethernet connected to an onboard
+   router that has the multiple interfaces.  Here the nodes each manage
+   their own secure path to their ground-based server, but have no
+   knowledge of which link is in use to intelligently use compression.
+
+3.2.  Basic use case for SCHC as an Ethertype
+
+   In the case of a classical LPWAN link such as LoRa [RFC9011], the use
+   of SCHC to compress the transported protocol, as well as the SCHC
+   session (called instance) to use, are implicit.  The MAC-Layer
+   endpoints are preconfigured so there can be only one session, and
+   there can be only SCHC.  When extended to Ethernet and more powerful
+   endpoint, this model is way too restrictive, and it is necessary to
+   signal both the use of SCHC and the SCHC session to be used.  While
+   the SCHC WG is chartered to produce the latter, the Ethertype defined
+   in this document will be used to signal SCHC as the upper-layer
+   protocol.
+
+   As an example that will leverage this, Aircraft-to-anything (A2X)
+   [drip-a2x-adhoc-session] and Aircraft-to-Ground
+   [drip-efficient-a2g-comm] protocols are specific cases that can
+   benefit from SCHC as an Ethertype.  These can use IEEE 802 wireless
+   technology and lessen spectrum contention in high traffic or long-
+   range situations by minimizing the datagram size via SCHC.
+
+   In the above uses, SCHC compresses the IPv6 header completely (all 40
+   bytes), leaving only destination address (32 bytes, source address
+   calculated from content), or only 8 bytes (needs both addresses) at
+   the cost of a 1-byte SCHC RuleID.  The 2-byte payload length may be
+   needed in some cases (as in Section 5).
+
+   Since the whole point of SCHC is to reduce packet size, SCHC directly
+   over an IEEE 802 technology cannot be addressed via the Ethernet
+   Protocol Assignment under the IANA OUI.  A distinct Ethertype is
+   needed by SCHC to actually reduce payload overhead.
+
+3.3.  Basic use case for SCHC as a UDP port
+
+   There is a need to allow carrying SCHC-compressed data units (i.e.,
+   SCHC datagrams [schc-architecture]) atop UDP.  For example, SCHC-
+   based header compression for the Constrained Application Protocol
+   (CoAP [RFC7252]) has been specified [RFC8824] and is being updated by
+   [schc-8824-update].  The document entitled 'Transmission of SCHC-
+   compressed packets over IEEE 802.15.4 networks' [6lo-15dot4-schc]
+   aims to exploit the opportunity of carrying SCHC-compressed CoAP
+   messages on top of UDP.  To support this functionality, there is a
+   need for UDP port numbers known by both endpoints (sender and
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                  [Page 5]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+   receiver) that identifies the presence of a SCHC Stratum (defined in
+   [schc-architecture]) atop UDP, i.e., that the UDP payload is a SCHC
+   datagram (in this case, a SCHC-compressed CoAP message).
+
+   In addition, note that it is possible to use traditional 6LoWPAN
+   header compression [RFC6282] to compress IPv6 and UDP headers, but
+   not to compress CoAP headers.  Therefore, the only way to support
+   CoAP header compression on devices running 6LoWPAN is by means of
+   SCHC, which again requires to place a SCHC Stratum on top of UDP.
+
+   SCHC header compression is also being developed for further protocols
+   carried by UDP (e.g., QUIC [schc-quic-compression]).  In the future,
+   SCHC may be applied to any protocol at any layer, such as DTLS and
+   TCP.
+
+3.4.  Basic Use case for SCHC over connection-oriented communication
+
+   In a connection-oriented communication, two endpoints establish a
+   session to transfer data reliably, with error detection and
+   reordering of received data.  During the connection establishment
+   (3-way handshake), both hosts must identify SCHC with the layer-4
+   port number and exchange and agree on the Set of Rules (SoR).
+   Through the data transfer, the management of the SoR uses the Yang
+   data model as described in the [schc-coreconf-management].  Both
+   endpoints must make the same changes to keep the integrity of the
+   flow control.
+
+   The SoR may contain dedicated Rules for Acknowledgements and
+   connection termination.
+
+   This approach is essential for critical business applications where
+   data loss or corruption could have serious financial or legal
+   consequences.
+
+3.5.  Basic use case for SCHC over Space Links
+
+   Space communications is a very bandwidth-constraint environment.
+   Space links are typically point-to-point links.  The deployment of IP
+   in deep space is described in the TIPTOP (Taking IP To Other Planets)
+   use case [I-D.ietf-tiptop-usecase] and architecture
+   [I-D.many-tiptop-ip-architecture] documents.  It specifies the use of
+   SCHC on space link layers as defined by the Consultative Committee
+   for Space Data Systems (CCSDS).
+
+
+
+
+
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                  [Page 6]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+3.6.  SCHC Port Numbers and protocol number as identifiers
+
+   In the current SCHC architecture, the SCHC Stratum Header adds
+   signalling information to the SCHC datagram.  It may be fully
+   compressed, and it does not add any overhead in that case.  The SCHC
+   Stratum Header helps to identify the use of SCHC and selects the
+   correct instance and SoR in the SCHC process.  The SCHC Stratum
+   Header format includes an identifier that depends on the compressed
+   stack layer.  These identifiers are the protocol number at layer
+   three and port numbers at layer four.
+
+4.  Internet Protocol Number for SCHC
+
+   The transport of a SCHC datgram as payload of an IP packet SHOULD be
+   indicated in the IPv4 "Protocol" field or the IPv6 "Next Header"
+   field with a value of TBD1 (recommended: 145) as shown below:
+
+    +=========+=========+================+================+===========+
+    | Decimal | Keyword | Protocol       | IPv6 Extension | Reference |
+    |         |         |                | Header         |           |
+    +=========+=========+================+================+===========+
+    |    TBD1 | SCHC    | Static Context |                | This RFC  |
+    |   (145) |         | Header         |                |           |
+    |         |         | Compression    |                |           |
+    +---------+---------+----------------+----------------+-----------+
+
+                     Table 1: Internet Protocol Numbers
+
+   The SCHC compressed header with payload is shown below.  The size of
+   the SCHC RuleID is variable as described in [RFC8724].  An
+   implementation should have a table of source IP address and RuleID
+   size.  The addresses should be represented in prefix format to allow
+   for groups of addresses having the same RuleID size.
+
+       |------- Compressed Header -------|
+       +---------------------------------+--------------------+
+       |  RuleID  |  Compression Residue |      Payload       |
+       +---------------------------------+--------------------+
+
+                          Figure 1: SCHC Datagram
+
+   The RuleID may be statically configured per [RFC8724], or may be
+   negotiated within a protocol as in IKE [ikev2-diet-esp].
+
+
+
+
+
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                  [Page 7]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+5.  Ethertype for SCHC
+
+   The use of SCHC as an Ethertype is similar to that as in Section 4
+   above.  Immediately after the SCHC Ethertype is the RuleID as in
+   Figure 1.  If the rules associated with the RuleID does not provide
+   the datagram length, the datagram length MUST be explicit in the
+   Compression Residue, as the IEEE 802 header may not provide the
+   needed length information to properly process the datagram.
+
+6.  Transport Port Numbers for SCHC
+
+   SCHC's first function is to compress the header; with this action,
+   the protocol ports are hidden from the application.  To identify SCHC
+   in the upper layers, the protocols do not have a next header field.
+   The port numbers are necessary to be aware that the protocol's header
+   has been compressed.
+
+7.  CCSDS Encapsulation Number for SCHC
+
+   The CCSDS link layers have a common encapsulation named Internet
+   Protocol Extension (IPE) [IPoverCCSDSSpaceLinks].  The codepoints are
+   managed by the Space Assigned Numbers Authority (SANA) under the IPE
+   registry [SANAIPEHeaderRegistry].  This registry already specifies
+   the encapsulation of previous IP header compression techniques.  This
+   document requests SANA through CCSDS to allocate a codepoint for SCHC
+   in the IPE registry.
+
+8.  IANA Considerations
+
+8.1.  IANA Internet Protocol Number Registry Update
+
+   This document requests IANA to make the following change to the
+   "Assigned Internet Protocol Numbers" [IANA-IPN] registry:
+
+   Internet Protocol Number:
+      This document defines the new Internet Protocol Number value TBD1
+      (suggested: 145) (Section 4) in the "Assigned Internet Protocol
+      Numbers" registry.
+
+
+
+
+
+
+
+
+
+
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                  [Page 8]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+    +=========+=========+================+================+===========+
+    | Decimal | Keyword | Protocol       | IPv6 Extension | Reference |
+    |         |         |                | Header         |           |
+    +=========+=========+================+================+===========+
+    |    TBD1 | SCHC    | Static Context |                | This RFC  |
+    |   (145) |         | Header         |                |           |
+    |         |         | Compression    |                |           |
+    +---------+---------+----------------+----------------+-----------+
+
+                                  Table 2
+
+8.2.  IANA Ethertype Request
+
+   IANA is requested using the process in Section 5.5 of
+   [intarea-rfc7042bis], to request the Ethertype for SCHC.
+
+9.  Security Considerations
+
+   None additional over already noted in [RFC8724], [RFC8824] and
+   [schc-architecture].
+
+10.  References
+
+10.1.  Normative References
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+10.2.  Informative References
+
+   [6lo-15dot4-schc]
+              Gomez, C. and A. Minaburo, "Transmission of SCHC-
+              compressed packets over IEEE 802.15.4 networks", Work in
+              Progress, Internet-Draft, draft-ietf-6lo-schc-15dot4-11,
+              14 October 2025, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-6lo-schc-15dot4-11>.
+
+
+
+
+
+
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                  [Page 9]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+   [diet-esp] Migault, D., Hatami, M., Cespedes, S., Atwood, J. W., Liu,
+              D., Guggemos, T., Bormann, C., and D. Schinazi, "ESP
+              Header Compression with Diet-ESP", Work in Progress,
+              Internet-Draft, draft-ietf-ipsecme-diet-esp-09, 17 August
+              2025, <https://datatracker.ietf.org/doc/html/draft-ietf-
+              ipsecme-diet-esp-09>.
+
+   [drip-a2x-adhoc-session]
+              Moskowitz, R., Card, S. W., and A. Gurtov, "Aircraft to
+              Anything AdHoc Broadcasts and Session", Work in Progress,
+              Internet-Draft, draft-moskowitz-drip-a2x-adhoc-session-07,
+              20 October 2025, <https://datatracker.ietf.org/doc/html/
+              draft-moskowitz-drip-a2x-adhoc-session-07>.
+
+   [drip-efficient-a2g-comm]
+              Moskowitz, R., Card, S. W., and A. Gurtov, "Efficient Air-
+              Ground Communications", Work in Progress, Internet-Draft,
+              draft-moskowitz-drip-efficient-a2g-comm-05, 17 September
+              2025, <https://datatracker.ietf.org/doc/html/draft-
+              moskowitz-drip-efficient-a2g-comm-05>.
+
+   [I-D.ietf-tiptop-usecase]
+              Blanchet, M., Eddy, W., and M. Eubanks, "IP in Deep Space:
+              Key Characteristics, Use Cases and Requirements", Work in
+              Progress, Internet-Draft, draft-ietf-tiptop-usecase-00, 20
+              July 2025, <https://datatracker.ietf.org/doc/html/draft-
+              ietf-tiptop-usecase-00>.
+
+   [I-D.many-tiptop-ip-architecture]
+              Blanchet, M., Eddy, W., and T. Li, "An Architecture for IP
+              in Deep Space", Work in Progress, Internet-Draft, draft-
+              many-tiptop-ip-architecture-02, 29 September 2025,
+              <https://datatracker.ietf.org/doc/html/draft-many-tiptop-
+              ip-architecture-02>.
+
+   [IANA-IPN] IANA, "Assigned Internet Protocol Numbers",
+              <https://www.iana.org/assignments/protocol-numbers/
+              protocol-numbers.xhtml>.
+
+   [ikev2-diet-esp]
+              Migault, D., Hatami, M., Liu, D., Preda, S., Atwood, J.
+              W., Cespedes, S., Guggemos, T., and D. Schinazi, "Internet
+              Key Exchange version 2 (IKEv2) extension for Header
+              Compression Profile (HCP)", Work in Progress, Internet-
+              Draft, draft-ietf-ipsecme-ikev2-diet-esp-extension-06, 21
+              August 2025, <https://datatracker.ietf.org/doc/html/draft-
+              ietf-ipsecme-ikev2-diet-esp-extension-06>.
+
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                 [Page 10]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+   [intarea-rfc7042bis]
+              Eastlake, D. E., Abley, J., and Y. Li, "IANA
+              Considerations and IETF Protocol and Documentation Usage
+              for IEEE 802 Parameters", Work in Progress, Internet-
+              Draft, draft-ietf-intarea-rfc7042bis-11, 6 November 2023,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-intarea-
+              rfc7042bis-11>.
+
+   [IPoverCCSDSSpaceLinks]
+              Consultative Committee on Space Data Systems(CCSDS), "IP
+              OVER CCSDS SPACE LINKS, Blue Book 702", September 2012,
+              <https://public.ccsds.org/Pubs/702x1b1c2.pdf>.
+
+   [RFC4303]  Kent, S., "IP Encapsulating Security Payload (ESP)",
+              RFC 4303, DOI 10.17487/RFC4303, December 2005,
+              <https://www.rfc-editor.org/info/rfc4303>.
+
+   [RFC6282]  Hui, J., Ed. and P. Thubert, "Compression Format for IPv6
+              Datagrams over IEEE 802.15.4-Based Networks", RFC 6282,
+              DOI 10.17487/RFC6282, September 2011,
+              <https://www.rfc-editor.org/info/rfc6282>.
+
+   [RFC7252]  Shelby, Z., Hartke, K., and C. Bormann, "The Constrained
+              Application Protocol (CoAP)", RFC 7252,
+              DOI 10.17487/RFC7252, June 2014,
+              <https://www.rfc-editor.org/info/rfc7252>.
+
+   [RFC8724]  Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and JC.
+              Zuniga, "SCHC: Generic Framework for Static Context Header
+              Compression and Fragmentation", RFC 8724,
+              DOI 10.17487/RFC8724, April 2020,
+              <https://www.rfc-editor.org/info/rfc8724>.
+
+   [RFC8824]  Minaburo, A., Toutain, L., and R. Andreasen, "Static
+              Context Header Compression (SCHC) for the Constrained
+              Application Protocol (CoAP)", RFC 8824,
+              DOI 10.17487/RFC8824, June 2021,
+              <https://www.rfc-editor.org/info/rfc8824>.
+
+   [RFC9011]  Gimenez, O., Ed. and I. Petrov, Ed., "Static Context
+              Header Compression and Fragmentation (SCHC) over LoRaWAN",
+              RFC 9011, DOI 10.17487/RFC9011, April 2021,
+              <https://www.rfc-editor.org/info/rfc9011>.
+
+   [RFC9147]  Rescorla, E., Tschofenig, H., and N. Modadugu, "The
+              Datagram Transport Layer Security (DTLS) Protocol Version
+              1.3", RFC 9147, DOI 10.17487/RFC9147, April 2022,
+              <https://www.rfc-editor.org/info/rfc9147>.
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                 [Page 11]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+   [SANAIPEHeaderRegistry]
+              Space Assigned Numbers Authority, "Internet Protocol
+              Extension Header",
+              <https://sanaregistry.org/r/ipe_header/>.
+
+   [schc-8824-update]
+              Tiloca, M., Toutain, L., Martínez, I., and A. Minaburo,
+              "Static Context Header Compression (SCHC) for the
+              Constrained Application Protocol (CoAP)", Work in
+              Progress, Internet-Draft, draft-ietf-schc-8824-update-07,
+              1 December 2025, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-schc-8824-update-07>.
+
+   [schc-architecture]
+              Pelov, A., Thubert, P., and A. Minaburo, "Static Context
+              Header Compression (SCHC) Architecture", Work in Progress,
+              Internet-Draft, draft-ietf-schc-architecture-05, 17
+              October 2025, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-schc-architecture-05>.
+
+   [schc-coreconf-management]
+              Minaburo, A., Toutain, L., FERNANDEZ, J. A., Banier, C.,
+              and M. Dumay, "CORECONF Rule management for SCHC", Work in
+              Progress, Internet-Draft, draft-toutain-schc-coreconf-
+              management-01, 19 October 2025,
+              <https://datatracker.ietf.org/doc/html/draft-toutain-schc-
+              coreconf-management-01>.
+
+   [schc-quic-compression]
+              Sirohi, S. and L. Toutain, "QUIC compression using SCHC",
+              Work in Progress, Internet-Draft, draft-sirohi-schc-quic-
+              compression-00, 12 May 2025,
+              <https://datatracker.ietf.org/doc/html/draft-sirohi-schc-
+              quic-compression-00>.
+
+Acknowledgments
+
+   Discussions with Pascal Thubert, lpwan co-chair, helped develop this
+   approach of using SCHC E2E below the current Transport Layers.
+
+   Adam Wiethuechter and Stuart W.  Card of AX Enterprize, LLC provided
+   extensive input and review for use of SCHC for aviation air-to-air
+   and air-to-ground communications.
+
+
+
+
+
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                 [Page 12]
+
+Internet-Draft          Protocol Numbers for SCHC          December 2025
+
+
+   Carles Gomez has been funded in part by
+   MCIU/AEI/10.13039/501100011033/FEDER/UE through project PID2023-
+   146378NB-I00, and by Secretaria d'Universitats i Recerca del
+   Departament d'Empresa i Coneixement de la Generalitat de Catalunya
+   with the grant number 2021 SGR 00330.
+
+Authors' Addresses
+
+   Robert Moskowitz (editor)
+   HTT Consulting
+   Oak Park, MI 48237
+   United States of America
+   Email: rgm@labs.htt-consult.com
+
+
+   Pascal Thubert
+   06330 Roquefort-les-Pins
+   France
+   Email: pascal.thubert@gmail.com
+
+
+   Carles Gomez
+   UPC
+   C/Esteve Terradas, 7
+   08860 Castelldefels
+   Spain
+   Email: carles.gomez@upc.edu
+
+
+   Ana Minaburo
+   Consultant
+   Rue de Rennes
+   35510 Cesson-Sevigne
+   France
+   Email: anaminaburo@gmail.com
+
+
+   Marc Blanchet
+   Viagenie
+   Canada
+   Email: marc.blanchet@viagenie.ca
+
+
+
+
+
+
+
+
+
+
+Moskowitz, et al.         Expires 26 June 2026                 [Page 13]

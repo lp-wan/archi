@@ -1,0 +1,20 @@
+# Minimal clean diff: draft-ietf-schc-architecture-06 to proposed -07
+
+This final clean diff contains only the Architecture change selected after reviewing the AI meta-analysis.
+
+```diff
+@@ Section 4.2.5.1 @@
+    The Control Header may itself be a SCHC-compressed structure
+    piggybacked on the Datagram, or an explicit protocol providing
+    services such as:
+@@
+    *  Metadata (retain information that is lost when performing the SCHC
+       operation, e.g., save the initial value of the EtherType field
+       when it is changed to EtherType=SCHC)
++
++   *  Routing or inspection pointers, such as bit pointers or residue
++      length metadata, that allow an intermediate node to locate selected
++      fields or residues in a Datagram when the profile permits that node
++      to inspect or update them without possessing the full decompression
++      Context.
+```

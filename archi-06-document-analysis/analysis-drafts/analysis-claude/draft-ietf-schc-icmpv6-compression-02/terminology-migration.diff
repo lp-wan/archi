@@ -1,0 +1,226 @@
+# Terminology and architectural-framing migration diff
+# draft-ietf-schc-icmpv6-compression-02  ->  SCHC Architecture -06 vocabulary
+#
+# Scope: technical, architectural, and normative text whose terminology changes
+# under -06. Boilerplate, references, YANG copyright, and addresses are omitted
+# except where a term is affected. Technical behavior is preserved throughout;
+# no change here is classified REQUIRED FOR CONCEPTUAL ALIGNMENT, so no behavior
+# is altered. Adaptation need is None, so no wording depends on an unaccepted
+# Architecture change (no BLOCKED markers).
+#
+# Key mappings applied:
+#   "SCHC End-Point" / "End-Point" / "end point"  -> "Endpoint" (-06 spelling)
+#   "SCHC instance" (association sense)            -> "Session"
+#   "SCHC entity" / "core SCHC"                    -> "SCHC Instance" / "SCHC Core"
+#   "Set of Rule"                                  -> "Set of Rules"
+#   "direction"                                    -> "Direction" (RFC 8724)
+#   Core/Device re-anchored on Endpoint + Instance + Role
+# ============================================================================
+
+## Abstract
+
+- Finally, for constrained networks such as LPWAN, it introduces a
+- proxy behavior, where a SCHC Core end-point may anticipate the device
+- reaction to incorrect messages.
++ Finally, for constrained networks such as LPWAN, it introduces a
++ proxy behavior, where the SCHC Core Endpoint may anticipate the Device
++ reaction to incorrect messages. Originating these ICMPv6 messages is an
++ IP-layer function co-located with the SCHC Core Endpoint and is outside
++ the SCHC compression/decompression model.
+
+## Section 1. Introduction
+
+- The Application may also benefit from the
+- ICMPv6 error message produced by the SCHC entity when the compression
+- is not possible.
++ The Application may also benefit from the
++ ICMPv6 error message produced by the SCHC Instance when the compression
++ is not possible.
+
+- *  ICMPv6 messages initiated by SCHC End-Points.  They can be sent in
+-    their SCHC-compressed form, in ICMPv6 messages traffic.  This
+-    includes error messages, as well as informational echo request/
+-    reply traffic
++ *  ICMPv6 messages initiated by SCHC Endpoints.  They can be sent in
++    their SCHC-compressed form, in ICMPv6 message traffic.  This
++    includes error messages, as well as informational echo request/
++    reply traffic
+
+- *  ICMPv6 error messages returned from the Internet after End-Point
+-    transmission.  The core SCHC forwards a compressed version of the
+-    error message to the End-Point, including if necessary a
+-    compressed payload.
++ *  ICMPv6 error messages returned from the Internet after an Endpoint's
++    transmission.  The SCHC Core forwards a compressed version of the
++    error message to the Endpoint, including if necessary a
++    compressed payload.
+
+- *  Traffic coming from the Internet that would generate an error on
+-    the End-Point: if it can detect the situation, the SCHC Core
+-    directly responds with an ICMPv6 error message, acting as a
+-    surrogate to the End-Point.
++ *  Traffic coming from the Internet that would generate an error on
++    the Endpoint: if it can detect the situation, the SCHC Core
++    directly responds with an ICMPv6 error message, acting as a
++    surrogate to the Endpoint. This surrogate response is an IP-layer
++    function co-located with the SCHC Core Endpoint.
+
+## Section 2. Terminology
+
+- This draft re-uses the Terminology defined in [RFC8724] and the
+- achitecture document.
++ This draft re-uses the terminology defined in [RFC8724] and in the SCHC
++ Architecture document [I-D.ietf-schc-architecture]. In particular,
++ Endpoint, Instance, Session, Context, and Set of Rules are used as
++ defined there.
+
+- *  SCHC Core: SCHC End-Point located at the boundary of a regular IP
+-    network and a network that applies SCHC compression and
+-    fragmentation
++ *  SCHC Core: a SCHC Endpoint (as defined in
++    [I-D.ietf-schc-architecture]) located at the boundary of a regular IP
++    network and a network that applies SCHC compression and
++    fragmentation. It hosts the core-side Instance of the Session with the
++    SCHC Device. The SCHC Core MAY be co-located with an IP-router
++    function used to originate ICMPv6 messages (see Sections 6 and 7).
+
+- *  SCHC Device: The other end of the SCHC instance formed with the
+-    SCHC core.
++ *  SCHC Device: the SCHC Endpoint at the other end of the Session formed
++    with the SCHC Core; it hosts the Device-side Instance.
+
+## Section 6. Device is the source of an ICMPv6 error message
+
+- In that case the SCHC C/D MAY act as a router (i.e. it MUST have a
+- routable IPv6 address to generate an ICMPv6 message).  When
+- compressing a packet containing an IPv6 header, no compression rules
+- are found and:
++ In that case the SCHC Core MAY act as a router (i.e. its co-located
++ IP-router function MUST have a routable IPv6 address to generate an
++ ICMPv6 message). This router function is distinct from the Endpoint's
++ C/D function. When compressing a packet containing an IPv6 header, no
++ compression Rule in the Set of Rules is found and:
+
+## Section 7. Device is the destination of an ICMPv6 error message
+
+- It should be compressed by the SCHC Core, but in the
+- reverse direction.  New MOs and CDAs are introduced to perform this
+- operation.  The MO check is a rule that matches the Target Value in
+- the forward or reverse direction and the CDA performs this
+- compression.
++ It should be compressed by the SCHC Core, but in the
++ reverse Direction.  New MOs and CDAs are introduced to perform this
++ operation.  The MO checks whether a Rule in the current Set of Rules
++ matches the Target Value in the forward or reverse Direction, and the
++ CDA performs this compression.
+
+### Section 7.1. Matching Operator rule match and reverse rule match.
+
+- If the Target Value contains a header, this matching operator returns
+- True if a Rule exists in the current Set of Rule to compress it.  The
+- selection can either be done:
++ If the Target Value contains a header, this Matching Operator returns
++ True if a Rule exists in the current Set of Rules to compress it.  The
++ selection can either be done:
+
+- *  in the same direction of the End-Point, this can be used to
+-    compress a protocol encapsulated in the header.
++ *  in the same Direction as the Endpoint, this can be used to
++    compress a protocol encapsulated in the header.
+
+- *  in the reverse direction of the end point, as in an ICMPv6 error
+-    message.
++ *  in the reverse Direction relative to the Endpoint, as in an ICMPv6
++    error message.
+
+### Section 7.2. Compression Decompression Actions to compress Target Values.
+
+- These CDAs compress-sent and rev-compress-sent compress the Target
+- Value using rules defined in the current Set of Rules.  This CDA MUST
+- be used in conjunction with the Matching Operators defined in
+- Section 7.1 according to the direction.  The compression is using the
+- same direction as the End-Point, the reverse compression uses the
+- opposite direction.
++ These CDAs compress-sent and rev-compress-sent compress the Target
++ Value using Rules defined in the current Set of Rules.  This CDA MUST
++ be used in conjunction with the Matching Operators defined in
++ Section 7.1 according to the Direction.  The compression uses the
++ same Direction as the Endpoint; the reverse compression uses the
++ opposite Direction.
+
+### Section 7.3. Example of ICMPv6 error message compression.
+
+- The payload is viewed as a field.  An unsued field MUST not appear in
+- the compressoin rules.
++ The payload is viewed as a field.  An unused field MUST NOT appear in
++ the compression Rules.
+
+- This information is used to try and identify
+- the SCHC rule that was used to decompress the offending IPv6 packet.
+- If the rule can be found, then the Rule Id is added at the end of the
+- compressed ICMPv6 message.
++ This information is used to try and identify
++ the SCHC Rule that was used to decompress the offending IPv6 packet.
++ If the Rule can be found, then the RuleID is added at the end of the
++ compressed ICMPv6 message.
+
+## Section 8. YANG identities and tree
+
+- *  mo-rev-rule-match: The value contained in the Field Value matches
+-    a rule.  The direction used for matching is the opposite of the
+-    incoming message: UP becomes DOWN and DOWN becomes UP.  This MO
+-    can be used to test if the Payload contained in the ICMPv6 message
+-    matches a rule.  This means that the original packet, at the
+-    origine of the ICMPv6 message, may have been generated from the
+-    SCHC decompression.
++ *  mo-rev-rule-match: The value contained in the Field Value matches
++    a Rule.  The Direction used for matching is the opposite of the
++    incoming message: UP becomes DOWN and DOWN becomes UP.  This MO
++    can be used to test whether the Payload contained in the ICMPv6
++    message matches a Rule in the current Set of Rules.  This means that
++    the original packet, at the origin of the ICMPv6 message, may have
++    been generated from the SCHC decompression.
+
+- *  mo-rule-match: The value contained in the Target Value matches a
+-    rule.  The direction is the one of the incoming message.  This MO
+-    is not used for ICMPv6 messages, but since it can be used in other
+-    situations, it has been included in the Data Model.
++ *  mo-rule-match: The value contained in the Target Value matches a
++    Rule.  The Direction is that of the incoming message.  This MO
++    is not used for ICMPv6 messages, but since it can be used in other
++    situations, it has been included in the Data Model.
+
+- The Field Value may be compressed by a rule.  The result SHOULD be
+- included in the SCHC message as a variable length residue.  It
+- contains the Rule ID used by the compression, the residue, the
+- payload and some padding bits since the variable length in it is in
+- bytes.
++ The Field Value may be compressed by a Rule.  The result SHOULD be
++ included in the SCHC message as a variable-length residue.  It
++ contains the RuleID used by the compression, the residue, the
++ payload, and some padding bits since the variable length is expressed
++ in bytes.
+
+- *  cda-rev-compress-sent: The direction used for compression is the
+-    opposite of the incoming message: UP becomes DOWN and DOWN becomes
+-    UP.
++ *  cda-rev-compress-sent: The Direction used for compression is the
++    opposite of the incoming message: UP becomes DOWN and DOWN becomes
++    UP.
+
+- *  cda-compress-sent: The direction used for compression is the same
+-    as for the incoming message.
++ *  cda-compress-sent: The Direction used for compression is the same
++    as for the incoming message.
+
+# ----------------------------------------------------------------------------
+# Notes:
+# * Section 5 ("Device does a ping") uses "device", "rule", "Target Value",
+#   "residue", "not-sent", "LSB" etc. consistent with RFC 8724 and needs no
+#   terminology migration beyond optional "rule"->"Rule" casing; left unchanged
+#   to avoid churn without semantic effect.
+# * Rule table columns (FL/FP/DI/MO/CDA, Up/Dw/Bi) are RFC 8724 wire-level
+#   notation and are retained verbatim.
+# * "SCHC instance" appeared only in the SCHC Device definition (association
+#   sense) and is migrated to "Session"; no other occurrence exists.
+# ----------------------------------------------------------------------------

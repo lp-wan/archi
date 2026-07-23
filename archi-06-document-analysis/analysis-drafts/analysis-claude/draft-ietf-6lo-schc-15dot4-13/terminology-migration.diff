@@ -1,0 +1,707 @@
+# Terminology and architectural-framing migration diff
+# draft-ietf-6lo-schc-15dot4-13 -> SCHC Architecture -06 terminology
+#
+# Assumptions:
+# - The two Trivial architecture edits in schc-architecture-edits.md are accepted
+#   (per-Session Role; Session-scoped Context compatibility).
+# - Technical behavior, wire formats, and RFC 2119 normative requirements are
+#   preserved throughout. Field names on the wire (e.g., "SCHC Instance ID",
+#   "SCHC Hdr") are unchanged; only their architectural framing is migrated.
+# - Mapping decisions applied consistently:
+#     "SCHC Data end point"            -> "SCHC Instance" (with its Context / SoR)
+#     "SCHC Control Header end point"  -> (dissolved) "the SoR for SCHC Control Header C/D"
+#     "Single-end point network"       -> "Single-Instance network"
+#     "Multiple-end point network"     -> "Multiple-Instance network"
+#     plain-English "endpoint(s)" (nodes) -> "node(s)" / "communicating node"
+#     citations [draft-ietf-schc-architecture], [draft-ietf-schc-arch]
+#                                      -> [I-D.ietf-schc-architecture] (rev -06)
+# - Unchanged sections are omitted. Boilerplate, acknowledgements, and
+#   administrative metadata are omitted (no terminology impact).
+
+=======================================================================
+Section 3.1.1  Main protocol stack
+=======================================================================
+
+- compress IPv6/UDP headers, and separate SCHC Strata [draft-ietf-schc-
+- arch] are also used to compress CoAP headers, when CoAP is secured by
++ compress IPv6/UDP headers, and separate SCHC Strata
++ [I-D.ietf-schc-architecture] are also used to compress CoAP headers,
++ when CoAP is secured by
+
+- (6LN, 6LBR, and external host).  SCHC Context at different SCHC
+- Strata may come from different provisioning domains.
++ (6LN, 6LBR, and external host).  SCHC Contexts at different SCHC
++ Strata may come from different provisioning domains; in the
++ terminology of [I-D.ietf-schc-architecture], the Instances at
++ different Strata may belong to different SCHC Domains.
+
+=======================================================================
+Section 3.2  SCHC architecture concepts (introduction)
+=======================================================================
+
+- This section describes how SCHC architecture concepts (such as "SCHC
+- Stratum", "Discriminator", "SCHC Control Header end point", "SCHC
+- Data end point", and "Set of Rules" (SoR)) [draft-ietf-schc-
+- architecture] are applied when SCHC is used to compress IPv6 packet
+- headers over IEEE 802.15.4 networks.  In addition, the concepts of
+- Single-end point networks and Multiple-end point networks are
+- introduced.  Note: in the present document, "Single-end point
+- networks" and "Multiple-end point networks" are used for brevity to
+- refer to "Single-end point SCHC-Lo networks" and "Multiple-end point
+- SCHC-Lo networks".
++ This section describes how SCHC architecture concepts (such as "SCHC
++ Stratum", "Discriminator", "Endpoint", "Instance", "Session",
++ "Context", and "Set of Rules" (SoR)) [I-D.ietf-schc-architecture]
++ are applied when SCHC is used to compress IPv6 packet headers over
++ IEEE 802.15.4 networks.  In addition, the concepts of
++ Single-Instance networks and Multiple-Instance networks are
++ introduced.  Note: in the present document, "Single-Instance
++ networks" and "Multiple-Instance networks" are used for brevity to
++ refer to "Single-Instance SCHC-Lo networks" and "Multiple-Instance
++ SCHC-Lo networks".
+
+=======================================================================
+Section 3.2.2  (was: Single-end point networks)
+=======================================================================
+
+-3.2.2.  Single-end point networks
+-
+- In Single-end point networks, all network nodes that use SCHC for C/D
+- have a single SCHC Data end point, and thus a single SoR for SCHC
+- Datagram C/D.  For this reason, in Single-end point networks, the
+- SCHC Control Header is fully compressed (i.e., the SCHC Control
+- Header requires 0 bits to be transmitted over the air).
+-
+- In Single-end point networks, all network nodes that use SCHC for C/D
+- have a single SCHC Control Header end point, and therefore a single
+- SoR for SCHC Control Header C/D, which in this case comprises a
+- single, implicit Rule for SCHC Control Header C/D.
++3.2.2.  Single-Instance networks
++
++ In Single-Instance networks, all network nodes that use SCHC for C/D
++ host a single SCHC Instance, and thus a single Context (with its
++ SoR) for SCHC Datagram C/D.  For this reason, in Single-Instance
++ networks, the SCHC Control Header is fully compressed (i.e., the
++ SCHC Control Header requires 0 bits to be transmitted over the air).
++
++ In Single-Instance networks, all network nodes that use SCHC for C/D
++ share a single SoR for SCHC Control Header C/D, which in this case
++ comprises a single, implicit Rule for SCHC Control Header C/D.
+
+=======================================================================
+Section 3.2.3  (was: Multiple-end point networks)
+=======================================================================
+
+-3.2.3.  Multiple-end point networks
+-
+- In Multiple-endpoint networks, at least some of the network nodes
+- that use SCHC for C/D have more than one SCHC Data end point, and
+- thus one SoR associated to each SCHC Data end point.  Therefore, in
+- Multiple-end point networks, the SCHC Control Header end point cannot
+- generally be fully compressed (i.e., in compressed form, a SCHC
+- Control Header of more than 0 bits is generally required to be
+- transmitted over the air).
+-
+- In Multiple-end point networks, all network nodes that use SCHC for
+- C/D have a single SCHC Control Header end point, and therefore a
+- single SoR for SCHC Control Header C/D, which may comprise several
+- Rules for SCHC Control Header C/D.
++3.2.3.  Multiple-Instance networks
++
++ In Multiple-Instance networks, at least some of the network nodes
++ that use SCHC for C/D host more than one SCHC Instance, and thus one
++ Context (with its SoR) associated to each SCHC Instance.  Therefore,
++ in Multiple-Instance networks, the SCHC Control Header cannot
++ generally be fully compressed (i.e., in compressed form, a SCHC
++ Control Header of more than 0 bits is generally required to be
++ transmitted over the air).
++
++ In Multiple-Instance networks, all network nodes that use SCHC for
++ C/D share a single SoR for SCHC Control Header C/D, which may
++ comprise several Rules for SCHC Control Header C/D.
+
+=======================================================================
+Section 3.4  Single-hop communication
+=======================================================================
+
+- In order to support the transmission of SCHC-compressed packets
+- between two IEEE 802.15.4 nodes that are single-hop neighbors, both
+- nodes MUST store the Rules intended for the communication between
+- those two endpoints.
++ In order to support the transmission of SCHC-compressed packets
++ between two IEEE 802.15.4 nodes that are single-hop neighbors, both
++ nodes MUST store the Rules intended for the communication between
++ those two nodes.
+
+=======================================================================
+Section 3.5  Multihop communication (introduction)
+=======================================================================
+
+- section defines three different modes: Straightfoward Route-Over
++ section defines three different modes: Straightforward Route-Over
+
+- (or joint IPv6 and upper-layer) packet header C/D.  When
+- additional SCHC Strata are used (i.e., for separate SCHC C/D applied
+- to upper layer protocols), additional Rules will need to be stored by
+- the corresponding endpoints.  However, such additional Rules are not
++ (or joint IPv6 and upper-layer) packet header C/D.  When
++ additional SCHC Strata are used (i.e., for separate SCHC C/D applied
++ to upper layer protocols), additional Rules will need to be stored by
++ the corresponding nodes.  However, such additional Rules are not
+
+=======================================================================
+Section 3.5.1  Straightforward Route-Over (SRO)
+=======================================================================
+
+- packet headers before being forwarded.  In SRO, in Single-end point
+- networks, a RuleID and the Rule it identifies MUST be unique SCHC-Lo
+- network-wide (note: the means to ensure so are out of the scope of
+- this document).  In order to simplify the management of RuleIDs in
+- the SCHC-Lo network, in SRO, all nodes in the SCHC-Lo network MAY
+- share the same SoR.  In SRO, in Multiple-endpoint networks, a not
+- fully compressed SCHC Control Header MUST be used.
++ packet headers before being forwarded.  In SRO, in Single-Instance
++ networks, a RuleID and the Rule it identifies MUST be unique SCHC-Lo
++ network-wide (note: the means to ensure so are out of the scope of
++ this document).  In order to simplify the management of RuleIDs in
++ the SCHC-Lo network, in SRO, all nodes in the SCHC-Lo network MAY
++ share the same SoR (i.e., their Instances share a common Context
++ and form a single Domain [I-D.ietf-schc-architecture]).  In SRO, in
++ Multiple-Instance networks, a not fully compressed SCHC Control
++ Header MUST be used.
+
+- Figure 8 illustrates an example Single-end point network with the
++ Figure 8 illustrates an example Single-Instance network with the
+  Rules that need to be stored by the nodes in SRO.  In this example,
+
+(Figure 8 caption)
+-      Figure 8: Rules stored by each node in an example Single-end
+-                        point network using SRO.
++      Figure 8: Rules stored by each node in an example
++                Single-Instance network using SRO.
+
+- Figure 9 illustrates an example Multiple-end point network with the
+- Rules that need to be stored by the nodes in SRO.  In this example,
+- in addition to the Rules used in Figure 8, which correspond to a SCHC
+- Data end point called E1 in this example, there is a second RuleID 2,
+- which corresponds to communication between A and B, in a second SCHC
+- Data end point (E2).  Note that, for simplicity, Figure 9 shows the
+- same end point identifier (e.g., E1 or E2) for two end points that
+- share a Rule.
++ Figure 9 illustrates an example Multiple-Instance network with the
++ Rules that need to be stored by the nodes in SRO.  In this example,
++ in addition to the Rules used in Figure 8, which correspond to a
++ SCHC Instance (and its Context) denoted E1 in this example, there is
++ a second RuleID 2, which corresponds to communication between A and
++ B, in a second SCHC Instance (E2).  Note that, for simplicity,
++ Figure 9 shows the same identifier (e.g., E1 or E2) for the
++ Instances of different nodes that share a Context.
+
+(Figure 9, right-hand legend header)
+-            6LR ------------+            Nodes | End point
++            6LR ------------+            Nodes | Instance
+
+(Figure 9 caption)
+-  Figure 9: Rules stored by each node in an example Multiple-end
+-                     point network using SRO.
++  Figure 9: Rules stored by each node in an example
++            Multiple-Instance network using SRO.
+
+=======================================================================
+Section 3.5.2  Tunneled, RPL-based Route-Over (TRO)
+=======================================================================
+
+- In TRO, each 6LoWPAN node (i.e., a host, a 6LR or a 6LBR) MUST store
+- the Rules defined for its communication with other peer nodes.  A 6LR
+- is relieved from storing Rules that do not involve the 6LR itself as
+- an endpoint.  A 6LBR MUST store all the Rules used by all nodes in
+- the SCHC-Lo network.
++ In TRO, each 6LoWPAN node (i.e., a host, a 6LR or a 6LBR) MUST store
++ the Rules defined for its communication with other peer nodes.  A 6LR
++ is relieved from storing Rules that do not involve the 6LR itself as
++ a communicating node.  A 6LBR MUST store all the Rules used by all
++ nodes in the SCHC-Lo network.
+
+- In a TRO Single-end point network, a RuleID and the Rule it
+- identifies MUST be unique SCHC-Lo network-wide (note: the means to
+- ensure so are out of the scope of this document).  In a TRO Multiple-
+- end point network, a not fully compressed SCHC Control Header MUST be
+- used.
++ In a TRO Single-Instance network, a RuleID and the Rule it
++ identifies MUST be unique SCHC-Lo network-wide (note: the means to
++ ensure so are out of the scope of this document).  In a TRO
++ Multiple-Instance network, a not fully compressed SCHC Control
++ Header MUST be used.
+
+- Figure 10 illustrates the Rules that need to be stored by the nodes
+- in TRO, based on the same example Single-end point network and sets
+- of peer nodes shown in Figure 8.
++ Figure 10 illustrates the Rules that need to be stored by the nodes
++ in TRO, based on the same example Single-Instance network and sets
++ of peer nodes shown in Figure 8.
+
+(Figure 10 caption)
+-     Figure 10: Rules stored by each node in an example Single-end
+-                        point network using TRO.
++     Figure 10: Rules stored by each node in an example
++                Single-Instance network using TRO.
+
+- Figure 11 illustrates an example Multiple-end point network with the
+- Rules that need to be stored by the nodes in TRO.  In this example,
+- in addition to the Rules used in Figure 10, which correspond to a
+- SCHC Data end point called E1 in this example, there is a second
+- RuleID 2, which corresponds to communication between A and B, in a
+- second SCHC Data end point (E2).
++ Figure 11 illustrates an example Multiple-Instance network with the
++ Rules that need to be stored by the nodes in TRO.  In this example,
++ in addition to the Rules used in Figure 10, which correspond to a
++ SCHC Instance (and its Context) denoted E1 in this example, there is
++ a second RuleID 2, which corresponds to communication between A and
++ B, in a second SCHC Instance (E2).
+
+(Figure 11, right-hand legend header)
+-          6LR -------------+             Nodes | End point
++          6LR -------------+             Nodes | Instance
+
+(Figure 11 caption)
+-  Figure 11: Rules stored by each node in an example Multiple-end
+-                      point network using TRO.
++  Figure 11: Rules stored by each node in an example
++             Multiple-Instance network using TRO.
+
+=======================================================================
+Section 3.5.3  Pointer-based Route-Over (PRO)
+=======================================================================
+
+- In a PRO Single-end point network, a RuleID MAY be used to identify
+- different Rules used by different sets of peer nodes within the SCHC-
+- Lo network.  In a PRO Multiple-end point network, a not fully
+- compressed SCHC Control Header MUST be used.
++ In a PRO Single-Instance network, a RuleID MAY be used to identify
++ different Rules used by different sets of peer nodes within the
++ SCHC-Lo network.  (In the terminology of
++ [I-D.ietf-schc-architecture], the Contexts of Instances that do not
++ participate in a common Session may bind the same RuleID to
++ unrelated Rules; the Contexts of the Instances of each set of peer
++ nodes remain compatible for their Session, and routing on the
++ destination address residue ensures that a Datagram is only
++ delivered to a node whose Context holds the Rule used.)  In a PRO
++ Multiple-Instance network, a not fully compressed SCHC Control
++ Header MUST be used.
+
+- Figure 13 illustrates the Rules that are stored by the nodes in an
+- example Single-end point network based using PRO.  Note that, in this
++ Figure 13 illustrates the Rules that are stored by the nodes in an
++ example Single-Instance network based using PRO.  Note that, in this
+
+(Figure 13 caption)
+-     Figure 13: Rules stored by each node in an example Single-end
+-      point network using PRO.  In this example, both RuleID 2 and
+-             RuleID 3 are used by two pairs of nodes each.
++     Figure 13: Rules stored by each node in an example
++      Single-Instance network using PRO.  In this example, both
++      RuleID 2 and RuleID 3 are used by two pairs of nodes each.
+
+- Figure 14 illustrates an example Multiple-end point network with the
+- Rules that need to be stored by the nodes in PRO.  In this example,
+- in addition to the Rules used in Figure 13, which correspond to a
+- SCHC Datagram Instance called E1 in this example, there is an
+- additional RuleID 2, which corresponds to communication between A and
+- D, in a second SCHC Data end point (E2).
++ Figure 14 illustrates an example Multiple-Instance network with the
++ Rules that need to be stored by the nodes in PRO.  In this example,
++ in addition to the Rules used in Figure 13, which correspond to a
++ SCHC Instance (and its Context) denoted E1 in this example, there is
++ an additional RuleID 2, which corresponds to communication between A
++ and D, in a second SCHC Instance (E2).
+
+(Figure 14, right-hand legend header)
+-                  /    \                              Nodes | End point
++                  /    \                              Nodes | Instance
+
+(Figure 14 caption)
+-    Figure 14: Rules stored by each node in an example Multiple-end
+-           point network using PRO.  'RID' stands for RuleID.
++    Figure 14: Rules stored by each node in an example
++     Multiple-Instance network using PRO.  'RID' stands for RuleID.
+
+(New paragraph, after the PRO 6LR description "...decrement its Hop Limit and
+route the packet, without the need to store the corresponding Rules.")
++ Note that, in the terminology of [I-D.ietf-schc-architecture], a 6LR
++ that forwards PRO traffic without storing the corresponding Rules is
++ not a SCHC Instance: it operates on the PRO Header framing and on
++ the bit ranges designated by the SCHC Pointer, and does not
++ interpret the SCHC Data through a Context.
+
+=======================================================================
+Section 3.5.4  Mesh-Under
+=======================================================================
+
+- In Mesh-Under, in a Single-end point network, a RuleID MAY be used to
+- identify different Rules used by different sets of peer nodes.  In a
+- Mesh-Under Multiple-end point network, a fully compressed SCHC
+- Control Header MAY be used as long as it is possible to determine the
+- SCHC Data end point needed to decompress a SCHC-compressed packet
+- based on the packet's originator address (which is present in the
+- Mesh Header [RFC 4944]).
++ In Mesh-Under, in a Single-Instance network, a RuleID MAY be used to
++ identify different Rules used by different sets of peer nodes.  In a
++ Mesh-Under Multiple-Instance network, a fully compressed SCHC
++ Control Header MAY be used as long as it is possible to determine
++ the SCHC Instance (and thus the Context) needed to decompress a
++ SCHC-compressed packet based on the packet's originator address
++ (which is present in the Mesh Header [RFC 4944]); in that case, the
++ originator address is used as a Discriminator
++ [I-D.ietf-schc-architecture].
+
+- Figure 15 illustrates the Rules that need to be stored by the nodes
+- when SCHC is used for header compression in a Single-end point Mesh-
+- Under network, based on the same example network and node pairs shown
++ Figure 15 illustrates the Rules that need to be stored by the nodes
++ when SCHC is used for header compression in a Single-Instance Mesh-
++ Under network, based on the same example network and node pairs shown
+
+(Figure 15 caption)
+-     Figure 15: Rules stored by each node in an example Single-end
+-     point network using Mesh-Under.  In this example, RuleID 2 is
+-                   used by different pairs of nodes.
++     Figure 15: Rules stored by each node in an example
++     Single-Instance network using Mesh-Under.  In this example,
++     RuleID 2 is used by different pairs of nodes.
+
+- Figure 16 illustrates an example Multiple-end point network with the
+- Rules that need to be stored by the nodes in PRO.  In this example,
+- in addition to the Rules used in Figure 13, which correspond to a
+- SCHC Data end point called E1 in this example, there is an additional
+- RuleID 2, which corresponds to communication between A and D, in a
+- second SCHC Data end point (E2).
++ Figure 16 illustrates an example Multiple-Instance network with the
++ Rules that need to be stored by the nodes in Mesh-Under.  In this
++ example, in addition to the Rules used in Figure 13, which
++ correspond to a SCHC Instance (and its Context) denoted E1 in this
++ example, there is an additional RuleID 2, which corresponds to
++ communication between A and D, in a second SCHC Instance (E2).
+
+(Figure 16, right-hand legend header)
+-             /        \                      Nodes | End point
++             /        \                      Nodes | Instance
+
+(Figure 16 caption)
+-    Figure 16: Rules stored by each node in an example Multiple-end
+-       point network using Mesh-Under.  'RID' stands for RuleID.
++    Figure 16: Rules stored by each node in an example
++     Multiple-Instance network using Mesh-Under.  'RID' stands for
++     RuleID.
+
+=======================================================================
+Section 4.1  Single-hop or SRO frame format
+=======================================================================
+
+(No change to the format itself; the SCHC Datagram composition sentence keeps
+the -06 citation, which matches -06 Figures 7-8 — Control Header inside the
+Datagram, before the RuleID:)
+
+- and user payload (i.e., the payload of the packet being carried over
+- IEEE 802.15.4) [draft-ietf-schc-architecture].  Figure 17 illustrates
++ and user payload (i.e., the payload of the packet being carried over
++ IEEE 802.15.4) [I-D.ietf-schc-architecture].  Figure 17 illustrates
+
+=======================================================================
+Section 4.1.1  SCHC Dispatch
+=======================================================================
+
+- this end, the present document specifies the SCHC Dispatch.  The SCHC
+- Dispatch indicates that the next field in the frame format is a SCHC
+- Sratum header ("SCHC Hdr" in Figure 17, see 4.1.2)).
++ this end, the present document specifies the SCHC Dispatch.  The SCHC
++ Dispatch indicates that the next field in the frame format is a SCHC
++ Control Header ("SCHC Hdr" in Figure 17, see 4.1.2).
+
+=======================================================================
+Section 4.1.2  SCHC Control Header
+=======================================================================
+
+- The SCHC Control Header ("SCHC Hdr" in Figure 17 and subsequent
+- figures) determines the SCHC Data end point to be used to decompress
+- the next field (SCHC Data, see 4.1.3).
++ The SCHC Control Header ("SCHC Hdr" in Figure 17 and subsequent
++ figures) identifies the SCHC Instance, and thus the Context, to be
++ used to decompress the next field (SCHC Data, see 4.1.3).
+
+- The uncompressed SCHC Control Header format comprises a single field,
+- called the SCHC Instance ID.  This field is an unsigned integer that
+- identifies the session between SCHC end points in two or more peer
+- nodes using a common SoR.  The SCHC Instance ID size is RECOMMENDED
+- to be between 1 and 8 bits.
++ The uncompressed SCHC Control Header format comprises a single field,
++ called the SCHC Instance ID.  This field is an unsigned integer that
++ identifies the SCHC Instance, and thus the Context, that applies to
++ the SCHC Data.  The Instances of two or more peer nodes that share
++ that Context (and thus a common SoR) within a Session use the same
++ SCHC Instance ID value.  The SCHC Instance ID size is RECOMMENDED
++ to be between 1 and 8 bits.
+
+- As described in the SCHC architecture draft, in compressed form, the
+- SCHC Control Header comprises a RuleID and a compression residue
+- [draft-ietf-schc-architecture].  The RuleID size of the compressed
++ As described in the SCHC architecture draft, in compressed form, the
++ SCHC Control Header comprises a RuleID and a compression residue
++ [I-D.ietf-schc-architecture].  The RuleID size of the compressed
+
+- In Single-end point networks, the SCHC Control Header MUST be fully
+- compressed, i.e., its size in compressed form is 0 bits.  In
+- Multiple-end point networks, the SCHC Control Header cannot always be
+- fully compressed; in this case, the RuleID size (of the Rule used to
+- compress the SCHC Control Header) is RECOMMENDED to be between 1 and
+- 8 bits.
++ In Single-Instance networks, the SCHC Control Header MUST be fully
++ compressed, i.e., its size in compressed form is 0 bits.  In
++ Multiple-Instance networks, the SCHC Control Header cannot always be
++ fully compressed; in this case, the RuleID size (of the Rule used to
++ compress the SCHC Control Header) is RECOMMENDED to be between 1 and
++ 8 bits.
+
+=======================================================================
+Section 4.1.3  SCHC Data
+=======================================================================
+
+- The SCHC Data is a packet header that has been compressed by using a
+- SCHC Data end point.  It is the compressed form of the header of the
+- original packet being carried over IEEE 802.15.4.  As defined in
++ The SCHC Data is a packet header that has been compressed by a SCHC
++ Instance.  It is the compressed form of the header of the
++ original packet being carried over IEEE 802.15.4.  As defined in
+
+=======================================================================
+Section 4.1.4  User payload
+=======================================================================
+
+- The user payload is the payload of the original packet being carried
+- over IEEE 802.15.4, which is unaffected by the SCHC Stratum [draft-
+- ietf-schc-architecture].
++ The user payload is the payload of the original packet being carried
++ over IEEE 802.15.4, which is unaffected by the SCHC Stratum
++ [I-D.ietf-schc-architecture].
+
+=======================================================================
+Section 5  Enabling the TPS (introduction)
+=======================================================================
+
+- SCHC uses a SCHC Control Header to identify the SCHC-compressed
+- protocol header(s), along with further information to support SCHC
+- operation (when needed).  SCHC may also need a Discriminator to
+- identify the SoR to be used for header decompression [draft-ietf-
+- schc-architecture].
++ SCHC uses a SCHC Control Header to identify the SCHC-compressed
++ protocol header(s), along with further information to support SCHC
++ operation (when needed).  SCHC may also need a Discriminator, used
++ by the Dispatcher to select the appropriate SCHC Instance, and thus
++ the Context (with its SoR) to be used for header decompression
++ [I-D.ietf-schc-architecture].
+
+=======================================================================
+Section 5.1  SCHC C/D for the TPS: joint UDP/CoAP header compression
+=======================================================================
+
+- TPS-only device transmits a CoAP data unit, the SCHC Control Header
+- is fully compressed and it incurs no transmission overhead (i.e., it
+- is compressed down to 0 bits when transmitted), since the SoR of the
+- SCHC Stratum end point contains exactly one Rule.  When receiving a
++ TPS-only device transmits a CoAP data unit, the SCHC Control Header
++ is fully compressed and it incurs no transmission overhead (i.e., it
++ is compressed down to 0 bits when transmitted), since the SoR of the
++ Instance at that SCHC Stratum contains exactly one Rule.  When
++ receiving a
+
+(Figure 30, inner-format labels)
+-                +------------------+---------------------+
+-                |   SCHC Stratum   |      SCHC Data      |
+-                |       Header     | (RuleID + cmp. rsd. |
+-                | for UDP and CoAP | of UDP/CoAP header) |
+-                +------------------+---------------------+
++                +------------------+---------------------+
++                |   SCHC Control   |      SCHC Data      |
++                |       Header     | (RuleID + cmp. rsd. |
++                | for UDP and CoAP | of UDP/CoAP header) |
++                +------------------+---------------------+
+
+(Figure 31, note)
+- Note: for devices that only implement the TPS (i.e., the only protocols carried over IP are UDP and CoAP),
+- the SCHC-Compressed Control Header is fully compressed (down to 0 bits when transmitted over the air) since
+- there is only one Rule in the SoR for the SCHC Stratum end point for such devices.
++ Note: for devices that only implement the TPS (i.e., the only protocols carried over IP are UDP and CoAP),
++ the SCHC-Compressed Control Header is fully compressed (down to 0 bits when transmitted over the air) since
++ there is only one Rule in the SoR of the Instance at that SCHC Stratum for such devices.
+
+=======================================================================
+Section 5.2  SCHC C/D for the TPS: multiple SCHC Strata
+=======================================================================
+
+(Figure 29 and Figures 32/35, right-hand column of the outer format)
+- |        | artifacts |(NH=0,NxtHdr=SCHC)| (incl. SCHC    |
+- |        |           |                  | Stratum Hdr(s))|
++ |        | artifacts |(NH=0,NxtHdr=SCHC)| (incl. SCHC    |
++ |        |           |                  | Control Hdr(s))|
+
+(Figure 32, inner-format labels)
+-                               +---------+--------+---------+--------+
+-                               |  SCHC   |  SCHC  |  SCHC   | SCHC   |
+-                               | Stratum | Payload| Stratum | Payload|
+-                               | Header  | (UDP)  |  Header | (CoAP) |
+-                               | for UDP |        | for CoAP|        |
+-                               +---------+--------+---------+--------+
++                               +---------+--------+---------+--------+
++                               |  SCHC   |  SCHC  |  SCHC   | SCHC   |
++                               | Control | Payload| Control | Payload|
++                               | Header  | (UDP)  |  Header | (CoAP) |
++                               | for UDP |        | for CoAP|        |
++                               +---------+--------+---------+--------+
+
+(Figure 33, note)
+-  Note: for devices that only implement the TPS (i.e., the only protocol carried over IPv6 is UDP),
+-  the SCHC-Compressed Control Header is fully compressed (down to 0 bits when transmitted over the air)
+-  since there is only one Rule in the SoR of the SCHC Stratum for such devices.
++  Note: for devices that only implement the TPS (i.e., the only protocol carried over IPv6 is UDP),
++  the SCHC-Compressed Control Header is fully compressed (down to 0 bits when transmitted over the air)
++  since there is only one Rule in the SoR of the Instance at that SCHC Stratum for such devices.
+
+(Figure 34, note)
+- Note: for devices that only implement the TPS (i.e., the only protocol carried over UDP is CoAP),
+- the SCHC-Compressed Control Header is fully compressed (down to 0 bits when transmitted over the air)
+- since there is only one Rule in the SoR of the SCHC Stratum for such devices.
++ Note: for devices that only implement the TPS (i.e., the only protocol carried over UDP is CoAP),
++ the SCHC-Compressed Control Header is fully compressed (down to 0 bits when transmitted over the air)
++ since there is only one Rule in the SoR of the Instance at that SCHC Stratum for such devices.
+
+(Figure 35, inner-format labels)
+-                      +---------+--------+---------+--------+---------+--------+
+-                      |  SCHC   |  SCHC  |  SCHC   | SCHC   | SCHC    | SCHC   |
+-                      | Stratum | Payload| Stratum | Payload| Stratum | Payload|
+-                      | Header  | (UDP)  |  Header | (CoAP  | Header  | (CoAP  |
+-                      | for UDP |        | for CoAP|  outer)| for CoAP| inner) |
+-                      +---------+--------+---------+--------+---------+--------+
++                      +---------+--------+---------+--------+---------+--------+
++                      |  SCHC   |  SCHC  |  SCHC   | SCHC   | SCHC    | SCHC   |
++                      | Control | Payload| Control | Payload| Control | Payload|
++                      | Header  | (UDP)  |  Header | (CoAP  | Header  | (CoAP  |
++                      | for UDP |        | for CoAP|  outer)| for CoAP| inner) |
++                      +---------+--------+---------+--------+---------+--------+
+
+(Figure 36, note)
+- Note: for devices that only implement the TPS and use OSCORE, the SCHC-Compressed Control Header for CoAP inner header C/D is fully compressed (down to 0 bits when transmitted over the air) since there is only one Rule in the SoR of that SCHC Stratum.
++ Note: for devices that only implement the TPS and use OSCORE, the SCHC-Compressed Control Header for CoAP inner header C/D is fully compressed (down to 0 bits when transmitted over the air) since there is only one Rule in the SoR of the Instance at that SCHC Stratum.
+
+=======================================================================
+Section 4  (introductory paragraph, cross-reference to Section 5.2)
+=======================================================================
+
+- payload.  Note that the SCHC Control Header formats to support CoAP
+- header C/D based on additional SCHC Strata over UDP (e.g., when CoAP
+- is secured by means of DTLS or OSCORE, see Figure 2) are defined in
+- Section 5.2.
+(unchanged — already uses -06 terminology)
+
+=======================================================================
+Section 6.1  SCHC compression for IPv6 and UDP headers
+=======================================================================
+
+- However, in some types of 6LoWPAN environments (e.g., when a sender
+- and its destination are both peer nodes in a mesh topology network),
+- additional functionality is needed to allow use of the Dev and App
+- roles for C/D.  In this case, each SCHC C/D entity needs to know its
+- role (Dev or App) in addition to the Rule(s), and corresponding
+- RuleIDs, for each node it communicates with before such communication
+- occurs [I-D.ietf-schc-architecture].  In such cases, the terms Uplink
+- and Downlink that have been defined in RFC 8724 need to be understood
+- in the context of each specific set of peer nodes.
++ However, in some types of 6LoWPAN environments (e.g., when a sender
++ and its destination are both peer nodes in a mesh topology network),
++ additional functionality is needed to allow use of the Dev and App
++ roles for C/D.  In this case, each SCHC Instance needs to know its
++ role (Dev or App), for each Session it participates in, in addition
++ to the Rule(s), and corresponding RuleIDs, for each node it
++ communicates with before such communication occurs (see the Role of
++ the Instance in [I-D.ietf-schc-architecture]).  In such cases, the
++ terms Uplink and Downlink that have been defined in RFC 8724 need to
++ be understood in the context of each specific set of peer nodes.
+
+=======================================================================
+Section 6.2  SCHC compression for CoAP headers
+=======================================================================
+
+- As stated in 5.1, in some types of 6LoWPAN environments (e.g., when a
+- sender and its destination are both peer nodes in a mesh topology
+- network), each SCHC C/D entity needs to know its role (Dev or App),
+- in addition to the Rule(s), and corresponding RuleIDs, for each node
+- it communicates with before such communication occurs
+- [I-D.ietf-schc-architecture].  Therefore, in such cases, direction
+- information will be specific to each set of peer nodes.
++ As stated in 5.1, in some types of 6LoWPAN environments (e.g., when a
++ sender and its destination are both peer nodes in a mesh topology
++ network), each SCHC Instance needs to know its role (Dev or App),
++ for each Session it participates in, in addition to the Rule(s), and
++ corresponding RuleIDs, for each node it communicates with before
++ such communication occurs [I-D.ietf-schc-architecture].  Therefore,
++ in such cases, direction information will be specific to each set of
++ peer nodes.
+
+=======================================================================
+Section 12.1  Normative References
+=======================================================================
+
+- [I-D.ietf-schc-architecture]
+-            Pelov, A., Thubert, P., and A. Minaburo, "Static Context
+-            Header Compression (SCHC) Architecture", Work in Progress,
+-            Internet-Draft, draft-ietf-schc-architecture-05, 17
+-            October 2025, <https://datatracker.ietf.org/doc/html/
+-            draft-ietf-schc-architecture-05>.
++ [I-D.ietf-schc-architecture]
++            Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and M.
++            Dumay, "Static Context Header Compression (SCHC)
++            Architecture", Work in Progress, Internet-Draft,
++            draft-ietf-schc-architecture-06, 6 July 2026,
++            <https://datatracker.ietf.org/doc/html/
++            draft-ietf-schc-architecture-06>.
+
+=======================================================================
+Appendix A.2  TRO
+=======================================================================
+
+- An advantage of TRO is that a node only has to store the Rules for
+- the communications it is involved in as an endpoint, which minimizes
+- memory requirements and the impact of potential SCHC context updates.
+- For example, 6LRs do not have to store SCHC context.
++ An advantage of TRO is that a node only has to store the Rules for
++ the communications it is involved in as a communicating node, which
++ minimizes memory requirements and the impact of potential SCHC
++ Context updates.  For example, 6LRs do not have to store a SCHC
++ Context.
+
+=======================================================================
+Appendix A.3  PRO
+=======================================================================
+
+- An advantage of PRO, as in TRO, is that a node only has to store the
+- Rules for the communications it is involved in as an endpoint, which
+- minimizes memory requirements and the impact of potential SCHC
+- context updates.  For example, 6LRs do not have to store SCHC
+- context.  An exception is a 6LBR, which has to store the Rules for
+- the communications of other endpoints with external nodes (if any).
++ An advantage of PRO, as in TRO, is that a node only has to store the
++ Rules for the communications it is involved in as a communicating
++ node, which minimizes memory requirements and the impact of
++ potential SCHC Context updates.  For example, 6LRs do not have to
++ store a SCHC Context.  An exception is a 6LBR, which has to store
++ the Rules for the communications of other nodes with external nodes
++ (if any).
+
+=======================================================================
+End of migration diff
+=======================================================================
+# Coverage note: Sections 1, 2, 3.1.2, 3.3, 4.2-4.5, 5 (formats other than the
+# labels above), 6.1.1, 6.1.2, 7, 8, 9, 10, Appendix A.1/A.4, B, C contain no
+# occurrence of the migrated -05 terminology ("SCHC Data end point", "SCHC
+# Control Header end point", "Single-/Multiple-end point network", "SCHC
+# Stratum end point/Header", "C/D entity", architectural "endpoint") and are
+# therefore unchanged. No location required an unaccepted architecture change;
+# no <<BLOCKED>> markers were needed.

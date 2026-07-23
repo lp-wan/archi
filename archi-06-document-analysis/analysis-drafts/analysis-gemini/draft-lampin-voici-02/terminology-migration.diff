@@ -1,0 +1,215 @@
+--- draft-lampin-voici-02.txt (Original)
++++ draft-lampin-voici-02.txt (Migrated)
+@@ -14,14 +14,14 @@
+ 
+ Abstract
+ 
+    The Static Context Header Compression (SCHC) framework identified the
+-   need for a minimal transport encapsulation that provides Session
+-   multiplexing when extrinsic Discriminators are insufficient.  This
+-   document specifies a Link Multiplexer (VOICI) that addresses those
+-   SCHC-driven requirements while remaining general enough to
+-   accommodate other compression mechanisms and uncompressed payloads.
+-   The encapsulation is designed for minimal overhead, reducing to 1
+-   byte in the common case (7 inline Session IDs), while supporting
+-   optional integrity protection and original EtherType/port recovery.
++   need for a minimal transport encapsulation (a Control Header) that provides
++   Session multiplexing when extrinsic Discriminators are insufficient.  This
++   document specifies a Link Multiplexer (VOICI) that addresses those
++   SCHC-driven requirements by carrying an explicit Discriminator while
++   remaining general enough to accommodate other compression mechanisms
++   and uncompressed payloads. The encapsulation is designed for minimal
++   overhead, reducing to 1 byte in the common case (7 inline Session IDs),
++   while supporting optional integrity protection and original EtherType/port recovery.
+ 
+@@ -151,11 +151,12 @@
+    This document specifies a Link Multiplexer (VOICI) that satisfies the
+    requirements identified for SCHC while remaining general enough for
+-   other compression mechanisms.  The VOICI header carries a Session ID
+-   for multiplexing, a Content Identifier for dispatching the Datagram
+-   to the correct handler, and optional integrity protection.  The
+-   encapsulation is designed for minimal overhead, reducing to 1 byte in
+-   the common case (inline Session IDs 0-6 with 2-bit Content
+-   Identifier).
++   other compression mechanisms.  The VOICI header acts as a Control Header
++   carrying a Session ID (acting as a link-local Discriminator component)
++   for Session multiplexing, a Content Identifier for dispatching the Datagram
++   to the correct Instance or handler, and optional integrity protection.  The
++   encapsulation is designed for minimal overhead, reducing to 1 byte in
++   the common case (inline Session IDs 0-6 with 2-bit Content
++   Identifier).
+ 
+@@ -183,5 +184,5 @@
+-    1.  *Session identification*: A mechanism to distinguish Sessions and
+-        route Datagrams to the correct processing handler (for example, a
+-        SCHC Instance).  The identifier (Session ID) is locally
+-        significant to the link.
++    1.  *Session identification*: A mechanism to distinguish Sessions and
++        route Datagrams to the correct Instance or processing handler (for
++        example, a SCHC Instance). The wire identifier (Session ID) acts as
++        a link-local Discriminator representing the logical Session.
+ 
+@@ -357,23 +358,24 @@
+ 4.  Integration within SCHC framework
+ 
+    VOICI integrates at the carrier layer using the SCHC Ethertype and
+    IP/UDP protocol numbers defined in [SCHC-PROTO-NUMS].  When
+    multiplexing is required, these values identify VOICI traffic on the
+    wire.  On deployments where explicit multiplexing is not needed,
+    i.e., provided by the supporting lower layers, VOICI is optional.
+-   The use of VOICI is part of the Endpoint configuration.
++   The use of VOICI is part of the Instance Configuration.
+ 
+-   On the sender side, the VOICI module prepends its header to the
+-   Datagram and replaces the original EtherType, IP Protocol Number, or
+-   UDP port number with the corresponding SCHC Ethertype or IP/UDP
+-   protocol number.  If the original framing information must be
+-   preserved for later restoration, the Original EtherType/Port flag (O)
+-   is set and the field is populated.
++   On the sender side, the Dispatcher (or VOICI encapsulation module)
++   prepends its Control Header to the Datagram and replaces the original
++   EtherType, IP Protocol Number, or UDP port number with the corresponding
++   SCHC Ethertype or IP/UDP protocol number.  If the original framing
++   information must be preserved for later restoration, the Original
++   EtherType/Port flag (O) is set and the field is populated as Metadata.
+ 
+-   On the receiver side, packets identified by the SCHC Ethertype or IP/
+-   UDP protocol number are handed to the VOICI dispatcher.  The VOICI
+-   module parses the header, uses the Session ID and CI field to route
+-   the Datagram to the correct processing handler, strips its own
+-   header, and optionally restores the original EtherType, IP Protocol
+-   Number, or UDP port number before passing the reconstituted frame to
+-   upper layers.
++   On the receiver side, packets identified by the SCHC Ethertype or IP/
++   UDP protocol number are handed to the Dispatcher.  The Dispatcher
++   parses the VOICI Control Header, uses the Session ID and CI field as
++   a compound Discriminator to route the Datagram to the correct Instance
++   (for SCHC) or non-SCHC handler (for raw/uncompressed traffic), strips
++   the Control Header, and optionally restores the original EtherType,
++   IP Protocol Number, or UDP port number before passing the reconstituted
++   frame to upper layers.
+ 
+@@ -474,10 +476,10 @@
+    *  *O (1 bit):* Original EtherType/Port present.  When set, the
+       Original EtherType/Port field is present, carrying the EtherType,
+       IP Next Header, or UDP port number that was replaced by the VOICI
+       EtherType, VOICI IP Protocol Number, or VOICI UDP port.  The field
+       is interpreted as an EtherType when VOICI is carried over a link-
+       layer transport (for example, IEEE 802 Ethertype), as a Next
+       Header if carried over IP, and as a UDP port when VOICI is carried
+       in a UDP payload.  This restoration is an VOICI responsibility;
+-      the Content Mechanism does not need to manage framing recovery and
+-      dispatching to original handler.
++      the Content Mechanism (or SCHC Instance) does not need to manage
++      framing recovery and dispatching to upper layers.
+ 
+@@ -551,9 +553,13 @@
+-   *  *Session ID (variable length):* Identifies the logical session
+-      that owns this Datagram.  When a mechanism is registered with
+-      VOICI, the mechanism profile assigns Session IDs and registers
+-      them with the VOICI instance.  The receiver VOICI uses the Session
+-      ID to dispatch the Datagram to the correct handler -- for SCHC,
+-      the handler is an SCHC Instance; for Unprocessed/Raw, the handler
+-      is the raw dispatch path.  The Session ID space (0-65535) is local
+-      to the link over which VOICI is carried and to the Content
+-      Mechanism.
++   *  *Session ID (variable length):* Identifies the logical session
++      that owns this Datagram. In the context of the SCHC Architecture
++      [SCHC-ARCH], the Session ID carried in the VOICI header acts as a
++      link-local Discriminator. The Dispatcher maps this link-local
++      Discriminator (possibly combined with lower-layer context) to a
++      logical Session whose identifier is unique within the Domain.
++      When a mechanism is registered with VOICI, the mechanism profile
++      assigns Session IDs and registers them with the Instance Manager.
++      The receiver's Dispatcher uses the Session ID and CI as a compound
++      Discriminator to route the Datagram to the correct Instance
++      (for SCHC) or non-SCHC handler (for Unprocessed/Raw). The Session
++      ID space (0-65535) is local to the link over which VOICI is carried
++      and to the Content Mechanism.
+ 
+@@ -679,27 +685,28 @@
+-6.  Session ID Allocation
+-
+-   The Session ID is locally significant to the link.  Allocation
+-   strategies depend on the deployment topology:
+-
+-6.1.  P2P Deployments
+-
+-   Session IDs MAY be negotiated between peers during Session
+-   establishment, or assigned by the Domain Manager during provisioning.
+-   Session ID 0 is a valid Session ID (no reserved values).
+-
+-6.2.  Star Topologies
+-
+-   The Network Gateway assigns Session IDs and communicates them to
+-   Devices during provisioning.  The Gateway maintains the Session ID to
+-   handler mapping.
+-
+-6.3.  Mesh and Other Topologies
+-
+-   Session IDs MAY be assigned by a Network or Domain Manager, or
+-   negotiated between peers.
+-
+-6.4.  Relay Remapping
+-
+-   A relay or gateway translating between links MAY remap Session IDs.
+-   The Session ID space is local to each link segment; there is no
+-   requirement for global uniqueness.
++6.  Session ID Allocation
++
++   The wire Session ID serves as a link-local Discriminator representing
++   the logical Session. Allocation strategies depend on the deployment
++   topology:
++
++6.1.  P2P Deployments
++
++   Session IDs MAY be negotiated between peers during Session
++   establishment, or assigned by the Domain Manager during provisioning.
++   Session ID 0 is a valid Session ID (no reserved values).
++
++6.2.  Star Topologies
++
++   The Network Gateway (acting as a Domain Manager or Instance Manager)
++   assigns Session IDs and communicates them to Devices during provisioning.
++   The Gateway maintains the mapping between link-local Discriminators
++   (Session IDs) and Instances.
++
++6.3.  Mesh and Other Topologies
++
++   Session IDs MAY be assigned by a Network or Domain Manager, or
++   negotiated between peers.
++
++6.4.  Relay Remapping
++
++   A relay or gateway translating between links MAY remap Session IDs
++   (translating the link-local Discriminator). The Session ID space is
++   local to each link segment; there is no requirement for global uniqueness
++   within the Domain for the wire-carried ID.
+ 
+@@ -707,5 +714,5 @@
+ 7.  Content Mechanism Identification
+ 
+    The CI field provides content mechanism identification.  VOICI at the
+-   receiver uses the CI and Session ID values to dispatch the Datagram
+-   to the correct handler without inspecting the Datagram contents.
++   receiver uses the CI and Session ID values as a compound Discriminator
++   to dispatch the Datagram to the correct Instance or handler without
++   inspecting the Datagram contents.
+ 
+@@ -828,6 +835,6 @@
+-   If Session IDs are predictable, an attacker could inject Datagrams
+-   with a forged Session ID to redirect traffic to a different handler.
+-   Session IDs SHOULD be randomly generated or derived from a secure key
+-   exchange.  In star topologies where the Domain Manager assigns
+-   Session IDs, the assigned values SHOULD be cryptographically random
+-   rather than sequential or otherwise predictable.
++   If Session IDs are predictable, an attacker could inject Datagrams
++   with a forged Session ID to redirect traffic to a different Instance
++   or handler. Session IDs SHOULD be randomly generated or derived from
++   a secure key exchange. In star topologies where the Domain Manager
++   assigns Session IDs, the assigned values SHOULD be cryptographically
++   random rather than sequential or otherwise predictable.
+ 
+@@ -864,2 +871,2 @@
+-   to dispatch the Datagram to a wrong handler, causing decompression
++   to dispatch the Datagram to a wrong Instance or handler, causing decompression

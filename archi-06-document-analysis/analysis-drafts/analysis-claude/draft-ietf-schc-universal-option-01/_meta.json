@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-schc-universal-option-01",
+  "agent": "claude",
+  "model": "default",
+  "host": "slug",
+  "pid": 41984,
+  "started": "2026-07-16T08:04:20Z",
+  "ended": "2026-07-16T08:12:28Z",
+  "duration_seconds": 488,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-6lo-schc-15dot4-13",
+  "agent": "claude",
+  "model": "default",
+  "host": "slug",
+  "pid": 41984,
+  "started": "2026-07-16T08:12:28Z",
+  "ended": "2026-07-16T08:27:02Z",
+  "duration_seconds": 874,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-schc-over-ppp-00",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 21611,
+  "started": "2026-07-10T16:34:13Z",
+  "ended": "2026-07-10T16:35:11Z",
+  "duration_seconds": 58,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

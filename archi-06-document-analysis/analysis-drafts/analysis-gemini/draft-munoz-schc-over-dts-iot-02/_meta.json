@@ -1,0 +1,13 @@
+{
+  "draft": "draft-munoz-schc-over-dts-iot-02",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 67016,
+  "started": "2026-07-10T14:29:59Z",
+  "ended": "2026-07-10T14:31:07Z",
+  "duration_seconds": 68,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

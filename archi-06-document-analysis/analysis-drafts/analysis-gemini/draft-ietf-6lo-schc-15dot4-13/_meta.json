@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-6lo-schc-15dot4-13",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 29930,
+  "started": "2026-07-10T16:51:07Z",
+  "ended": "2026-07-10T16:52:26Z",
+  "duration_seconds": 79,
+  "exit_code": 0,
+  "deliverables_produced": 2,
+  "dry_run": false
+}

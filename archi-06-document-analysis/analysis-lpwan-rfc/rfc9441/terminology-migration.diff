@@ -1,0 +1,231 @@
+--- rfc9441.txt
++++ rfc9441-schc-06-aligned.txt
+@@ Section 1 @@
+-   The Generic Framework for Static Context Header Compression (SCHC)
+-   and Fragmentation specification [RFC8724] describes two mechanisms:
+-   i) a protocol header compression scheme and ii) a frame fragmentation
+-   and loss recovery functionality.  Either can be used on top of radio
+-   technologies, such as the four Low-Power Wide Area Networks (LPWANs)
+-   listed in [RFC8376], which are Sigfox, LoRaWAN, NB-IoT, and IEEE
+-   802.15.4w.  These LPWANs have similar characteristics, such as star-
+-   oriented topologies, network architecture, and connected devices with
+-   built-in applications.
++   The Generic Framework for Static Context Header Compression (SCHC)
++   and Fragmentation specification [RFC8724] and the SCHC Architecture
++   [draft-ietf-schc-architecture-06] describe the SCHC framework, where
++   SCHC Instances hosted on Endpoints execute i) protocol header
++   compression and decompression (C/D) and ii) fragmentation and
++   reassembly (F/R) functions within a Session using shared Contexts.
++   These mechanisms can be used on top of radio technologies, such as the
++   four Low-Power Wide Area Networks (LPWANs) listed in [RFC8376], which
++   are Sigfox, LoRaWAN, NB-IoT, and IEEE 802.15.4w.  These LPWANs have
++   similar characteristics, such as star-oriented topologies, network
++   architecture, and connected devices with built-in applications.
+
+@@ Section 1 @@
+-   This document updates the SCHC protocol for frame fragmentation and
+-   loss recovery.  It defines a SCHC Compound ACK format and procedure,
+-   which are intended to reduce the number of response transmissions
+-   (i.e., SCHC ACKs) in the ACK-on-Error mode of SCHC.  The SCHC
+-   Compound ACK extends the failure SCHC ACK message format so that it
+-   can contain several bitmaps, with each bitmap being identified by its
+-   corresponding window number.  The SCHC Compound ACK is backwards
+-   compatible with the SCHC ACK as defined in [RFC8724], and introduces
+-   flexibility, as the receiver has the capability to respond to the
+-   All-0 SCHC Fragment, providing more Downlink opportunities and
+-   therefore adjusting to the delay requirements of the application.
++   This document updates the SCHC protocol for frame fragmentation and
++   loss recovery (F/R).  It defines a SCHC Compound ACK Datagram format
++   and procedure, which are intended to reduce the number of response
++   transmissions (i.e., SCHC ACKs) in the ACK-on-Error mode executed by a
++   SCHC Instance.  The SCHC Compound ACK extends the failure SCHC ACK
++   Datagram format so that it can contain several bitmaps, with each bitmap
++   being identified by its corresponding window number.  The SCHC Compound
++   ACK is backwards compatible with the SCHC ACK as defined in [RFC8724],
++   and introduces flexibility, as the reassembling SCHC Instance has the
++   capability to respond to the All-0 SCHC Fragment, providing more Downlink
++   opportunities and therefore adjusting to the delay requirements of the
++   application.
+
+@@ Section 3 @@
+-   The SCHC Compound ACK is a failure SCHC ACK message that can contain
+-   several bitmaps, with each bitmap being identified by its
+-   corresponding window number.  In [RFC8724], the failure SCHC ACK
+-   message only contains one bitmap corresponding to one window.  The
+-   SCHC Compound ACK extends this format, allowing more windows to be
+-   acknowledged in a single ACK and reducing the total number of failure
+-   SCHC ACK messages, especially when fragment losses are present in
+-   intermediate windows.
++   The SCHC Compound ACK is a failure SCHC ACK Datagram that can contain
++   several bitmaps, with each bitmap being identified by its
++   corresponding window number.  In [RFC8724], the failure SCHC ACK
++   Datagram only contains one bitmap corresponding to one window.  The
++   SCHC Compound ACK extends this format, allowing more windows to be
++   acknowledged in a single ACK Datagram and reducing the total number of
++   failure SCHC ACK Datagrams exchanged in a Session, especially when
++   fragment losses are present in intermediate windows.
+
+@@ Section 3.2 @@
+-   As presented in [RFC8724], the SCHC ACK format can be considered a
+-   special SCHC Compound ACK case in which it reports only the tiles of
+-   one window.  Therefore, the SCHC Compound ACK is backwards compatible
+-   with the SCHC ACK format presented in [RFC8724].  The receiver can
+-   assume that the sender does not support the SCHC Compound ACK if,
+-   although the SCHC Compound ACK sent by the receiver reports losses in
+-   more than one window, the sender does not resend any tiles from
+-   windows other than the first window reported in the SCHC Compound
+-   ACK.  In that case, the receiver can send SCHC Compound ACKs with
+-   only one window of tiles.
++   As presented in [RFC8724], the SCHC ACK format can be considered a
++   special SCHC Compound ACK case in which it reports only the tiles of
++   one window.  Therefore, the SCHC Compound ACK is backwards compatible
++   with the SCHC ACK format presented in [RFC8724].  The reassembling
++   SCHC Instance can assume that the fragmenting SCHC Instance does not
++   support the SCHC Compound ACK if, although the SCHC Compound ACK sent by
++   the reassembling Instance reports losses in more than one window, the
++   fragmenting Instance does not resend any tiles from windows other than
++   the first window reported in the SCHC Compound ACK.  In that case, the
++   reassembling Instance can send SCHC Compound ACKs with only one window
++   of tiles.
+
+@@ Section 3.2.1 @@
+-   The ACK-on-Error mode supports L2 technologies that have variable MTU
+-   and out-of-order delivery.  It requires an L2 that provides a
+-   feedback path from the reassembler to the fragmenter.  See Appendix F
+-   for a discussion on using ACK-on-Error mode on quasi-bidirectional
+-   links.
++   The ACK-on-Error mode supports L2 technologies that have variable MTU
++   and out-of-order delivery.  It requires an L2 that provides a
++   feedback path from the reassembling SCHC Instance to the fragmenting
++   SCHC Instance in a Session.  See Appendix F for a discussion on using
++   ACK-on-Error mode on quasi-bidirectional links.
+
+@@ Section 3.2.1 @@
+-   For each active pair of RuleID and DTag values, the sender MUST
+-   maintain:
+-
+-   *  one Attempts counter and
+-
+-   *  one Retransmission Timer.
+-
+-   For each active pair of RuleID and DTag values, the receiver MUST
+-   maintain:
+-
+-   *  one Attempts counter and
+-
+-   *  one Inactivity Timer.
++   For each active pair of RuleID and DTag values in a Session, the
++   fragmenting SCHC Instance MUST maintain in its Set of Variables (SoV):
++
++   *  one Attempts counter and
++
++   *  one Retransmission Timer.
++
++   For each active pair of RuleID and DTag values in a Session, the
++   reassembling SCHC Instance MUST maintain in its Set of Variables (SoV):
++
++   *  one Attempts counter and
++
++   *  one Inactivity Timer.
+
+@@ Section 3.2.1.1 @@
+-   At the beginning of the fragmentation of a new SCHC Packet:
+-
+-   *  the fragment sender MUST select a RuleID and DTag value pair for
+-      this SCHC Packet.  A Rule MUST NOT be selected if the values of M
+-      and WINDOW_SIZE for that Rule are such that the SCHC Packet cannot
+-      be fragmented in (2^M) * WINDOW_SIZE tiles or less.
+-
+-   *  the fragment sender MUST initialize the Attempts counter to 0 for
+-      that RuleID and DTag value pair.
++   At the beginning of the fragmentation of a new SCHC Packet:
++
++   *  the fragmenting SCHC Instance MUST select a RuleID and DTag value pair
++      for this SCHC Packet from the active Context.  A Rule MUST NOT be
++      selected if the values of M and WINDOW_SIZE for that Rule in the Set
++      of Rules (SoR) are such that the SCHC Packet cannot be fragmented in
++      (2^M) * WINDOW_SIZE tiles or less.
++
++   *  the fragmenting SCHC Instance MUST initialize the Attempts counter in
++      the Session's Set of Variables (SoV) to 0 for that RuleID and DTag
++      value pair.
+
+@@ Section 3.2.1.1 @@
+-   The fragment sender MUST listen for SCHC Compound ACK messages after
+-   having sent:
+-
+-   *  an All-1 SCHC Fragment or
+-
+-   *  a SCHC ACK REQ.
++   The fragmenting SCHC Instance MUST listen for SCHC Compound ACK
++   Datagrams after having sent:
++
++   *  an All-1 SCHC Fragment or
++
++   *  a SCHC ACK REQ.
+
+@@ Section 3.2.1.1 @@
+-   On receiving a SCHC Compound ACK:
++   On receiving a SCHC Compound ACK Datagram:
+
+@@ Section 3.2.1.2 @@
+-   On receiving a SCHC Fragment with a RuleID and DTag pair not being
+-   processed at that time:
+-
+-   *  the receiver SHOULD check that the DTag value has not recently
+-      been used for that RuleID value, thereby ensuring that the
+-      received SCHC Fragment is not a remnant of a prior fragmented SCHC
+-      Packet transmission.  The initial value of the Inactivity Timer is
+-      the RECOMMENDED lifetime for the DTag value at the receiver.  If
+-      the SCHC Fragment is determined to be such a remnant, the receiver
+-      MAY silently ignore it and discard it.
+-
+-   *  the receiver MUST start a process to assemble a new SCHC Packet
+-      with that RuleID and DTag value pair.  The receiver MUST start an
+-      Inactivity Timer for that RuleID and DTag value pair.  It MUST
+-      initialize an Attempts counter to 0 for that RuleID and DTag value
+-      pair.  If the receiver is under-resourced to do this, it MUST
+-      respond to the sender with a SCHC Receiver-Abort.
++   On receiving a SCHC Fragment Datagram with a RuleID and DTag pair not
++   being processed at that time:
++
++   *  the reassembling SCHC Instance SHOULD check that the DTag value has
++      not recently been used for that RuleID value in the Session's Set of
++      Variables (SoV), thereby ensuring that the received SCHC Fragment is
++      not a remnant of a prior fragmented SCHC Packet transmission.  The
++      initial value of the Inactivity Timer is the RECOMMENDED lifetime for
++      the DTag value at the reassembling Instance.  If the SCHC Fragment
++      is determined to be such a remnant, the reassembling Instance MAY
++      silently ignore it and discard it.
++
++   *  the reassembling SCHC Instance MUST start a process to assemble a new
++      SCHC Packet with that RuleID and DTag value pair.  The reassembling
++      Instance MUST start an Inactivity Timer in its Set of Variables (SoV)
++      for that RuleID and DTag value pair.  It MUST initialize an Attempts
++      counter to 0 in the SoV for that RuleID and DTag value pair.  If the
++      reassembling Instance is under-resourced to do this, it MUST respond
++      to the fragmenting Instance with a SCHC Receiver-Abort.
+
+@@ Section 5 @@
+-   This document also extends the SCHC YANG data model defined in
+-   [RFC9363] by including a new leaf in the Ack-on-Error fragmentation
+-   mode to describe both the option to use the SCHC Compound ACK, as
+-   well as its bitmap format.
++   This document also extends the SCHC YANG data model defined in
++   [RFC9363], which represents the Context schema stored in the Context
++   Repository and managed by the Domain Manager, by including a new leaf in
++   the Ack-on-Error fragmentation mode to describe both the option to use
++   the SCHC Compound ACK, as well as its bitmap format.
+
+@@ Section 6 @@
+-   This section lists the parameters related to the SCHC Compound ACK
+-   usage that need to be defined in the Profile.  This list MUST be
+-   appended to the list of SCHC parameters under "Decision to use SCHC
+-   fragmentation mechanism or not.  If yes, the document must describe:"
+-   as defined in Appendix D of [RFC8724].
++   This section lists the parameters related to the SCHC Compound ACK
++   usage that need to be defined in the Profile to populate the Instance
++   Configuration and Context (Set of Rules).  This list MUST be appended
++   to the list of SCHC parameters under "Decision to use SCHC
++   fragmentation mechanism or not.  If yes, the document must describe:"
++   as defined in Appendix D of [RFC8724].

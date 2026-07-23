@@ -1,0 +1,3024 @@
+
+
+
+
+6lo Working Group                                               C. Gomez
+Internet-Draft                                                       UPC
+Updates: 8138, 8724, 9008 (if approved)                      A. Minaburo
+Intended status: Standards Track                              Consultant
+Expires: 5 January 2027                                        July 2026
+
+
+  Transmission of SCHC-compressed packets over IEEE 802.15.4 networks
+                     draft-ietf-6lo-schc-15dot4-13
+
+Abstract
+
+   A framework called Static Context Header Compression and
+   fragmentation (SCHC) has been designed with the primary goal of
+   supporting IPv6 over Low Power Wide Area Network (LPWAN) technologies
+   [RFC8724].  One of the SCHC components is a header compression
+   mechanism.  If used properly, SCHC header compression allows a
+   greater compression ratio than that achievable with traditional
+   6LoWPAN header compression [RFC6282].  For this reason, it may make
+   sense to use SCHC header compression in some 6LoWPAN environments,
+   including IEEE 802.15.4 networks.  This document specifies how a
+   SCHC-compressed packet can be carried over IEEE 802.15.4 networks.
+   The document also enables the transmission of SCHC-compressed UDP/
+   CoAP headers over 6LoWPAN-compressed IPv6 packets.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 2 January 2027.
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                 [Page 1]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
+   2.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   4
+     2.1.  Requirements language . . . . . . . . . . . . . . . . . .   4
+     2.2.  Background on previous specifications . . . . . . . . . .   5
+     2.3.  New term  . . . . . . . . . . . . . . . . . . . . . . . .   5
+   3.  Architecture  . . . . . . . . . . . . . . . . . . . . . . . .   5
+     3.1.  Protocol stacks . . . . . . . . . . . . . . . . . . . . .   5
+       3.1.1.  Main protocol stack . . . . . . . . . . . . . . . . .   5
+       3.1.2.  Transition protocol stacks  . . . . . . . . . . . . .  10
+     3.2.  SCHC architecture concepts  . . . . . . . . . . . . . . .  12
+       3.2.1.  SCHC Stratum and Discriminator  . . . . . . . . . . .  12
+       3.2.2.  Single-end point networks . . . . . . . . . . . . . .  13
+       3.2.3.  Multiple-end point networks . . . . . . . . . . . . .  13
+     3.3.  Network topologies  . . . . . . . . . . . . . . . . . . .  13
+     3.4.  Single-hop communication  . . . . . . . . . . . . . . . .  14
+     3.5.  Multihop communication  . . . . . . . . . . . . . . . . .  14
+       3.5.1.  Straightforward Route-Over (SRO)  . . . . . . . . . .  15
+       3.5.2.  Tunneled, RPL-based Route-Over (TRO)  . . . . . . . .  17
+       3.5.3.  Pointer-based Route-Over (PRO)  . . . . . . . . . . .  21
+       3.5.4.  Mesh-Under  . . . . . . . . . . . . . . . . . . . . .  23
+   4.  Frame Format  . . . . . . . . . . . . . . . . . . . . . . . .  25
+     4.1.  Single-hop or SRO frame format  . . . . . . . . . . . . .  25
+       4.1.1.  SCHC Dispatch . . . . . . . . . . . . . . . . . . . .  26
+       4.1.2.  SCHC Control Header . . . . . . . . . . . . . . . . .  26
+       4.1.3.  SCHC Data . . . . . . . . . . . . . . . . . . . . . .  28
+       4.1.4.  User payload  . . . . . . . . . . . . . . . . . . . .  28
+       4.1.5.  Padding . . . . . . . . . . . . . . . . . . . . . . .  28
+     4.2.  TRO frame format  . . . . . . . . . . . . . . . . . . . .  28
+     4.3.  PRO frame format  . . . . . . . . . . . . . . . . . . . .  30
+     4.4.  Mesh-Under frame format . . . . . . . . . . . . . . . . .  32
+     4.5.  Summary . . . . . . . . . . . . . . . . . . . . . . . . .  33
+   5.  Enabling the TPS  . . . . . . . . . . . . . . . . . . . . . .  34
+     5.1.  SCHC C/D for the TPS: joint UDP/CoAP header
+           compression . . . . . . . . . . . . . . . . . . . . . . .  35
+     5.2.  SCHC C/D for the TPS: multiple SCHC Strata  . . . . . . .  37
+   6.  SCHC compression for IPv6, UDP, and CoAP headers  . . . . . .  41
+     6.1.  SCHC compression for IPv6 and UDP headers . . . . . . . .  41
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                 [Page 2]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+       6.1.1.  Compression of IPv6 addresses . . . . . . . . . . . .  42
+       6.1.2.  UDP checksum field  . . . . . . . . . . . . . . . . .  43
+     6.2.  SCHC compression for CoAP headers . . . . . . . . . . . .  43
+   7.  Neighbor Discovery  . . . . . . . . . . . . . . . . . . . . .  43
+   8.  Fragmentation and reassembly  . . . . . . . . . . . . . . . .  44
+   9.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  44
+   10. Security Considerations . . . . . . . . . . . . . . . . . . .  44
+   11. Acknowledgments . . . . . . . . . . . . . . . . . . . . . . .  45
+   12. References  . . . . . . . . . . . . . . . . . . . . . . . . .  45
+     12.1.  Normative References . . . . . . . . . . . . . . . . . .  45
+     12.2.  Informative References . . . . . . . . . . . . . . . . .  48
+   Appendix A.  Analysis of route-over multihop approaches . . . . .  49
+     A.1.  SRO . . . . . . . . . . . . . . . . . . . . . . . . . . .  49
+     A.2.  TRO . . . . . . . . . . . . . . . . . . . . . . . . . . .  49
+     A.3.  PRO . . . . . . . . . . . . . . . . . . . . . . . . . . .  50
+     A.4.  Summary . . . . . . . . . . . . . . . . . . . . . . . . .  51
+   Appendix B.  Relationship with RFC 7973 . . . . . . . . . . . . .  51
+   Appendix C.  Destination prefix encoding for the Address Residue
+           Length field in PRO . . . . . . . . . . . . . . . . . . .  51
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  53
+
+1.  Introduction
+
+   RFC 6282 is the main specification for IPv6 over Low power Wireless
+   Personal Area Network (6LoWPAN) IPv6 header compression [RFC6282].
+   That RFC was designed assuming IEEE 802.15.4 as the layer below the
+   6LoWPAN adaptation layer, and it has also been reused by the IPv6
+   over Networks of Resource-constrained Nodes (6lo) working group (with
+   proper adaptations) for IPv6 header compression over many other
+   technologies relatively similar to IEEE 802.15.4 in terms of
+   characteristics such as physical layer bit rate, layer 2 maximum
+   payload size, etc.  Examples of such technologies comprise BLE, DECT-
+   ULE, ITU G.9959, MS/TP, NFC, and PLC.  RFC 6282 provides additional
+   functionality, such as a mechanism for UDP header compression.
+
+   In the best cases, RFC 6282 allows to compress a 40-byte IPv6 header
+   down to a 2-byte compressed header (for link-local interactions) or a
+   3-byte compressed header (when global IPv6 addresses are used).  On
+   the other hand, RFC 6282 typically compresses a UDP header to a size
+   of 2 to 4 bytes.  Therefore, in advantageous conditions, a 48-byte
+   uncompressed IPv6/UDP header may be compressed down to a 4- to 6-byte
+   format (when using link-local addresses) or a 5- to 7-byte format
+   (for global interactions) by using RFC 6282.
+
+   Recently, a framework called Static Context Header Compression (SCHC)
+   has been designed with the primary goal of supporting IPv6 over Low
+   Power Wide Area Network (LPWAN) technologies [RFC8724].  SCHC
+   comprises header compression and decompression (C/D) and
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                 [Page 3]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   fragmentation and reassembly (F/R) functionality tailored to the
+   extraordinary constraints of LPWAN technologies, which are more
+   severe than those exhibited by IEEE 802.15.4 or other relatively
+   similar technologies.  SCHC header compression allows a greater
+   compression ratio than that of RFC 6282.  If used properly, SCHC
+   allows to compress an IPv6/UDP header down to e.g. a single byte.  In
+   addition, SCHC can be used to compress Constrained Application
+   Protocol (CoAP) headers [RFC7252][RFC8824], which further increases
+   the achievable performance improvement of using SCHC header
+   compression, since there is no 6LoWPAN header compression mechanism
+   defined for CoAP.  Therefore, it may make sense to use SCHC header
+   compression in some 6LoWPAN environments, including IEEE 802.15.4
+   networks, considering its greater efficiency.
+
+   This document specifies how a SCHC-compressed packet can be carried
+   over IEEE 802.15.4 networks.  In order to ease a transition from
+   existing 6LoWPAN/6Lo implementations to support SCHC header
+   compression, the document also enables the transmission of SCHC-
+   compressed UDP/CoAP headers over 6LoWPAN-compressed IPv6 packets.
+   Further transition approaches are also described.
+
+   The mechanism to be used to provide the SCHC header compression
+   context to the nodes in an IEEE 802.15.4 network is out of the scope
+   of this document.  Techniques intended to allow communication between
+   nodes that only use 6LoWPAN for header compression and nodes that
+   only use SCHC for header compression are out of the scope of this
+   document.
+
+   Note that, as per this document, and while SCHC defines fragmentation
+   mechanisms as well, 6LoWPAN/6lo fragmentation is used when necessary
+   to transport SCHC-compressed packets over IEEE 802.15.4 networks
+   [RFC4944][RFC8930][RFC8931].
+
+   In order to properly adapt to the requirements of supporting SCHC-
+   compressed packets over IEEE 802.15.4 networks, this specification
+   updates RFC 8138, RFC 8724, and RFC 9008.
+
+2.  Terminology
+
+2.1.  Requirements language
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP14 [RFC2119], [RFC8174], when, and only when, they appear in all
+   capitals, as shown here.
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                 [Page 4]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+2.2.  Background on previous specifications
+
+   The reader is expected to be familiar with the terms and concepts
+   defined in specifications of 6LoWPAN frame formats [RFC4944],
+   Neighbor Discovery for 6LoWPANs [RFC6775][RFC8505], RPL [RFC6550] and
+   companion documents [RFC6553][RFC6554][RFC9008], 6LoWPAN Routing
+   Header [RFC8138], SCHC [RFC8724], SCHC for CoAP [RFC8824], and SCHC
+   architecture [I-D.ietf-schc-architecture].
+
+   RFC 8724 defines the Rule concept, whereby a Rule may be used to
+   support header compression or fragmentation functionality.  In the
+   present document, Rules are only used for header compression.
+
+2.3.  New term
+
+   SCHC-Lo network: a 6LoWPAN network where SCHC is used for header
+   compression/decompression.  Note: "SCHC-Lo" is pronounced as "sheek-
+   low", since it inherits the pronunciation of "SCHC" as "sheek" in
+   English (see RFC 8724).
+
+3.  Architecture
+
+3.1.  Protocol stacks
+
+3.1.1.  Main protocol stack
+
+   The traditional 6LoWPAN-based protocol stack for constrained devices
+   (Figure 1, left) places the 6LoWPAN adaptation layer between IPv6 and
+   an underlying technology such as IEEE 802.15.4.  Suitable upper layer
+   protocols include CoAP [RFC7252] and UDP.  (Note that, while CoAP has
+   also been specified over TCP, and TCP may play a significant role in
+   IoT environments [RFC9006], 6LoWPAN header compression has not been
+   defined for TCP, as of the writing.)
+
+   6LoWPAN can be envisioned as a set of two main sublayers, where the
+   upper one provides header compression, while the lower one offers
+   fragmentation.
+
+   This document defines an alternative approach for packet header
+   compression over IEEE 802.15.4, which leads to a modified protocol
+   stack (Figure 1, right).  Fragmentation functionality remains the one
+   defined by 6LoWPAN [RFC4944] and 6lo [RFC8930][RFC8931].
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                 [Page 5]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+        +------------+          +------------+
+        | CoAP, other|          | CoAP, other|
+        +------------+          +------------+
+        | UDP, other |          | UDP, other |
+        +------------+          +------------+
+        |    IPv6    |          |    IPv6    |
+        +------------+          +------------+
+        | 6LoWPAN HC |          |  SCHC HC   |  <-- NEW
+        +------------+          +------------+
+        |6LoWPAN Frag|          |6LoWPAN Frag|
+        +------------+          +------------+
+        |  802.15.4  |          |  802.15.4  |
+        +------------+          +------------+
+
+
+        Figure 1: Traditional 6LoWPAN-based protocol stack over IEEE
+       802.15.4 (left) and alternative protocol stack using SCHC for
+         header compression (right).  HC and Frag stand for Header
+                Compression and Fragmentation, respectively.
+
+   SCHC header compression may be applied to the headers of different
+   protocols or sets of protocols.  Some examples include: i) IPv6
+   packet headers, ii) joint IPv6 and UDP packet headers, iii) joint
+   IPv6, UDP and CoAP packet headers, etc.
+
+   SCHC header compression can also be used at various layers of a
+   protocol stack [draft-ietf-schc-architecture].  For example, when
+   CoAP is used at the application layer, CoAP headers can be compressed
+   by means of SCHC [RFC8824][draft-ietf-schc-8824-update].  Figure 2
+   illustrates the corresponding protocol stacks when SCHC is used to
+   compress IPv6/UDP headers, and separate SCHC Strata [draft-ietf-schc-
+   arch] are also used to compress CoAP headers, when CoAP is secured by
+   means of Datagram Transport Layer Security (DTLS) [RFC9147]
+   (Figure 2, left) or Object Security for Constrained RESTful
+   Environments (OSCORE) [RFC8613] (Figure 2, right) [RFC8824].  Note
+   that, when OSCORE is used to protect CoAP, both the CoAP inner and
+   outer headers can be compressed by means of SCHC, which requires one
+   SCHC Stratum for the CoAP inner header and another one for the CoAP
+   outer header.
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                 [Page 6]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+                                  +------------+
+                                  | CoAP inner |
+           +------------+         +------------+
+           |    CoAP    |         |   SCHC HC  |
+           +------------+         +------------+
+           |   SCHC HC  |         | CoAP outer |
+           +------------+         +------------+
+           |    DTLS    |         |   SCHC HC  |
+           +------------+         +------------+
+           |     UDP    |         |     UDP    |
+           +------------+         +------------+
+           |    IPv6    |         |    IPv6    |
+           +------------+         +------------+
+           |   SCHC HC  |         |   SCHC HC  |
+           +------------+         +------------+
+           |6LoWPAN Frag|         |6LoWPAN Frag|
+           +------------+         +------------+
+           |  802.15.4  |         |  802.15.4  |
+           +------------+         +------------+
+
+
+     Figure 2: 6LoWPAN-based protocol stack over IEEE 802.15.4 using a
+         SCHC Stratum for header compression of IPv6/UDP, and also
+       separate SCHC Strata for CoAP header compression, when CoAP is
+      secured by means of DTLS (left) and OSCORE (right).  HC and Frag
+       stand for Header Compression and Fragmentation, respectively.
+
+   Figures 3, 4 and 5 illustrate the SCHC-Lo network scenarios
+   corresponding to a 6LN communicating with an external host on the
+   Internet, and the protocol stacks corresponding to each relevant node
+   (6LN, 6LBR, and external host).  SCHC Context at different SCHC
+   Strata may come from different provisioning domains.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                 [Page 7]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+            6LN                6LBR                       External host
+
+         +--------+                                        +--------+
+         |  CoAP  |                                        |  CoAP  |
+         +--------+                                        +--------+
+         |   UDP  |                                        |   UDP  |
+         +--------+     +----------------+                 +--------+
+         |  IPv6  |     |      IPv6      |                 |  IPv6  |
+         +--------+     +--------+-------+                 +--------+
+         |SCHC HC |     |SCHC HC |       |                 |        |
+         +--------+     +--------+       +                 +        +
+         |6Lo Frag|     |6Lo Frag|       |                 |        |
+         +--------+     +--------+       +                 +        +
+         |802.15.4|     |802.15.4|       |                 |        |
+         +--------+     +--------+-------+                 +--------+
+             |               |        |                        |
+             +---------------+        +------------------------+
+              SCHC-Lo network                  Internet
+
+
+           Figure 3: Scenario and protocol stacks for end-to-end
+      communication between a 6LN in a SCHC-Lo network and an external
+        host on the Internet, without end-to-end security for CoAP.
+             (Note: the figure has been adapted from RFC 8824.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                 [Page 8]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+            6LN                6LBR                      External host
+
+         +--------+                                        +--------+
+         |  CoAP  |                                        |  CoAP  |
+         +--------+                                        +--------+
+         |  SCHC  |                                        |  SCHC  |
+         +--------+                                        +--------+
+         |  DTLS  |                                        |  DTLS  |
+         +--------+                                        +--------+
+         .  udp   .                                        .  udp   .
+         ..........     ..................                 ..........
+         .  ipv6  .     .      ipv6      .                 .  ipv6  .
+         ..........     ..................                 ..........
+         .  schc  .     .  schc  .       .                 .        .
+         ..........     ..........       .                 .        .
+         .6lo frag.     .6lo frag.       .                 .        .
+         ..........     ..........       .                 .        .
+         .802.15.4.     .802.15.4.       .                 .        .
+         ..........     ..................                 ..........
+             |               |        |                         |
+             +---------------+        +-------------------------+
+              SCHC-Lo network                   Internet
+
+
+           Figure 4: Scenario and protocol stacks for end-to-end
+      communication between a 6LN in a SCHC-Lo network and an external
+     host on the Internet, when CoAP is secured with DTLS.  (Note: the
+                  figure has been adapted from RFC 8824.)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                 [Page 9]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+         +--------+                                        +--------+
+         |  CoAP  |                                        |  CoAP  |
+         |  Inner |                                        |  Inner |
+         +--------+                                        +--------+
+         |  SCHC  |                                        |  SCHC  |
+         |  Inner |                                        |  Inner |
+         +--------+                                        +--------+
+         |  CoAP  |                                        |  CoAP  |
+         |  Outer |                                        |  Outer |
+         +--------+                                        +--------+
+         |  SCHC  |                                        |  SCHC  |
+         |  Outer |                                        |  Outer |
+         +--------+                                        +--------+
+         .  udp   .                                        .  udp   .
+         ..........     ..................                 ..........
+         .  ipv6  .     .      ipv6      .                 .  ipv6  .
+         ..........     ..................                 ..........
+         .  schc  .     .  schc  .       .                 .        .
+         ..........     ..........       .                 .        .
+         .6lo frag.     .6lo frag.       .                 .        .
+         ..........     ..........       .                 .        .
+         .802.15.4.     .802.15.4.       .                 .        .
+         ..........     ..................                 ..........
+             |               |        |                        |
+             +---------------+        +------------------------+
+              SCHC-Lo network                  Internet
+
+
+           Figure 5: Scenario and protocol stacks for end-to-end
+      communication between a 6LN in a SCHC-Lo network and an external
+      host on the Internet, when CoAP is secured with OSCORE.  (Note:
+                the figure has been adapted from RFC 8824.).
+
+3.1.2.  Transition protocol stacks
+
+   In order to ease a transition from existing 6LoWPAN implementations
+   to support SCHC header compression, the present document also: i)
+   illustrates protocol stacks where 6LoWPAN header compression is used
+   to compress IPv6/UDP headers while SCHC compresses CoAP headers (see
+   Figure 6), and ii) enables the transmission of SCHC-compressed UDP/
+   CoAP headers over 6LoWPAN-compressed IPv6 packets (see Figure 7 and
+   Section 5).  Note that the greatest header compression performance
+   can be achieved by using SCHC to also compress the UDP header.
+
+   RFC 8824 and draft-ietf-schc-8824-update define how SCHC can be used
+   to compress CoAP headers.  On the other hand, it is possible to carry
+   SCHC-compressed CoAP headers over UDP by means of using SCHC UDP
+   ports [I-D.ietf-schc-protocol-numbers].  Figure 6 (left) shows the
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 10]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   corresponding protocol stack, where 6LoWPAN header compression is
+   applied to UDP and IPv6.  When DTLS is preferred to protect SCHC-
+   compressed CoAP messages, the DTLS layer sits between the SCHC
+   Stratum below CoAP and the UDP layer (Figure 6, middle).  Figure 6
+   (right) shows the protocol stack when OSCORE is used to protect CoAP
+   messages, and SCHC is used to compress both CoAP inner and outer
+   headers.
+
+
+                                                 +------------+
+                                                 | CoAP inner |
+                            +------------+       +------------+
+                            |    CoAP    |       |   SCHC HC  |
+       +------------+       +------------+       +------------+
+       |    CoAP    |       |    SCHC    |       | CoAP outer |
+       +------------+       +------------+       +------------+
+       |    SCHC    |       |    DTLS    |       |   SCHC HC  |
+       +------------+       +------------+       +------------+
+       |     UDP    |       |     UDP    |       |     UDP    |
+       +------------+       +------------+       +------------+
+       |    IPv6    |       |    IPv6    |       |    IPv6    |
+       +------------+       +------------+       +------------+
+       | 6LoWPAN HC |       | 6LoWPAN HC |       | 6LoWPAN HC |
+       +------------+       +------------+       +------------+
+       |6LoWPAN Frag|       |6LoWPAN Frag|       |6LoWPAN Frag|
+       +------------+       +------------+       +------------+
+       |  802.15.4  |       |  802.15.4  |       |  802.15.4  |
+       +------------+       +------------+       +------------+
+
+         Figure 6: Transition protocol stacks where 6LoWPAN header
+     compression is applied to UDP and IPv6: without security for CoAP
+       (left), using DTLS (middle), and using OSCORE (right).  HC and
+            Frag stand for Header Compression and Fragmentation,
+                               respectively.
+
+   Finally, the transition protocol stack (TPS) enabled by this document
+   (Section 5), which allow the transmission of 6LoWPAN-compressed IPv6
+   packets containing SCHC-compressed UDP/CoAP data units, is shown in
+   Figure 7, in three different variants: single SCHC Stratum for joint
+   UDP/CoAP SCHC header compression (left), two SCHC Strata -one below
+   UDP and another one below CoAP- (middle), and three SCHC Strata -one
+   below UDP, one below the CoAP outer layer, and one below the CoAP
+   inner layer- (right).  Note that the rightmost protocol stack in
+   Figure 7 corresponds to use of OSCORE-protected CoAP.
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 11]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+                                                 +------------+
+                                                 | CoAP inner |
+                                                 +------------+
+                                                 |   SCHC HC  |
+                            +------------+       +------------+
+                            |    CoAP    |       | CoAP outer |
+       +------------+       +------------+       +------------+
+       |    CoAP    |       |   SCHC HC  |       |   SCHC HC  |
+       +------------+       +------------+       +------------+
+       |     UDP    |       |     UDP    |       |     UDP    |
+       +------------+       +------------+       +------------+
+       |   SCHC HC  |       |   SCHC HC  |       |   SCHC HC  |
+       +------------+       +------------+       +------------+
+       |    IPv6    |       |    IPv6    |       |    IPv6    |
+       +------------+       +------------+       +------------+
+       | 6LoWPAN HC |       | 6LoWPAN HC |       | 6LoWPAN HC |
+       +------------+       +------------+       +------------+
+       |6LoWPAN Frag|       |6LoWPAN Frag|       |6LoWPAN Frag|
+       +------------+       +------------+       +------------+
+       |  802.15.4  |       |  802.15.4  |       |  802.15.4  |
+       +------------+       +------------+       +------------+
+
+      Figure 7: TPS variants using SCHC for header compression of UDP/
+       CoAP headers (right): one SCHC Stratum (left), two SCHC Strata
+      (middle), and three SCHC Strata (right).  HC and Frag stand for
+            Header Compression and Fragmentation, respectively.
+
+3.2.  SCHC architecture concepts
+
+   This section describes how SCHC architecture concepts (such as "SCHC
+   Stratum", "Discriminator", "SCHC Control Header end point", "SCHC
+   Data end point", and "Set of Rules" (SoR)) [draft-ietf-schc-
+   architecture] are applied when SCHC is used to compress IPv6 packet
+   headers over IEEE 802.15.4 networks.  In addition, the concepts of
+   Single-end point networks and Multiple-end point networks are
+   introduced.  Note: in the present document, "Single-end point
+   networks" and "Multiple-end point networks" are used for brevity to
+   refer to "Single-end point SCHC-Lo networks" and "Multiple-end point
+   SCHC-Lo networks".
+
+3.2.1.  SCHC Stratum and Discriminator
+
+   When SCHC is used to compress IPv6 packets over IEEE 802.15.4
+   networks, a SCHC Stratum is located on top of layer 2 and below layer
+   3 (that is, at layer 2.5).  Note that the compressed data of the SCHC
+   Stratum may also comprise upper layer packet headers.  For example,
+   SCHC may be used to compress IP headers, IP/UDP headers or IP/UDP/
+   CoAP headers (all at once).
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 12]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   In both Single-end point and Multiple-end point networks, the
+   Discriminator is a 6LoWPAN Dispatch Type set to the SCHC Dispatch or
+   to the SCHC Pointer Dispatch (see Section 4).
+
+3.2.2.  Single-end point networks
+
+   In Single-end point networks, all network nodes that use SCHC for C/D
+   have a single SCHC Data end point, and thus a single SoR for SCHC
+   Datagram C/D.  For this reason, in Single-end point networks, the
+   SCHC Control Header is fully compressed (i.e., the SCHC Control
+   Header requires 0 bits to be transmitted over the air).
+
+   In Single-end point networks, all network nodes that use SCHC for C/D
+   have a single SCHC Control Header end point, and therefore a single
+   SoR for SCHC Control Header C/D, which in this case comprises a
+   single, implicit Rule for SCHC Control Header C/D.
+
+3.2.3.  Multiple-end point networks
+
+   In Multiple-endpoint networks, at least some of the network nodes
+   that use SCHC for C/D have more than one SCHC Data end point, and
+   thus one SoR associated to each SCHC Data end point.  Therefore, in
+   Multiple-end point networks, the SCHC Control Header end point cannot
+   generally be fully compressed (i.e., in compressed form, a SCHC
+   Control Header of more than 0 bits is generally required to be
+   transmitted over the air).
+
+   In Multiple-end point networks, all network nodes that use SCHC for
+   C/D have a single SCHC Control Header end point, and therefore a
+   single SoR for SCHC Control Header C/D, which may comprise several
+   Rules for SCHC Control Header C/D.
+
+3.3.  Network topologies
+
+   IEEE 802.15.4 supports two main network topologies: the star
+   topology, and the peer-to-peer (i.e., mesh) topology.
+
+   SCHC has been designed for LPWAN technologies, which are typically
+   based on a star topology where constrained devices (e.g., sensors)
+   communicate with a less constrained, central network gateway [RFC
+   8376].  However, as stated in [draft-ietf-schc-architecture], SCHC is
+   generic and it can also be used in networking environments beyond the
+   ones originally considered for SCHC.
+
+   SCHC compression is applicable to both star topology and mesh
+   topology IEEE 802.15.4 networks.  The mechanism to be used to provide
+   the SCHC header compression context to the nodes in an IEEE 802.15.4
+   network is out of the scope of this document.
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 13]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+3.4.  Single-hop communication
+
+   In order to support the transmission of SCHC-compressed packets
+   between two IEEE 802.15.4 nodes that are single-hop neighbors, both
+   nodes MUST store the Rules intended for the communication between
+   those two endpoints.
+
+   The frame format to be used to carry a SCHC-compressed packet in
+   single-hop communication is described in Section 4.1.
+
+3.5.  Multihop communication
+
+   6LoWPAN defines two approaches for multihop communication: Route-Over
+   and Mesh-Under [RFC6606].  In Route-Over, routing is performed at the
+   IP layer.  In Mesh-Under, routing functionality is located at the
+   adaptation layer, below IP.  This section describes how SCHC-
+   compressed packets are transmitted over a multihop IEEE 802.15.4
+   network, for both Route-Over and Mesh-Under.  For Route-Over, this
+   section defines three different modes: Straightfoward Route-Over
+   (SRO); Tunneled, RPL-based Route-Over (TRO), and Pointer- based
+   Route-Over (PRO).  All nodes that use Route-Over in a SCHC-Lo network
+   MUST use the same Route-Over mode.
+
+   Note that there exist hybrid 6LoWPAN-based solutions that combine
+   features from both Route-Over and Mesh-Under.  Such solutions MAY use
+   functionality defined in this section as appropriate.
+
+   The description of the different modes enabling SCHC-compressed
+   transmission over multihop IEEE 802.15.4 paths is illustrated by
+   means of examples.  Note that the examples only show Rules designed
+   for IPv6 (or joint IPv6 and upper-layer) packet header C/D.  When
+   additional SCHC Strata are used (i.e., for separate SCHC C/D applied
+   to upper layer protocols), additional Rules will need to be stored by
+   the corresponding endpoints.  However, such additional Rules are not
+   shown in the examples, for the sake of clarity.  Also for clarity
+   reasons, the examples contain routers that do not generate or receive
+   application-layer messages as hosts.  However, in practical
+   scenarios, nodes acting as routers may also generate or receive
+   application-layer messages.  Such nodes MUST support the
+   functionality described in this section for hosts, in addition to
+   their routing functionality.
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 14]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   On a related note, routers MAY use SCHC C/D for the transmission of
+   control-plane or management-plane messages.  In such case, they need
+   to store Rules as appropriate, and use single-hop or multihop
+   transmission procedures accordingly.  As of the writing, SCHC C/D has
+   been defined for some protocols.  While there are plans to expand the
+   set of protocols SCHC C/D can be applied to, in some cases it might
+   not be possible to compress all headers of protocols atop IPv6.
+
+3.5.1.  Straightforward Route-Over (SRO)
+
+   SCHC header compression MAY be used in a Route-Over network in a
+   straightforward approach, whereby all routers (i.e., all 6LRs and
+   6LBRs) MUST store all the Rules in use by any nodes in the SCHC-Lo
+   network, whereas a host MUST store the Rules defined for its
+   communication with other nodes.  This approach is called
+   Straightforward Route-Over (SRO).  In this case, 6LoWPAN routers are
+   able to decompress (if needed) received packet headers and compress
+   packet headers before being forwarded.  In SRO, in Single-end point
+   networks, a RuleID and the Rule it identifies MUST be unique SCHC-Lo
+   network-wide (note: the means to ensure so are out of the scope of
+   this document).  In order to simplify the management of RuleIDs in
+   the SCHC-Lo network, in SRO, all nodes in the SCHC-Lo network MAY
+   share the same SoR.  In SRO, in Multiple-endpoint networks, a not
+   fully compressed SCHC Control Header MUST be used.
+
+   Figure 8 illustrates an example Single-end point network with the
+   Rules that need to be stored by the nodes in SRO.  In this example,
+   RuleID 1 is intended for communication between Host A and Host B,
+   RuleID 2 is intended for communication between Host A and Host C, and
+   RuleID 3 is used for the communication between Host A and an external
+   node called Host E.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 15]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+                                                 Host E
+                                                /
+                    (RuleID 1)        +--------+
+                    (RuleID 2)    --- |Internet|
+                    (RuleID 3)   /    +--------+
+                   6LBR ---------
+                 /      \
+                /        \
+              6LR         6LR ------------+          Pair of nodes
+     (RuleID 1) |         | (RuleID 1)    |  RuleID 1:   A, B
+     (RuleID 2) |         | (RuleID 2)    |  RuleID 2:   A, C
+     (RuleID 3) |         | (RuleID 3)    |  RuleID 3:   A, E
+                |         |               |
+             Host A      Host B         Host C
+              (RuleID 1)    (RuleID 1)     (RuleID 2)
+              (RuleID 2)
+              (RuleID 3)
+
+        Figure 8: Rules stored by each node in an example Single-end
+                          point network using SRO.
+
+   Figure 9 illustrates an example Multiple-end point network with the
+   Rules that need to be stored by the nodes in SRO.  In this example,
+   in addition to the Rules used in Figure 8, which correspond to a SCHC
+   Data end point called E1 in this example, there is a second RuleID 2,
+   which corresponds to communication between A and B, in a second SCHC
+   Data end point (E2).  Note that, for simplicity, Figure 9 shows the
+   same end point identifier (e.g., E1 or E2) for two end points that
+   share a Rule.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 16]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+                                                   Host E
+                    (RuleID 2, E2)                /
+                    (RuleID 1, E1)      +--------+
+                    (RuleID 2, E1)  --- |Internet|
+                    (RuleID 3, E1) /    +--------+
+                   6LBR -----------
+                 /      \
+                /        \
+              6LR         6LR -------------+            Nodes | End point
+(RuleID 1, E1) |         | (RuleID 1, E1)  |   RuleID 1: A, B      E1
+(RuleID 2, E1) |         | (RuleID 2, E1)  |   RuleID 2: A, C      E1
+(RuleID 3, E1) |         | (RuleID 3, E1)  |   RuleID 3: A, E      E1
+(RuleID 2, E2) |         | (RuleID 2, E2)  |   RuleID 2: A, B      E2
+               |         |                 |
+              Host A      Host B         Host C
+        (RuleID 1, E1)    (RuleID 1, E1)   (RuleID 2, E1)
+        (RuleID 2, E1)    (RuleID 2, E2)
+        (RuleID 3, E1)
+        (RuleID 2, E2)
+
+
+    Figure 9: Rules stored by each node in an example Multiple-end
+                       point network using SRO.
+
+   The frame format to be used to carry a SCHC-compressed packet in SRO
+   is described in Section 4.1.
+
+3.5.2.  Tunneled, RPL-based Route-Over (TRO)
+
+   In a Route-Over network that uses the IPv6 Routing Protocol for Low-
+   Power and Lossy Networks (RPL) [RFC6550], the RPL non-storing mode
+   [RFC6550, RFC 6554] and [RFC8138] MAY be exploited in order to
+   efficiently transmit SCHC-compressed packets.  In this approach,
+   packets sent by a 6LN are tunneled to the root, and packets intended
+   for 6LNs are tunneled from the root (note: a tunnel is not needed
+   when the root itself is the source).  Traffic between two 6LNs
+   traverses an Upward tunnel to the root and a Downward tunnel from the
+   root.  The present document defines the described approach as
+   Tunneled, RPL-based Route-Over approach (TRO).
+
+   In TRO, each 6LoWPAN node (i.e., a host, a 6LR or a 6LBR) MUST store
+   the Rules defined for its communication with other peer nodes.  A 6LR
+   is relieved from storing Rules that do not involve the 6LR itself as
+   an endpoint.  A 6LBR MUST store all the Rules used by all nodes in
+   the SCHC-Lo network.
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 17]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   In a TRO Single-end point network, a RuleID and the Rule it
+   identifies MUST be unique SCHC-Lo network-wide (note: the means to
+   ensure so are out of the scope of this document).  In a TRO Multiple-
+   end point network, a not fully compressed SCHC Control Header MUST be
+   used.
+
+   Figure 10 illustrates the Rules that need to be stored by the nodes
+   in TRO, based on the same example Single-end point network and sets
+   of peer nodes shown in Figure 8.
+
+
+                                                 Host E
+                                                /
+                    (RuleID 1)        +--------+
+                    (RuleID 2)    --- |Internet|
+                    (RuleID 3)   /    +--------+
+                   6LBR ---------
+                 /      \
+                /        \
+              6LR         6LR ------------+             Pair of nodes
+     (no Rules) |         | (no Rules)    |    RuleID 1:    A, B
+                |         |               |    RuleID 2:    A, C
+                |         |               |    RuleID 3:    A, E
+                |         |               |
+             Host A      Host B         Host C
+              (RuleID 1)    (RuleID 1)     (RuleID 2)
+              (RuleID 2)
+              (RuleID 3)
+
+       Figure 10: Rules stored by each node in an example Single-end
+                          point network using TRO.
+
+   Figure 11 illustrates an example Multiple-end point network with the
+   Rules that need to be stored by the nodes in TRO.  In this example,
+   in addition to the Rules used in Figure 10, which correspond to a
+   SCHC Data end point called E1 in this example, there is a second
+   RuleID 2, which corresponds to communication between A and B, in a
+   second SCHC Data end point (E2).
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 18]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+                                                Host E
+                  (RuleID 2, E2)               /
+                  (RuleID 1, E1)      +--------+
+                  (RuleID 2, E1)  --- |Internet|
+                  (RuleID 3, E1) /    +--------+
+                 6LBR -----------
+               /      \
+              /        \
+            6LR         6LR -------------+             Nodes | End point
+  (No Rules) |         | (No Rules)      |   RuleID 1:  A, B      E1
+             |         |                 |   RuleID 2:  A, C      E1
+             |         |                 |   RuleID 3:  A, E      E1
+             |         |                 |   RuleID 2:  A, B      E2
+             |         |                 |
+           Host A    Host B            Host C
+      (RuleID 1, E1)    (RuleID 1, E1)   (RuleID 2, E1)
+      (RuleID 2, E1)    (RuleID 2, E2)
+      (RuleID 3, E1)
+      (RuleID 2, E2)
+
+    Figure 11: Rules stored by each node in an example Multiple-end
+                        point network using TRO.
+
+   RFC 9008 describes how the communication between a 6LN and another
+   node (another 6LN or the root of the same RPL domain, or an external
+   node, e.g., on the Internet) is performed.  For the sake of
+   description clarity, Figure 12 (adapted from Figure 3 in RFC 9008)
+   provides a reference topology including nodes referred to in the
+   remainder of this subsection.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 19]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+                    +------------+
+                    |  INTERNET  |---------+
+                    +------------+         |
+                                         Z |
+                                     +-------+
+                                     | 6LBR  |
+                         +-----------|(root) |--------+
+                         |           +-------+        |
+                         |                            |
+                         | Y                          |X
+                     +---|---+                    +---|---+
+                     |  6LR  |                    |  6LR  |
+             +-------|       |--+              +--|       |--+
+             |       +-------+  |              |  +-------+  |
+             | W                |  V           |             |
+         +---|---+          +---|---+          |             |
+         |  6LR  |          |  6LR  |          |             |
+         |       |          |       |          |             |
+         +---|---+          +-|---|-+          |             |
+             |                |   |            |             |
+             |           +----+   |            |             |
+          U  |         T |        | S        R |           Q |
+       +-----+-+   +-------+  +---|--+     +---|---+     +---|---+
+       |  RAL  |   |  RUL  |  | RAL  |     |  RAL  |     |  RUL  |
+       |  6LN  |   |  6LN  |  | 6LN  |     |  6LN  |     |  6LN  |
+       +-------+   +-------+  +------+     +-------+     +-------+
+
+      Figure 12: Reference topology to support the description of TRO.
+
+   In RPL non-storing mode, for Downward traffic, the root adds a
+   source-routing header.  The root also performs IPv6-in-IPv6
+   encapsulation, except when the root itself is the packet source.  The
+   IPv6-in-IPv6 encapsulation terminates at the 6LN (if it is a RAL,
+   e.g., U, S or R) or at the last 6LR, e.g., V or X, (if the 6LN is a
+   RUL, e.g., T or Q).  For Upward traffic, IPv6-in-IPv6 encapsulation
+   is performed by the first 6LR, e.g. V or X, when the 6LN is a RUL,
+   e.g., T or Q, that sends a packet to an external node or to another
+   6LN in the same RPL domain, but not to the root.  When the 6LN is a
+   RAL (e.g., U, S or R) that sends packets to the same destinations,
+   IPv6-in-IPv6 encapsulation may be performed (by the RAL itself).  The
+   destination in the outer header of the IPv6-in-IPv6 encapsulation for
+   Upward traffic is the root.
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 20]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   This document updates RFC 9008 by specifying that, in TRO, when a 6LN
+   transmits an IPv6 packet whose header is compressed by means of SCHC
+   instead of 6LoWPAN header compression (RFC 6282), the SCHC-compressed
+   packet MUST be tunneled by means of IPv6-in-IPv6 encapsulation up to
+   the root.  This applies regardless of the inner, SCHC-compressed
+   packet destination.
+
+   For Upward traffic, when the 6LN is a RAL (e.g., U, S or R), the 6LN
+   itself performs the IPv6-in-IPv6 encapsulation.  However, if the 6LN
+   is a RUL (e.g., T or Q), IPv6-in-IPv6 encapsulation is performed by
+   the first 6LR (e.g., E or C, respectively).  In the latter case, in
+   order to enable efficient packet transmission in the first hop from
+   the 6LN, the first 6LR SHOULD be provided with SCHC Rules allowing
+   efficient header compression of packets sent by that 6LN.
+
+   For Downward traffic, when the 6LN is a RUL (e.g., G or J), in order
+   to enable efficient packet transmission in the last hop to the 6LN,
+   the last 6LR (e.g., V or X, respectively) SHOULD be provided with
+   SCHC Rules allowing efficient header compression of packets sent to
+   that 6LN.
+
+   Not providing such SCHC Rules to the first or last 6LR (for Upward or
+   Downward traffic, respectively) should only happen if it is not
+   practical or possible to do so (e.g., due to lack of available memory
+   at the 6LR).
+
+   For the sake of efficiency, RFC 8138 MUST be used to compress IPv6-
+   in-IPv6 headers, the RPL Option (RFC 6553) and the source routing
+   header (RPL Routing Header type 3, RFC 6554).
+
+   The frame format to be used to carry a SCHC-compressed packet in TRO
+   is described in Section 4.2.
+
+3.5.3.  Pointer-based Route-Over (PRO)
+
+   In the previous SCHC-Lo route-over approach, TRO, intermediate nodes
+   do not have to know the IPv6 destination address of a SCHC-compressed
+   IPv6 packet to be able to forward it.  Another approach where
+   intermediate nodes do not have to store the compression/decompression
+   Rules used by other nodes, which in addition does not require the
+   artifacts used in TRO (i.e., IPv6-in-IPv6 encapsulation, non-storing
+   mode RPL and RFC 8138 compression), is called Pointer-based Route-
+   Over (PRO).
+
+   In PRO, a pointer (called "SCHC Pointer") is prepended to the SCHC-
+   compressed packet, in order to indicate the location and length of
+   the Hop Limit and the destination address residues in the SCHC-
+   compressed header.  Therefore, a 6LR is able to determine the IPv6
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 21]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   destination address of a SCHC-compressed packet, decrement its Hop
+   Limit and route the packet, without the need to store the
+   corresponding Rules.  Note that, in PRO, each 6LoWPAN node (i.e., a
+   host, a 6LR, or a 6LBR) MUST store the Rules defined for its
+   communication with other peer nodes.  A 6LBR MUST store the Rules
+   used by any SCHC-Lo network node for communication with external
+   nodes.
+
+   In a PRO Single-end point network, a RuleID MAY be used to identify
+   different Rules used by different sets of peer nodes within the SCHC-
+   Lo network.  In a PRO Multiple-end point network, a not fully
+   compressed SCHC Control Header MUST be used.
+
+   Figure 13 illustrates the Rules that are stored by the nodes in an
+   example Single-end point network based using PRO.  Note that, in this
+   example, the SCHC-Lo network exploits the fact that PRO allows a
+   given RuleID to be used by different pairs of nodes.
+
+
+                                                    Host E
+                                                  /
+                                        +--------+- Host F
+                   (RuleID 3)       --- |Internet|
+                   (RuleID 4)      /    +--------+
+                   6LBR -----------
+                 /      \                              Pair of nodes
+                /        \                     RuleID 1:   A, B
+              6LR         6LR ------------+    RuleID 2:   A, C
+    (no Rules)/|         | (no Rules)    |     RuleID 2:   D, B
+             / |         |               |     RuleID 3:   A, E
+            /  |         |               |     RuleID 4:   B, F
+           /   |         |               |
+      Host D  Host A     Host B         Host C
+   RuleID 2)   (RuleID 1)  (RuleID 1)    (RuleID 2)
+               (RuleID 2)  (RuleID 2)
+               (RuleID 3)  (RuleID 4)
+
+       Figure 13: Rules stored by each node in an example Single-end
+        point network using PRO.  In this example, both RuleID 2 and
+               RuleID 3 are used by two pairs of nodes each.
+
+   PRO is compatible with RPL storing mode, as well as with other
+   routing protocols.
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 22]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   Figure 14 illustrates an example Multiple-end point network with the
+   Rules that need to be stored by the nodes in PRO.  In this example,
+   in addition to the Rules used in Figure 13, which correspond to a
+   SCHC Datagram Instance called E1 in this example, there is an
+   additional RuleID 2, which corresponds to communication between A and
+   D, in a second SCHC Data end point (E2).
+
+
+                                                Host E
+                                               /
+                                     +--------+- Host F
+                    (RID 3, E1)  --- |Internet|
+                    (RID 4, E1) /    +--------+
+                   6LBR -------
+                  /    \                              Nodes | End point
+                 /      \                      RID 1:  A, B      E1
+               6LR       6LR ------------+     RID 2:  A, C      E1
+     (no Rules)/|         | (no Rules)   |     RID 2:  D, B      E1
+              / |         |              |     RID 3:  A, E      E1
+             /  |         |              |     RID 4:  B, F      E1
+            /   |         |              |     RID 2:  A, D      E2
+       Host D  Host A     Host B        Host C
+   (RID 2, E1)  (RID 1, E1)  (RID 1, E1) (RID 2, E1)
+   (RID 2, E2)  (RID 2, E1)  (RID 2, E1)
+                (RID 3, E1)  (RID 3, E1)
+                (RID 2, E2)
+
+      Figure 14: Rules stored by each node in an example Multiple-end
+             point network using PRO.  'RID' stands for RuleID.
+
+   The frame format to be used to carry a SCHC-compressed packet in PRO
+   is described in Section 4.3.
+
+3.5.4.  Mesh-Under
+
+   When Mesh-Under is used in a SCHC-Lo network, Mesh-Under operates as
+   described in RFC 4944.  The frame format to be used to carry a SCHC-
+   compressed packet in the Mesh-Under approach is described in
+   Section 4.4.
+
+   For header compression in a Mesh-Under SCHC-Lo network, a SCHC-Lo
+   network node MUST store the Rules defined for its communication with
+   other peer nodes.
+
+   In Mesh-Under, in a Single-end point network, a RuleID MAY be used to
+   identify different Rules used by different sets of peer nodes.  In a
+   Mesh-Under Multiple-end point network, a fully compressed SCHC
+   Control Header MAY be used as long as it is possible to determine the
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 23]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   SCHC Data end point needed to decompress a SCHC-compressed packet
+   based on the packet's originator address (which is present in the
+   Mesh Header [RFC 4944]).
+
+   Figure 15 illustrates the Rules that need to be stored by the nodes
+   when SCHC is used for header compression in a Single-end point Mesh-
+   Under network, based on the same example network and node pairs shown
+   in Figure 13.  Note that, in this example, the network exploits the
+   fact that Mesh-under allows a given RuleID to be reused by different
+   sets of peer nodes, even if the Rules sharing the same RuleID are
+   different.  Nodes denoted "m" in Figure 15 correspond to Mesh-Under
+   forwarders [RFC 6606].
+
+
+                                                      Host E
+                                                    /
+                                          +--------+- Host F
+                     (RuleID 3)       --- |Internet|
+                     (RuleID 4)      /    +--------+
+                    6LBR -----------
+                   /     \                               Pair of nodes
+                  /       \                        RuleID 1: A, B
+                 m         m --------------+       RuleID 2: A, C
+      (no Rules)/|         | (no Rules)    |       RuleID 2: D, B
+               / |         |               |       RuleID 3: A, E
+              /  |         |               |       RuleID 4: B, F
+             /   |         |               |
+        Host D  Host A     Host B         Host C
+    (RuleID 2)   (RuleID 1)  (RuleID 1)    (RuleID 2)
+                 (RuleID 2)  (RuleID 2)
+                 (RuleID 3)  (RuleID 4)
+
+       Figure 15: Rules stored by each node in an example Single-end
+       point network using Mesh-Under.  In this example, RuleID 2 is
+                     used by different pairs of nodes.
+
+   Figure 16 illustrates an example Multiple-end point network with the
+   Rules that need to be stored by the nodes in PRO.  In this example,
+   in addition to the Rules used in Figure 13, which correspond to a
+   SCHC Data end point called E1 in this example, there is an additional
+   RuleID 2, which corresponds to communication between A and D, in a
+   second SCHC Data end point (E2).
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 24]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+                                                 Host E
+                                               /
+                                     +--------+- Host F
+                    (RID 3, E1)  --- |Internet|
+                    (RID 4, E1) /    +--------+
+                   6LBR -------
+                 /      \                              Nodes | End point
+                /        \                      RID 1:  A, B       E1
+                m         m --------------+     RID 2:  A, C       E1
+     (no Rules)/|         | (no Rules)    |     RID 2:  D, B       E1
+              / |         |               |     RID 3:  A, E       E1
+             /  |         |               |     RID 4:  B, F       E1
+            /   |         |               |     RID 2:  A, D       E2
+       Host D  Host A     Host B         Host C
+   (RID 2, E1)  (RID 1, E1)  (RID 1, E1)  (RID 2, E1)
+   (RID 2, E2)  (RID 2, E1)  (RID 2, E1)
+                   (RID 3, E1)  (RID 2, E2)
+                   (RID 2, E2)
+
+      Figure 16: Rules stored by each node in an example Multiple-end
+         point network using Mesh-Under.  'RID' stands for RuleID.
+
+4.  Frame Format
+
+   This section defines the frame formats that can be used when a SCHC-
+   compressed packet is carried over IEEE 802.15.4.  Such formats are
+   carried as IEEE 802.15.4 frame payload.  Note that the SCHC Control
+   Header formats to support CoAP header C/D based on additional SCHC
+   Strata over UDP (e.g., when CoAP is secured by means of DTLS or
+   OSCORE, see Figure 2) are defined in Section 5.2.
+
+4.1.  Single-hop or SRO frame format
+
+   This subsection defines the frame format for carrying SCHC-compressed
+   packets over IEEE 802.15.4 for single-hop communication (see 3.3) or
+   when SRO is used for multihop communication (see 3.4.1).  This format
+   comprises a SCHC Dispatch Type, a SCHC Datagram, and Padding bits, if
+   any.  The SCHC Datagram is composed of a SCHC Control Header (which
+   in some cases is fully elided), a SCHC Data (i.e., the SCHC-
+   compressed header of the packet being carried over IEEE 802.15.4),
+   and user payload (i.e., the payload of the packet being carried over
+   IEEE 802.15.4) [draft-ietf-schc-architecture].  Figure 17 illustrates
+   the described frame format.
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 25]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+     <--------------- IEEE 802.15.4 frame payload -------------------->
+
+                     <----------- SCHC Datagram ------------>
+     +---------------+--------+--------------+--------------+ - - - - +
+     | SCHC Dispatch |SCHC Hdr|  SCHC Data   | user payload | Padding |
+     +---------------+--------+--------------+--------------+ - - - - +
+
+      Figure 17: Encapsulated, SCHC-compressed packet, for single-hop
+          or SRO transmission.  Padding bits are added if needed.
+
+4.1.1.  SCHC Dispatch
+
+   Adding SCHC header compression to the panoply of header compression
+   mechanisms used in 6LoWPAN/6Lo environments creates the need to
+   signal when a packet header has been compressed by using SCHC.  To
+   this end, the present document specifies the SCHC Dispatch.  The SCHC
+   Dispatch indicates that the next field in the frame format is a SCHC
+   Sratum header ("SCHC Hdr" in Figure 17, see 4.1.2)).
+
+   This document defines the SCHC Dispatch as a 6LoWPAN Dispatch Type
+   for SCHC header compression [RFC4944].  With the aim to minimize
+   overhead, the present document allocates a 1-byte pattern in Page 0
+   [RFC8025] for the SCHC Dispatch Type:
+
+   SCHC Dispatch Type bit pattern: 01000100 (Page 0) (Note: to be
+   confirmed by IANA))
+
+4.1.2.  SCHC Control Header
+
+   The SCHC Control Header ("SCHC Hdr" in Figure 17 and subsequent
+   figures) determines the SCHC Data end point to be used to decompress
+   the next field (SCHC Data, see 4.1.3).
+
+   The SCHC Control Header format, and some examples of possible
+   corresponding Rules for SCHC Control Header C/D, are shown in
+   Figure 18.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 26]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+      Uncompressed SCHC Control Header format:
+      +------------------+
+      | SCHC Instance ID |
+      +------------------+
+
+      Compressed SCHC Control Header format:
+      +--------+- - - - - - - - - - -+
+      | RuleID | Compression Residue |
+      +--------+- - - - - - - - - - -+
+
+      Example C/D Rules for the SCHC Control Header:
+
+      RuleID 1
+      +-------------+--+---+--+-----+------+-----------+
+      |     FID     |FL|POS|DI| TV  |  MO  |     CDA   |
+      +-------------+--+---+--+-----+------+-----------+
+      | SCHC.instid | 8| 1 |Bi|value|equal | not-sent  |
+      +-------------+--+---+--+-----+------+-----------+
+
+      RuleID 2
+      +-------------+--+---+--+-----+------+-----------+
+      |     FID     |FL|POS|DI| TV  |  MO  |    CDA    |
+      +-------------+--+---+--+-----+------+-----------+
+      | SCHC.instid | 8| 1 |Bi|0x00 |MSB(7)|    LSB    |
+      +-------------+--+---+--+-----+------+-----------+
+
+           Figure 18: SCHC Control Header Format and examples of
+            corresponding C/D Rules for the SCHC Control Header
+
+   The uncompressed SCHC Control Header format comprises a single field,
+   called the SCHC Instance ID.  This field is an unsigned integer that
+   identifies the session between SCHC end points in two or more peer
+   nodes using a common SoR.  The SCHC Instance ID size is RECOMMENDED
+   to be between 1 and 8 bits.
+
+   As described in the SCHC architecture draft, in compressed form, the
+   SCHC Control Header comprises a RuleID and a compression residue
+   [draft-ietf-schc-architecture].  The RuleID size of the compressed
+   SCHC Control Header is RECOMMENDED to be between 0 and 8 bits.  In
+   the examples shown in Figure 18, the best match between a SCHC
+   Instance ID and the Rules with RuleID 1 and RuleID 2 lead to
+   compression residues of 0 bits and 1 bit, respectively.
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 27]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   In Single-end point networks, the SCHC Control Header MUST be fully
+   compressed, i.e., its size in compressed form is 0 bits.  In
+   Multiple-end point networks, the SCHC Control Header cannot always be
+   fully compressed; in this case, the RuleID size (of the Rule used to
+   compress the SCHC Control Header) is RECOMMENDED to be between 1 and
+   8 bits.
+
+4.1.3.  SCHC Data
+
+   The SCHC Data is a packet header that has been compressed by using a
+   SCHC Data end point.  It is the compressed form of the header of the
+   original packet being carried over IEEE 802.15.4.  As defined in
+   [RFC8724], a SCHC-compressed header comprises a RuleID, and a
+   compression residue.  As per the present specification, a RuleID size
+   between 1 and 16 bits is RECOMMENDED.  In order to decide the RuleID
+   size to be used in a SCHC-Lo network, the trade-off between
+   (compressed) header overhead and the number of Rules needs to be
+   carefully assessed.
+
+4.1.4.  User payload
+
+   The user payload is the payload of the original packet being carried
+   over IEEE 802.15.4, which is unaffected by the SCHC Stratum [draft-
+   ietf-schc-architecture].
+
+4.1.5.  Padding
+
+   If SCHC header compression leads to a SCHC Datagram size of a non-
+   integer number of bytes, padding bits of value equal to zero MUST be
+   appended to the SCHC Datagram as appropriate to align to an octet
+   boundary.
+
+4.2.  TRO frame format
+
+   This subsection defines the frame formats for carrying SCHC-
+   compressed packets over IEEE 802.15.4 in TRO (see 3.3.2).  Such
+   formats are based on RFC 8138; however, instead of RFC 6282 header
+   compression, this specification uses SCHC header compression.
+   Accordingly, this specification updates RFC 8138 by stating that a
+   6LoRH header MUST always be placed before the LOWPAN_IPHC as defined
+   in RFC 6282 [RFC6282] or the SCHC Dispatch, followed by the SCHC
+   Control Header and the SCHC-compressed packet, as defined in the
+   present specification.
+
+   Since 6LoRH uses Dispatch Types in Page 1, the present specification
+   also defines a SCHC Dispatch Type in Page 1, with the same bit
+   pattern as the one in Page 0: 01000100 (to be confirmed by IANA).
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 28]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   In the TRO frame formats, the SCHC Header is preceded by the SCHC
+   Dispatch (in this case, in Page 1).
+
+   The frame format for Downward transmission, except when the SCHC-
+   compressed packet source is a RPL root, is shown in Figure 19:
+
+
+  <---------------- IEEE 802.15.4 frame payload ----------------------->
+                                               <- SCHC Datagram ->
+  +-- ... -+-- ... --+-...-+-- ... -+---- ... -+----+-----+------+ - - +
+  |11110001|SRH-6LoRH|RPI- |IP-in-IP| 01000100 |SCHC|SCHC | user | pad |
+  |Page 1  |         |6LoRH|  6LoRH |SCHCDsptch| Hdr| Pld |  pld |     |
+  +-- ... -+-- ... --+-...-+-- ... -+---- ... -+----+-----+------+ - - +
+                                      (Page 1)
+
+                                    <-------- This specification ------>
+
+    Figure 19: Downward frame format for SCHC-compressed packets in
+                TRO, when the source is not a RPL root.
+
+   The frame format for Downward transmission, when the SCHC-compressed
+   packet source is a RPL root, is shown in Figure 20:
+
+
+    <---------------- IEEE 802.15.4 frame payload ---------------->
+                                          <- SCHC Datagram ->
+    +-- ... -+-- ... --+- ... -+---- ... -+----+-----+------+ - - +
+    |11110001|SRH-6LoRH| RPI-  | 01000100 |SCHC|SCHC | user | pad |
+    |Page 1  |         | 6LoRH |SCHCDsptch| Hdr| Pld |  pld |     |
+    +-- ... -+-- ... --+- ... -+---- ... -+----+-----+------+ - - +
+                                 (Page 1)
+
+                               <----- This specification --------->
+
+      Figure 20: Downward frame format for SCHC-compressed packets in
+                    TRO, when the source is a RPL root.
+
+   The frame format for Upward transmission is shown in Figure 21 (note
+   that it does not include the source routing header that is present in
+   the Downward frame format):
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 29]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+     <--------------- IEEE 802.15.4 frame payload ----------------->
+                                           <- SCHC Datagram ->
+     +-- ... -+- ... -+-- ... --+---- ... -+----+-----+------+ - - +
+     |11110001| RPI-  | IP-in-IP| 01000100 |SCHC|SCHC | user | pad |
+     |Page 1  | 6LoRH |  6LoRH  |SCHCDsptch| Hdr| Pld |  pld |     |
+     +-- ... -+- ... -+--- ... -+---- ... -+----+-----+------+ - - +
+                                  (Page 1)
+
+                                <------- This specification ------->
+
+
+     Figure 21: Upward frame format for SCHC-compressed packets in TRO.
+
+4.3.  PRO frame format
+
+   This subsection describes the frame format for carrying SCHC-
+   compressed packets over IEEE 802.15.4 in PRO (see 3.5.3).  Such
+   format is shown in Figure 22:
+
+
+        <------------ IEEE 802.15.4 frame payload ------------->
+
+        +--------------+-------------+--------------+ - - - - +
+        |  PRO Header  |  SCHC Data  | user payload | Padding |
+        +--------------+-------------+--------------+ - - - - +
+                v              <->
+                |               |
+                +---------------+
+                  SCHC Pointer
+
+        Figure 22: frame format for SCHC-compressed packets in PRO.
+
+   The PRO Header format is shown in Figure 23:
+
+
+
+       0 1 2 3 4 5 6 7 0 1 2 3 4 .... 5 6 7 0 1 2 3 4 5 6 7 0 1
+      +---------------+-+ - - - +----+-------------+-+---------+
+      |      SCHC     |C|       |    |             |H| Adress  |
+      |     Pointer   |I|  DCI  |SCHC| Bit Pointer |L| Residue |
+      |    Dispatch   |D|       | Hdr|             |M| Length  |
+      +---------------+-+ - - - +----+-------------+-+---------+
+
+
+                       Figure 23: PRO Header format.
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 30]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   The first field in Figure 23 is defined as the SCHC Pointer Dispatch,
+   which signals the start of a PRO Header format.  This document
+   defines the SCHC Pointer Dispatch as a 6LoWPAN Dispatch Type
+   [RFC4944] for SCHC header compression.
+
+   With the aim to minimize header overhead, the present document
+   allocates a 1-byte pattern in the 6LoWPAN Dispatch Type Page 0
+   [RFC8025] for the SCHC Pointer Dispatch Type:
+
+   SCHC Pointer Dispatch Type bit pattern: 01000101 (Page 0) (Note: to
+   be confirmed by IANA))
+
+   The next field in the PRO Header is the Context IDentifier (CID)
+   flag, which is set to 1 to signal that the Destination Context
+   Identifier (DCI) field (see PRO_header_format) is present in the
+   frame.  When CID is set to 0, the DCI field is not present.
+
+   The DCI field is optional.  When present, it has a size of 4 bits.
+   Similarly to RFC 6282, this field identifies the prefix of the IPv6
+   destination address.  How such prefix context is distributed and
+   maintained is out of the scope of the present document.  If a network
+   comprises nodes that use SCHC header compression and nodes that only
+   support 6LoWPAN header compression, the prefix context to be used for
+   both types of nodes SHOULD be the same.
+
+   The next field is the SCHC Control Header ("SCHC Hdr" in Figure 22),
+   which has been defined in section 4.1.2.  As shown in Figure 22, in
+   the PRO Header, the SCHC Control Header is not immediately followed
+   by the SCHC Datagram.
+
+   The Bit pointer gives the starting position of Traffic Class,
+   followed by the Hop Limit and the IPv6 destination address in the
+   SCHC residue of the SCHC-compressed IPv6 header (in bits), starting
+   after the Address Residue Length field and before the first field of
+   the SCHC-compressed IPv6 header (i.e., the RuleID).  For example, if
+   the Traffic Class, Hop Limit and the IPv6 destination address residue
+   are the only residues in a SCHC- compressed IPv6 packet header (i.e.,
+   such residue starts right after the RuleID in the SCHC-compressed
+   header), then the Bit pointer will have a value of RuleID length in
+   bits.  Note that, in PRO, a router can read and modify the ECN bits
+   and the Hop Limit field of a received SCHC-compressed IPv6 packet,
+   without the need to store the corresponding Rules.
+
+   The Hop Limit (HLM) flag is 1 bit that indicates the length of the
+   Hop Limit field residue in the SCHC-compressed IPv6 header.  When HLM
+   equals 0, the Hop Limit compression residue has a size of 4 bits.  In
+   this case, the 4 most significant bits of the uncompressed Hop Limit
+   field are equal to 0.  Therefore, Hop Limit compression applies only
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 31]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   to Hop Limit values between 15 and 0.  When HLM is set to 1, the Hop
+   Limit compression residue has a size of 8 bits (i.e., it is
+   uncompressed).
+
+   The Address Residue Length field indirectly indicates the size of the
+   IPv6 destination address residue.  This field indicates the size of
+   the destination prefix that has been elided when the IPv6 packet
+   header has been compressed, as shown in the table in Appendix C.
+   Therefore, the decompressor can determine the size of the destination
+   address residue.  The decompressor knows the destination prefix
+   either because it is known a priori, or via the DCI field.
+
+   PRO requires a special SCHC Rule design where the FIDs of the IPv6
+   Destination and Source addresses are swapped (see 6.1.1).
+
+4.4.  Mesh-Under frame format
+
+   This subsection describes the frame formats for carrying SCHC-
+   compressed packets over IEEE 802.15.4 in the Mesh-Under approach (see
+   3.3.3).  Note that the formats are provided in this section for the
+   sake of clarity and completeness, since they are the same as those
+   defined for Mesh-Under in RFC 4944, except for the fact that SCHC-
+   compressed packets are carried.
+
+   The frame format for a SCHC-compressed packet to be sent by means of
+   Mesh-Under, when fragmentation is not needed, is shown in Figure 24:
+
+
+    <--------------- IEEE 802.15.4 frame payload ------------------->
+
+                                         <------ SCHC Datagram ----->
+    +---------+--------+-----------+--------+--------+--------+ - - +
+    |Mesh Type|Mesh Hdr|SCHC Dsptch|SCHC Hdr|SCHC Pld|User pld| pad |
+    +---------+--------+-----------+--------+--------+--------+ - - +
+
+
+      Figure 24: Encapsulated, SCHC-compressed packet, for Mesh-Under
+      transmission (without fragmentation).  Padding bits are added if
+                                  needed.
+
+   The frame format for a SCHC-compressed packet to be sent by means of
+   Mesh-Under, which also requires fragmentation, is shown in Figure 25:
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 32]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+    <------------------ IEEE 802.15.4 frame payload ------------------>
+
+                                     <----- SCHC Datagram ------>
+    +-----+-----+-----+-----+--------+--------+--------+--------+ - - +
+    |M Typ|M Hdr|F Typ|F Hdr|SCHC Dsp|SCHC Hdr|SCHC Pld|User pld| Pad |
+    +-----+-----+-----+-----+--------+--------+--------+--------+ - - +
+
+
+      Figure 25: Encapsulated, SCHC-compressed packet, for Mesh-Under
+       transmission (with fragmentation).  Padding bits are added if
+                                  needed.
+
+   The frame format for a SCHC-compressed packet to be sent by means of
+   Mesh-Under, which also requires a broadcast header to support mesh
+   broadcast/multicast, is shown in Figure 26:
+
+
+    <---------------- IEEE 802.15.4 frame payload -------------------->
+                                     <------ SCHC Datagram ----->
+    +-----+-----+-----+-----+--------+--------+--------+--------+ - - +
+    |M Typ|M Hdr|B Typ|B Hdr|SCHC Dsp|SCHC Hdr|SCHC Pld|User pld| Pad |
+    +-----+-----+-----+-----+--------+--------+--------+--------+ - - +
+
+
+         Figure 26: Encapsulated, SCHC-compressed packet, for mesh
+          broadcast/multicast in Mesh-Under transmission (without
+      fragmentation).  Padding bits are added if needed.  'B Dsp' and
+       'B Hdr' stand for 'Broadcast Dispatch' and 'Broadcast Header',
+                               respectively.
+
+   As in RFC 4944, when more than one LoWPAN header is used in the same
+   packet, they MUST appear in the following order: Mesh Addressing
+   Header, Broadcast Header, Fragmentation Header.
+
+4.5.  Summary
+
+   A summary of the formats and main features for the different
+   transmission alternatives enabled by the present document is shown in
+   Figure 27:
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 33]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   +-------------+-----------------------------------------------------+
+   |  Single-hop |                      Multihop                       |
+   +-------------+-----------------------------------------+-----------+
+   |             |              Route-Over                 |           |
+   |             +---------+----------------+--------------+ Mesh-Under|
+   |             |   SRO   |      TRO       |     PRO      |           |
+   +-------------+---------+----------------+--------------+-----------+
+   |SCHC Dispatch|SCHC Disp|IP-in-IP, 6LoRH,|SCHC Ptr Disp,|Mesh Hdrs, |
+   |             |         | SCHC Dispatch  | SCHC Pointer |SCHC Dsptch|
+   +-------------+---------+----------------+--------------+-----------+
+   |   see 4.1   | see 4.1 |    see 4.2     |   see 4.3    |  see 4.4  |
+   +-------------+---------+----------------+--------------+-----------+
+
+         Figure 27: Summary of formats and main features for the
+       transmission of SCHC- compressed packets over IEEE 802.15.4
+       enabled by the present document, and corresponding artifacts
+
+5.  Enabling the TPS
+
+   This section describes two main approaches to enable the TPS, i.e.,
+   the protocol stack that keeps using 6LoWPAN/6lo header compression
+   [RFC6282][RFC8138] for the IPv6 header, while using SCHC for UDP and
+   CoAP header compression (Figure 7, Section 3.1.2).  The first
+   approach is based on using a single SCHC Stratum for joint UDP/CoAP
+   header C/D.  The second one is based on using at least two SCHC
+   Strata (one of them for UDP header C/D, the other(s) for CoAP header
+   C/D, including OSCORE).  The functionality associated to these two
+   approaches is described in subsection 5.1 and subsection 5.2,
+   respectively.
+
+   SCHC uses a SCHC Control Header to identify the SCHC-compressed
+   protocol header(s), along with further information to support SCHC
+   operation (when needed).  SCHC may also need a Discriminator to
+   identify the SoR to be used for header decompression [draft-ietf-
+   schc-architecture].
+
+   In order to support SCHC-compressed UDP/CoAP headers over 6LoWPAN-
+   compressed IPv6 packets, the present document exploits the work that
+   is being done by the SCHC WG to define a new Internet Protocol Number
+   for SCHC [I-D.ietf-schc-protocol-numbers].  In this approach, the NH
+   field of the RFC 6282-compressed IPv6 header format is set to 0.  The
+   Next Header field of the IPv6 header remains an 8-bit (uncompressed)
+   field carrying the SCHC Internet Protocol Number.  The resulting
+   protocol encapsulation and corresponding format for an unfragmented
+   packet, which is carried as IEEE 802.15.4 frame payload, is shown in
+   Figure 28.  Padding is added as needed to align the format to an
+   octet boundary.
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 34]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+      <---------------- IEEE 802.15.4 frame payload ------------------>
+      +-----------------------+------------------+--------------+ - - +
+      | RFC6282-compressed    | SCHC-compressed  |              |     |
+      |     IPv6 header       | UDP/CoAP headers | CoAP Payload | Pad |
+      |(NH=0,Next Header=SCHC)| (includes SCHC   |              |     |
+      |                       | Control Header)  |              |     |
+      +-----------------------+------------------+--------------+ - - +
+
+       Figure 28: Protocol data unit encapsulation and format for the
+                 TPS, using a SCHC Internet Protocol Number
+
+   For RPL-based networks that use the TPS, the formats defined in RFC
+   8138 may also be used for the sake of efficiency, as shown in
+   Figure 29.  In this figure, the first field is the Page switch with
+   value 1, followed by RFC 8138-compressed routing artifacts, then
+   followed by the RFC 6282-compressed IPv6 header (which indicates that
+   the next header data unit is a SCHC Datagram).
+
+
+
+<----------------------- IEEE 802.15.4 frame payload ------------------->
++--------+------------+------------------+----------------+---------+ - +
+|11110001|8138-cmprssd|  6282-compressed | SCHC-comprssd  |         |   |
+|(Page 1)|  routing   |   IPv6 header    | UDP/CoAP hdrs  |   CoAP  |Pad|
+|        | artifacts  |(NH=0,NxtHdr=SCHC)| (incl. SCHC    | Payload |   |
+|        |            |                  | Control Header)|         |   |
++--------+------------+------------------+----------------+---------+ - +
+
+
+    Figure 29: Protocol data unit encapsulation and format for the
+  TPS using a SCHC Internet Protocol Number and RFC 8138-compressed
+                          routing artifacts
+
+5.1.  SCHC C/D for the TPS: joint UDP/CoAP header compression
+
+   Over the IP layer, SCHC compression may be used for UDP only, UDP and
+   CoAP jointly, or any other protocol or combination of protocols.
+   This section describes joint UDP/CoAP C/D for the TPS, based on a
+   single SCHC Stratum.
+
+   The SCHC-compressed UDP/CoAP headers field has the format detailed in
+   Figure 30.  Such field comprises in turn two fields: the SCHC Control
+   Header for UDP and CoAP, and the corresponding SCHC Data (i.e., a
+   RuleID followed by the compression residue of the UDP/CoAP header).
+   If there is a single SoR for UDP/CoAP header C/D, the SCHC Control
+   Header for UDP and CoAP is fully elided (i.e., it requires zero bits
+   when the packet is transmitted).
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 35]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+    <---------------- IEEE 802.15.4 frame payload ------------------>
+    +-----------------------+------------------+--------------+ - - +
+    | RFC6282-compressed    | SCHC-compressed  |              |     |
+    |     IPv6 header       | UDP/CoAP headers | CoAP Payload | Pad |
+    |(NH=0,Next Header=SCHC)|(includes SCHC    |              |     |
+    |                       | Control Header(s)|              |     |
+    +-----------------------+------------------+--------------+ - - +
+                            /                  \
+                   |-------/                    \-----------|
+                   +------------------+---------------------+
+                   |   SCHC Stratum   |      SCHC Data      |
+                   |       Header     | (RuleID + cmp. rsd. |
+                   | for UDP and CoAP | of UDP/CoAP header) |
+                   +------------------+---------------------+
+
+
+        Figure 30: Detailed view of the SCHC-compressed UDP and CoAP
+     headers.  A single SCHC Stratum is used jointly for UDP and CoAP.
+
+   The SCHC Control Header for joint UDP and CoAP header C/D, and the
+   Rule to compress/decompress the SCHC Control Header itself for
+   devices that only support the TPS, are defined in Figure 31.  When a
+   TPS-only device transmits a CoAP data unit, the SCHC Control Header
+   is fully compressed and it incurs no transmission overhead (i.e., it
+   is compressed down to 0 bits when transmitted), since the SoR of the
+   SCHC Stratum end point contains exactly one Rule.  When receiving a
+   data unit, a TPS-only device also assumes that the SCHC Control
+   Header is fully compressed (down to 0 bits).
+
+   A SCHC-Lo network may comprise TPS-only nodes and other nodes that
+   also use 6LoWPAN/6lo to compress IPv6 headers (and routing protocol
+   artifacts when needed) but support other protocol combinations on top
+   of IPv6, in addition to UDP/CoAP.  The latter nodes MUST also use/
+   assume a fully compressed SCHC Control Header (down to 0 bits when
+   transmitted) to send/receive UDP/CoAP data units to/from nodes that
+   only implement the TPS, but will need to use/assume a not fully
+   compressed SCHC Control Header when sending/receiving to/from other
+   devices that support further protocols atop IPv6.  In that case, the
+   uncompressed SCHC Control Header format will also be the one shown in
+   Figure 31, but using the appropriate Protocol ID and Port number
+   values.  In such a mixed network, a receiving node can determine
+   whether the SCHC Control Header has been fully compressed (down to 0
+   bits) based on prior knowledge that the sender is a TPS-only node.
+   In this case, the IPv6 address of the sender is used as a
+   Discriminator.
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 36]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   +-----------+-----------+
+   |Protocol ID|Port number| Non-Compressed SCHC Control Header for joint UDP/CoAP C/D
+   +-----------+-----------+
+   Protocol ID = 17 (UDP)
+   Port number = 5683 (CoAP)
+
+   +---------+- - - - - - - - - - -+
+   | Rule ID | Compression Residue | SCHC-Compressed Control Header for joint UDP/CoAP C/D
+   +---------+- - - - - - - - - - -+
+   Note: for devices that only implement the TPS (i.e., the only protocols carried over IP are UDP and CoAP),
+   the SCHC-Compressed Control Header is fully compressed (down to 0 bits when transmitted over the air) since
+   there is only one Rule in the SoR for the SCHC Stratum end point for such devices.
+
+   Rule to compress/decompress the SCHC Control Header for joint UDP/CoAP header C/D for devices that only implement the TPS:
+
+   RuleID
+   +--------------+--+---+--+----+------+----------+
+   |      FID     |FL|POS|DI| TV |  MO  |   CDA    |
+   +--------------+--+---+--+----+------+----------+
+   | SCHC.proto   | 8| 1 |Bi| 17 |equal | not-sent |
+   +--------------+--+---+--+----+------+----------+
+   | SCHC.portnum |16| 1 |Bi|5683|equal | not-sent |
+   +--------------+--+---+--+----+------+----------+
+
+
+   Figure 31: SCHC Control Header for joint UDP/CoAP header C/D in
+    non-compressed and in SCHC-compressed form, and corresponding
+                                Rule.
+
+5.2.  SCHC C/D for the TPS: multiple SCHC Strata
+
+   This section describes SCHC C/D for the TPS, based on using a SCHC
+   Stratum below UDP, for UDP header C/D, and at least another one,
+   between UDP and CoAP, for CoAP header C/D.
+
+   When only one SCHC Stratum is used for CoAP header C/D (e.g., when
+   OSCORE is not used), the SCHC-compressed UDP/CoAP headers field
+   comprises four fields (Figure 32): the SCHC Control Header for UDP,
+   the corresponding SCHC Data (i.e., a RuleID followed by the
+   compression residue of the UDP header), the SCHC Control Header for
+   CoAP, and the SCHC Data for the latter (i.e., a RuleID followed by
+   the compression residue of the CoAP header).  If there is a single
+   SoR for UDP header C/D or CoAP header C/D, the corresponding SCHC
+   Control Header is fully elided.
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 37]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+ <----------------------- IEEE 802.15.4 frame payload ------------------------->
+ +--------+-----------+------------------+----------------+--------------+ - - +
+ |11110001|8138-cmprsd|  6282-compressed | SCHC-comprssd  |              |     |
+ |(Page 1)|  routing  |   IPv6 header    | UDP/CoAP hdrs  | CoAP Payload | Pad |
+ |        | artifacts |(NH=0,NxtHdr=SCHC)| (incl. SCHC    |              |     |
+ |        |           |                  | Stratum Hdr(s))|
+ +--------+-----------+------------------+----------------+--------------+ - - +
+                                        /                  \
+                               |-------/                    \--------|
+                               +---------+--------+---------+--------+
+                               |  SCHC   |  SCHC  |  SCHC   | SCHC   |
+                               | Stratum | Payload| Stratum | Payload|
+                               | Header  | (UDP)  |  Header | (CoAP) |
+                               | for UDP |        | for CoAP|        |
+                               +---------+--------+---------+--------+
+
+     Figure 32: Detailed view of the SCHC-compressed UDP and CoAP
+     headers.  Two separate SCHC Strata are used to support SCHC-
+       compressed UDP headers and SCHC-compressed CoAP headers,
+                            respectively.
+
+   The SCHC Control Header for UDP header C/D, and the Rule to compress/
+   decompress that SCHC Control Header for devices that only support the
+   TPS, are defined in Figure 33.  The SCHC Control Header for CoAP
+   header C/D, and the Rule to compress/decompress that SCHC Control
+   Header for devices that only support the TPS, are defined in
+   Figure 34.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 38]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+ +-------------+
+ | Protocol ID | Non-Compressed SCHC Control Header for UDP
+ +-------------+
+ Protocol ID = 17 (UDP)
+
+ +.........+- - - - - - - - - - -+
+ | Rule ID | Compression Residue | SCHC-Compressed Control Header for UDP
+ +.........+- - - - - - - - - - -+
+  Note: for devices that only implement the TPS (i.e., the only protocol carried over IPv6 is UDP),
+  the SCHC-Compressed Control Header is fully compressed (down to 0 bits when transmitted over the air)
+  since there is only one Rule in the SoR of the SCHC Stratum for such devices.
+
+ Rule to compress the SCHC Control Header for UDP header C/D:
+
+ RuleID
+ +------------+--+---+--+----+------+----------+
+ |     FID    |FL|POS|DI| TV |  MO  |   CDA    |
+ +------------+--+---+--+----+------+----------+
+ | SCHC.proto | 8| 1 |Bi| 17 |equal | not-sent |
+ +------------+--+---+--+----+------+----------+
+
+      Figure 33: SCHC Control Header for UDP header C/D in non-
+    compressed and SCHC- compressed form, and corresponding Rule.
+
+
+ +-------------+
+ | Port number | Non-Compressed SCHC Control Header for CoAP
+ +-------------+
+ Port number = 5683 (CoAP)
+
+ +.........+- - - - - - - - - - -+
+ | Rule ID | Compression Residue | SCHC-Compressed Control Header for CoAP
+ +.........+- - - - - - - - - - -+
+ Note: for devices that only implement the TPS (i.e., the only protocol carried over UDP is CoAP),
+ the SCHC-Compressed Control Header is fully compressed (down to 0 bits when transmitted over the air)
+ since there is only one Rule in the SoR of the SCHC Stratum for such devices.
+
+ Rule to compress the SCHC Control Header for CoAP header C/D:
+
+ RuleID
+ +--------------+--+---+--+----+------+----------+
+ |      FID     |FL|POS|DI| TV |  MO  |   CDA    |
+ +--------------+--+---+--+----+------+----------+
+ | SCHC.portnum | 8| 1 |Bi|5683|equal | not-sent |
+ +--------------+--+---+--+----+------+----------+
+
+      Figure 34: SCHC Control Header for CoAP header C/D in non-
+   compressed and in SCHC-compressed form, and corresponding Rule.
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 39]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   When CoAP is protected with OSCORE, one SCHC Stratum is used below
+   UDP (for UDP header C/D), a second one is used between UDP and the
+   CoAP outer header (for CoAP outer header C/D), and a third one is
+   used between the CoAP outer header and the CoAP inner header (for
+   CoAP inner header C/D).
+
+   In this case, the SCHC-compressed UDP/CoAP headers field comprises
+   six fields (Figure 35): the SCHC Control Header for UDP, the
+   corresponding SCHC Data (i.e., a RuleID followed by the compression
+   residue of the UDP header), the SCHC Control Header for CoAP outer
+   header, the SCHC Data for the latter (i.e., a RuleID followed by the
+   compression residue of the CoAP outer header), the SCHC Control
+   Header for CoAP inner header, and the SCHC Data for the latter (i.e.,
+   a RuleID followed by the compression residue of the CoAP inner
+   header).  If there is a single SoR for UDP header C/D, CoAP outer
+   header C/D, or CoAP inner header C/D, the corresponding SCHC Control
+   Header is fully elided.
+
+
+ <------------------------ IEEE 802.15.4 frame payload ------------------------>
+ +--------+------------+------------------+----------------+--------------+ - - +
+ |11110001|8138-cmprssd|  6282-compressed | SCHC-comprssd  |              |     |
+ |(Page 1)|  routing   |   IPv6 header    | UDP/CoAP hdrs  | CoAP Payload | Pad |
+ |        | artifacts  |(NH=0,NxtHdr=SCHC)| (incl. SCHC    |              |     |
+ |        |            |                  | Stratum Hdr(s))|
+ +--------+------------+------------------+----------------+--------------+ - - +
+                                         /                  \
+                      |-----------------/                    \-----------------|
+                      +---------+--------+---------+--------+---------+--------+
+                      |  SCHC   |  SCHC  |  SCHC   | SCHC   | SCHC    | SCHC   |
+                      | Stratum | Payload| Stratum | Payload| Stratum | Payload|
+                      | Header  | (UDP)  |  Header | (CoAP  | Header  | (CoAP  |
+                      | for UDP |        | for CoAP|  outer)| for CoAP| inner) |
+                      +---------+--------+---------+--------+---------+--------+
+
+     Figure 35: Detailed view of the SCHC-compressed UDP and CoAP
+
+   When OSCORE is used to protect CoAP in the TPS, the SCHC Control
+   Headers for UDP and CoAP outer header C/D, and the Rules to compress/
+   decompress those SCHC Control Headers for devices that only support
+   the TPS, are the ones already illustrated in Figures 33 and 34.  The
+   SCHC Control Header for CoAP inner header C/D, and the Rule to
+   compress/decompress that SCHC Control Header, are shown in Figure 36.
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 40]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+ +-------------+
+ |Option number| Non-Compressed SCHC Control Header for CoAP inner header
+ +-------------+
+ Option number = 9 (OSCORE)
+
+ +.........+- - - - - - - - - - -+
+ | Rule ID | Compression Residue | SCHC-Compressed Control Header for CoAP inner
+ +.........+- - - - - - - - - - -+
+ Note: for devices that only implement the TPS and use OSCORE, the SCHC-Compressed Control Header for CoAP inner header C/D is fully compressed (down to 0 bits when transmitted over the air) since there is only one Rule in the SoR of that SCHC Stratum.
+
+ Rule to compress the SCHC Control Header for CoAP inner header C/D:
+
+ RuleID
+ +--------------+--+---+--+----+------+----------+
+ |      FID     |FL|POS|DI| TV |  MO  |   CDA    |
+ +--------------+--+---+--+----+------+----------+
+ | SCHC.optnum  |16| 1 |Bi|  9 |equal | not-sent |
+ +--------------+--+---+--+----+------+----------+
+
+   Figure 36: SCHC Control Header for CoAP inner header C/D in non-
+     compressed and SCHC-compressed form, and corresponding Rule.
+
+6.  SCHC compression for IPv6, UDP, and CoAP headers
+
+   SCHC header compression may be applied to the headers of different
+   protocols or sets of protocols.  Some examples include: i) IPv6
+   packet headers, ii) joint IPv6 and UDP packet headers, iii) joint
+   IPv6, UDP and CoAP packet headers, etc.
+
+   This section describes how IPv6, UDP, and CoAP header fields are
+   compressed.
+
+6.1.  SCHC compression for IPv6 and UDP headers
+
+   IPv6 and UDP header fields MUST be compressed as per Section 10 of
+   RFC 8724.
+
+   IPv6 addresses are split into two 64-bit-long fields; one for the
+   prefix and one for the Interface Identifier (IID).
+
+   To allow for a single Rule being used for both directions, RFC 8724
+   identifies IPv6 addresses and UDP ports by their role (Dev or App)
+   and not by their position in the header (source or destination).
+   This optimization can be used as is in some IEEE 802.15.4 networks
+   (e.g., an IEEE 802.15.4 star topology where the peripheral devices
+   (Devs) send/receive packets to/from a network-side entity (App)).
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 41]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   However, in some types of 6LoWPAN environments (e.g., when a sender
+   and its destination are both peer nodes in a mesh topology network),
+   additional functionality is needed to allow use of the Dev and App
+   roles for C/D.  In this case, each SCHC C/D entity needs to know its
+   role (Dev or App) in addition to the Rule(s), and corresponding
+   RuleIDs, for each node it communicates with before such communication
+   occurs [I-D.ietf-schc-architecture].  In such cases, the terms Uplink
+   and Downlink that have been defined in RFC 8724 need to be understood
+   in the context of each specific set of peer nodes.
+
+   RFC 8724 (Section 7.1) states that "In a Rule, the Field Descriptors
+   are listed in the order in which the fields appear in the packet
+   header".  The present specification updates RFC 8724 by stating that,
+   in order to allow IPv6 header compression in PRO, the Field
+   Descriptors of the IPv6 destination address (i.e., IPv6 DevPrefix and
+   IPv6 DevIID) MUST appear before the Field Descriptors of the IPv6
+   source address (i.e., IPv6 AppPrefix and IPv6 AppIID), while the rest
+   of fields appear in the same order as in the IPv6 packet header.
+
+   In PRO, in order to support SCHC-based IPv6 header compression, one
+   Rule MUST be defined for each direction between the involved C/D
+   nodes.  In such a Rule, the IPv6 DevPrefix and IPv6 DevIID FIDs MUST
+   refer to the destination address (i.e., the destination node takes
+   the "Dev" role) of the SCHC-compressed IPv6 header.  This allows a
+   6LR to read the compression residue of the Hop Limit and IPv6
+   destination address fields of the SCHC-compressed header by means of
+   the Bit Pointer.
+
+6.1.1.  Compression of IPv6 addresses
+
+   Compression of IPv6 source and destination prefixes MUST be performed
+   as per Section 10.7.1 of RFC 8724.  Additional guidance is given in
+   the present section.
+
+   Compression of IPv6 source and destination IIDs MUST be performed as
+   per Section 10.7.2 of RFC 8724.  One particular consideration when
+   SCHC C/D is used in IEEE 802.15.4 networks is that, in contrast with
+   some LPWAN technologies, IEEE 802.15.4 data frame headers include
+   both source and destination fields.  If the Dev or App IID are based
+   on an L2 address, in some cases the IID can be reconstructed with
+   information coming from the L2 header.  Therefore, in those cases,
+   DevIID and AppIID CDAs can be used.
+
+   RFC 8724 states that "If the Rule is intended to compress packets
+   with different prefix values, match-mapping SHOULD be used"
+   (Section 10.7.1 of RFC 8724) and "If several IIDs are possible, then
+   the TV contains the list of possible IIDs, the MO is set to "match-
+   mapping" and the CDA is set to "mapping-sent"" (Section 10.7.2 of RFC
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 42]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   8724).  However, the present specification updates RFC 8724 by
+   stating that, in PRO, a source node MUST NOT use the match-mapping
+   operator or the "mapping-sent" CDA to compress the IPv6 destination
+   address prefix or the IPv6 destination IID, because 6LRs do not store
+   SCHC context, and therefore do not have the match-mapping index
+   meaning information.
+
+6.1.2.  UDP checksum field
+
+   RFC 8724 states that "a SCHC compressor MAY elide the UDP checksum
+   when another layer guarantees at least equal integrity protection for
+   the UDP payload and the pseudo-header".
+
+   IEEE 802.15.4 frames carry a 16-bit Frame Check Sequence (FCS), which
+   is computed by means of a 16-bit ITU-T CRC algorithm.  Considering
+   the FCS size, the greater error detection capabilities of CRC
+   compared with checksum, and the fact that the IEEE 802.15.4 FCS will
+   be checked at each hop in an IEEE 802.15.4 multihop network, the UDP
+   checksum MUST be elided when using SCHC to compress UDP headers.
+
+6.2.  SCHC compression for CoAP headers
+
+   CoAP header fields MUST be compressed as per Sections 4 to 6 of RFC
+   8824.  Additional guidance is given in this section.
+
+   For CoAP header compression/decompression, the SCHC Rules description
+   uses direction information in order to reduce the number of Rules
+   needed to compress headers.
+
+   As stated in 5.1, in some types of 6LoWPAN environments (e.g., when a
+   sender and its destination are both peer nodes in a mesh topology
+   network), each SCHC C/D entity needs to know its role (Dev or App),
+   in addition to the Rule(s), and corresponding RuleIDs, for each node
+   it communicates with before such communication occurs
+   [I-D.ietf-schc-architecture].  Therefore, in such cases, direction
+   information will be specific to each set of peer nodes.
+
+7.  Neighbor Discovery
+
+   A number of optimizations have been developed in order to efficiently
+   support IPv6 Neighbor Discovery (ND) in 6LoWPAN environments (6LoWPAN
+   ND) [RFC 6775][RFC 8505].  SCHC can also be used to compress 6LoWPAN
+   ND packets.  At the time of this writing, compression of ICMPv6
+   headers is being specified in the SCHC WG [draft-ietf-schc-
+   icmpv6-compression].  Thus, it will be possible to compress the IPv6
+   header and the ICMPv6 header of a packet carrying a 6LoWPAN ND
+   message.
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 43]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+8.  Fragmentation and reassembly
+
+   After applying SCHC header compression to a packet intended for
+   transmission, if the size of the resulting SCHC Datagram (Section 4)
+   exceeds the IEEE 802.15.4 frame payload space available, such SCHC
+   Datagram MUST be fragmented, carried and reassembled by means of the
+   fragmentation and reassembly functionality defined by 6LoWPAN
+   [RFC4944] or 6Lo [RFC8930][RFC8931].
+
+   In a Route-Over SCHC-Lo network, the 6LoWPAN fragment forwarding
+   technique called Virtual Reassembly Buffer (VRB) [RFC8930] SHOULD be
+   used.  However, VRB might not be the best approach for a particular
+   SCHC-Lo network, e.g., if at least one of the caveats described in
+   Section 6 of RFC 8930 is unacceptable or cannot be addressed.
+
+9.  IANA Considerations
+
+   This document requests the allocation of the 6LoWPAN Dispatch Type
+   Field Bit Patterns, on the Pages and with the Header Types shown
+   next:
+
+
+            +--------------+--------+-----------------+-------------+
+            | Bit Pattern  |  Page  |   Header Type   |  Reference  |
+            +--------------+--------+-----------------+-------------+
+            |   01000100   |    0   |      SCHC       |  [RFCthis]  |
+            +--------------+--------+-----------------+-------------+
+            |   01000100   |    1   |      SCHC       |  [RFCthis]  |
+            +--------------+--------+-----------------+-------------+
+            |   01000101   |    0   |   SCHC Pointer  |  [RFCthis]  |
+            +--------------+--------+-----------------+-------------+
+
+       Figure 37: Details of the 6LoWPAN Dispatch Type Field request
+
+10.  Security Considerations
+
+   This document does not define SCHC header compression functionality
+   beyond the one defined in RFC 8724.  Therefore, the security
+   considerations in section 12.1 of RFC 8724 and in section 9 of RFC
+   8824 apply.
+
+   As a safety measure, a SCHC decompressor implementing the present
+   specification MUST NOT reconstruct a packet larger than 1500 bytes
+   [RFC8724].
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 44]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   IEEE 802.15.4 networks support link-layer security mechanisms such as
+   encryption and authentication.  As in RFC 8824, the use of a
+   cryptographic integrity-protection mechanism to protect the SCHC-
+   compressed headers is REQUIRED.
+
+   The addition of the pointer used in PRO creates new attack
+   opportunities.  A malicious node might be able to modify the related
+   fields (i.e., Bit Pointer or Address Residue Length) to prevent a
+   router from correctly reconstructing the IPv6 destination field of a
+   SCHC-compressed IPv6 packet, thus preventing delivery of the packet
+   to its intended destination.  Appropriate use of link-layer security
+   should significantly reduce the probability of the described threat.
+
+11.  Acknowledgments
+
+   Ana Minaburo and Laurent Toutain suggested for the first time the use
+   of SCHC in environments where 6LoWPAN has traditionally been used.
+   Flavien Moullec is a contributor to this document.  Laurent Toutain,
+   Pascal Thubert, Dominique Barthel, Guangpeng Li, Carsten Bormann,
+   Nathan Lecorchet, Stuart Cheshire, Kiran Makhijani, Georgios Z.
+   Papadopoulos, Peter Yee, Alexander Pelov, and Esko Dijk made comments
+   that helped shape this document.
+
+   Carles Gomez has been funded in part by the Spanish Government
+   through project PID2019-106808RA-I00 and PID2023-146378NB-I00, and by
+   Secretaria d'Universitats i Recerca del Departament d'Empresa i
+   Coneixement de la Generalitat de Catalunya 2017 through grant SGR 376
+   and 2021 throught grant SGR 00330.
+
+12.  References
+
+12.1.  Normative References
+
+   [I-D.ietf-schc-architecture]
+              Pelov, A., Thubert, P., and A. Minaburo, "Static Context
+              Header Compression (SCHC) Architecture", Work in Progress,
+              Internet-Draft, draft-ietf-schc-architecture-05, 17
+              October 2025, <https://datatracker.ietf.org/doc/html/
+              draft-ietf-schc-architecture-05>.
+
+   [I-D.ietf-schc-protocol-numbers]
+              Moskowitz, R., Thubert, P., Gomez, C., Minaburo, A., and
+              M. Blanchet, "Protocol Numbers for SCHC", Work in
+              Progress, Internet-Draft, draft-ietf-schc-protocol-
+              numbers-06, 23 December 2025,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
+              protocol-numbers-06>.
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 45]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC4944]  Montenegro, G., Kushalnagar, N., Hui, J., and D. Culler,
+              "Transmission of IPv6 Packets over IEEE 802.15.4
+              Networks", RFC 4944, DOI 10.17487/RFC4944, September 2007,
+              <https://www.rfc-editor.org/info/rfc4944>.
+
+   [RFC6282]  Hui, J., Ed. and P. Thubert, "Compression Format for IPv6
+              Datagrams over IEEE 802.15.4-Based Networks", RFC 6282,
+              DOI 10.17487/RFC6282, September 2011,
+              <https://www.rfc-editor.org/info/rfc6282>.
+
+   [RFC6550]  Winter, T., Ed., Thubert, P., Ed., Brandt, A., Hui, J.,
+              Kelsey, R., Levis, P., Pister, K., Struik, R., Vasseur,
+              JP., and R. Alexander, "RPL: IPv6 Routing Protocol for
+              Low-Power and Lossy Networks", RFC 6550,
+              DOI 10.17487/RFC6550, March 2012,
+              <https://www.rfc-editor.org/info/rfc6550>.
+
+   [RFC6553]  Hui, J. and JP. Vasseur, "The Routing Protocol for Low-
+              Power and Lossy Networks (RPL) Option for Carrying RPL
+              Information in Data-Plane Datagrams", RFC 6553,
+              DOI 10.17487/RFC6553, March 2012,
+              <https://www.rfc-editor.org/info/rfc6553>.
+
+   [RFC6554]  Hui, J., Vasseur, JP., Culler, D., and V. Manral, "An IPv6
+              Routing Header for Source Routes with the Routing Protocol
+              for Low-Power and Lossy Networks (RPL)", RFC 6554,
+              DOI 10.17487/RFC6554, March 2012,
+              <https://www.rfc-editor.org/info/rfc6554>.
+
+   [RFC6606]  Kim, E., Kaspar, D., Gomez, C., and C. Bormann, "Problem
+              Statement and Requirements for IPv6 over Low-Power
+              Wireless Personal Area Network (6LoWPAN) Routing",
+              RFC 6606, DOI 10.17487/RFC6606, May 2012,
+              <https://www.rfc-editor.org/info/rfc6606>.
+
+   [RFC6775]  Shelby, Z., Ed., Chakrabarti, S., Nordmark, E., and C.
+              Bormann, "Neighbor Discovery Optimization for IPv6 over
+              Low-Power Wireless Personal Area Networks (6LoWPANs)",
+              RFC 6775, DOI 10.17487/RFC6775, November 2012,
+              <https://www.rfc-editor.org/info/rfc6775>.
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 46]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   [RFC7252]  Shelby, Z., Hartke, K., and C. Bormann, "The Constrained
+              Application Protocol (CoAP)", RFC 7252,
+              DOI 10.17487/RFC7252, June 2014,
+              <https://www.rfc-editor.org/info/rfc7252>.
+
+   [RFC7973]  Droms, R. and P. Duffy, "Assignment of an Ethertype for
+              IPv6 with Low-Power Wireless Personal Area Network
+              (LoWPAN) Encapsulation", RFC 7973, DOI 10.17487/RFC7973,
+              November 2016, <https://www.rfc-editor.org/info/rfc7973>.
+
+   [RFC8025]  Thubert, P., Ed. and R. Cragie, "IPv6 over Low-Power
+              Wireless Personal Area Network (6LoWPAN) Paging Dispatch",
+              RFC 8025, DOI 10.17487/RFC8025, November 2016,
+              <https://www.rfc-editor.org/info/rfc8025>.
+
+   [RFC8065]  Thaler, D., "Privacy Considerations for IPv6 Adaptation-
+              Layer Mechanisms", RFC 8065, DOI 10.17487/RFC8065,
+              February 2017, <https://www.rfc-editor.org/info/rfc8065>.
+
+   [RFC8138]  Thubert, P., Ed., Bormann, C., Toutain, L., and R. Cragie,
+              "IPv6 over Low-Power Wireless Personal Area Network
+              (6LoWPAN) Routing Header", RFC 8138, DOI 10.17487/RFC8138,
+              April 2017, <https://www.rfc-editor.org/info/rfc8138>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+   [RFC8505]  Thubert, P., Ed., Nordmark, E., Chakrabarti, S., and C.
+              Perkins, "Registration Extensions for IPv6 over Low-Power
+              Wireless Personal Area Network (6LoWPAN) Neighbor
+              Discovery", RFC 8505, DOI 10.17487/RFC8505, November 2018,
+              <https://www.rfc-editor.org/info/rfc8505>.
+
+   [RFC8613]  Selander, G., Mattsson, J., Palombini, F., and L. Seitz,
+              "Object Security for Constrained RESTful Environments
+              (OSCORE)", RFC 8613, DOI 10.17487/RFC8613, July 2019,
+              <https://www.rfc-editor.org/info/rfc8613>.
+
+   [RFC8724]  Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and JC.
+              Zuniga, "SCHC: Generic Framework for Static Context Header
+              Compression and Fragmentation", RFC 8724,
+              DOI 10.17487/RFC8724, April 2020,
+              <https://www.rfc-editor.org/info/rfc8724>.
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 47]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   [RFC8824]  Minaburo, A., Toutain, L., and R. Andreasen, "Static
+              Context Header Compression (SCHC) for the Constrained
+              Application Protocol (CoAP)", RFC 8824,
+              DOI 10.17487/RFC8824, June 2021,
+              <https://www.rfc-editor.org/info/rfc8824>.
+
+   [RFC8930]  Watteyne, T., Ed., Thubert, P., Ed., and C. Bormann, "On
+              Forwarding 6LoWPAN Fragments over a Multi-Hop IPv6
+              Network", RFC 8930, DOI 10.17487/RFC8930, November 2020,
+              <https://www.rfc-editor.org/info/rfc8930>.
+
+   [RFC8931]  Thubert, P., Ed., "IPv6 over Low-Power Wireless Personal
+              Area Network (6LoWPAN) Selective Fragment Recovery",
+              RFC 8931, DOI 10.17487/RFC8931, November 2020,
+              <https://www.rfc-editor.org/info/rfc8931>.
+
+   [RFC9008]  Robles, M.I., Richardson, M., and P. Thubert, "Using RPI
+              Option Type, Routing Header for Source Routes, and IPv6-
+              in-IPv6 Encapsulation in the RPL Data Plane", RFC 9008,
+              DOI 10.17487/RFC9008, April 2021,
+              <https://www.rfc-editor.org/info/rfc9008>.
+
+   [RFC9147]  Rescorla, E., Tschofenig, H., and N. Modadugu, "The
+              Datagram Transport Layer Security (DTLS) Protocol Version
+              1.3", RFC 9147, DOI 10.17487/RFC9147, April 2022,
+              <https://www.rfc-editor.org/info/rfc9147>.
+
+12.2.  Informative References
+
+   [I-D.ietf-schc-8824-update]
+              Tiloca, M., Toutain, L., Martínez, I., and A. Minaburo,
+              "Static Context Header Compression (SCHC) for the
+              Constrained Application Protocol (CoAP)", Work in
+              Progress, Internet-Draft, draft-ietf-schc-8824-update-08,
+              3 June 2026, <https://datatracker.ietf.org/doc/html/draft-
+              ietf-schc-8824-update-08>.
+
+   [I-D.ietf-schc-icmpv6-compression]
+              Barthel, D. and L. Toutain, "Static Context Header
+              Compression (SCHC) for the Internet Control Message
+              Protocol (ICMPv6)", Work in Progress, Internet-Draft,
+              draft-ietf-schc-icmpv6-compression-02, 13 June 2025,
+              <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
+              icmpv6-compression-02>.
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 48]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   [RFC9006]  Gomez, C., Crowcroft, J., and M. Scharf, "TCP Usage
+              Guidance in the Internet of Things (IoT)", RFC 9006,
+              DOI 10.17487/RFC9006, March 2021,
+              <https://www.rfc-editor.org/info/rfc9006>.
+
+Appendix A.  Analysis of route-over multihop approaches
+
+   This section provides an analysis of the features, pros and cons of
+   the route-over multihop approaches defined in this document: i) SRO,
+   ii) TRO, and iii) PRO.
+
+A.1.  SRO
+
+   SRO incurs the lowest header overhead among the considered Route-Over
+   approaches, as it only requires the SCHC Dispatch (1 byte).  However,
+   it is the most demanding approach in terms of memory usage, since all
+   SCHC-Lo network routers (i.e., 6LRs and 6LBRs) need to store all the
+   Rules in use in the SCHC-Lo network.  Therefore, it will be suitable
+   for rather small networks and/or where nodes have sufficient memory.
+   Also, SCHC context should be as static as possible, in order to avoid
+   frequent stored SCHC context updates on the SCHC-Lo network routers.
+
+A.2.  TRO
+
+   TRO incurs a header overhead that includes a fixed part (a Page
+   Switch plus the SCHC Dispatch, of 1 byte each), plus a variable part
+   that comprises RFC 8138-compressed routing artifacts.
+
+   Regarding the latter, in a Downward transmission, it would include
+   the SRH-6LoRH (of variable size, of 4 bytes in the best case, or
+   e.g., 8 bytes as in Fig. 20 of RFC 8138), the RPI-6LoRH (3 bytes in
+   the best case) and the IP-in-IP header (not present if the source is
+   the Root, at least 3 bytes otherwise).  In the cases considered, and
+   when the Root is not the packet source, the total header overhead of
+   TRO would be of at least 12-16 bytes.
+
+   For upward transmission, the variable part of the header overhead for
+   this approach would include only the RPI-6LoRH (at least, 3 bytes)
+   and the IP-in-IP header (at least, 3 bytes).  Therefore, in the cases
+   considered, the total header overhead of TRO would be of at least 8
+   bytes.
+
+   Note that, while the overhead of TRO may appear to be relatively
+   high, tunnel-based structures like the one assumed in TRO may exist
+   already in a network deployment.  Therefore, in such cases, the
+   additional overhead of TRO may be actually lower.
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 49]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   An advantage of TRO is that a node only has to store the Rules for
+   the communications it is involved in as an endpoint, which minimizes
+   memory requirements and the impact of potential SCHC context updates.
+   For example, 6LRs do not have to store SCHC context.
+
+   Note that TRO requires the network to use RPL, non-storing mode.
+   Furthermore, the paths for communication between two nodes in the
+   same network or with external nodes will need to traverse the Root.
+   For communication with external nodes, traversing the Root will be
+   needed anyway, therefore this feature does not pose any issue.
+   However, this constraint will preclude the usage of optimal routes in
+   some cases.
+
+A.3.  PRO
+
+   PRO incurs the PRO header overhead (i.e., between 3 and 3.5 bytes).
+   In addition, with PRO, the Hop Limit field will have to be carried
+   fully inline (1 byte) or compressed down to a minimum size of 4 bits.
+   Furthermore, PRO introduces a limit to the achievable IPv6
+   destination address compression performance, as described next (note
+   that the size of the destination address compression residue will
+   depend on and will need to be planned for the intended use case of
+   the network):
+
+   A.- In special cases (e.g., if there is only one possible destination
+   that is known beforehand), there will not be a destination address
+   residue.
+
+   B.- For a given destination prefix known by the network nodes (e.g.,
+   when prefix contexts are used, or if there can only be one
+   destination prefix), if there can be several possible destinations in
+   that network, the destination address residue will be up to 8 bytes
+   (it could be less depending on how the addresses in that network are
+   built, for example, it could be just 2 bytes).
+
+   C.- For destination prefixes not covered by prefix contexts or a
+   priori knowledge by the nodes, the destination address residue will
+   have to be the whole address (16 bytes), since an intermediate node
+   does not know which is the destination prefix.
+
+   An advantage of PRO, as in TRO, is that a node only has to store the
+   Rules for the communications it is involved in as an endpoint, which
+   minimizes memory requirements and the impact of potential SCHC
+   context updates.  For example, 6LRs do not have to store SCHC
+   context.  An exception is a 6LBR, which has to store the Rules for
+   the communications of other endpoints with external nodes (if any).
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 50]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   A potential advantage of PRO is that, in contrast with TRO, paths for
+   intranetwork communication are not necessarily constrained to
+   traversing a root node.  Another feature is that the routing solution
+   to be used is not tied to RPL non-storing mode.  However, the routing
+   solution may involve other constraints and/or trade-offs.
+
+A.4.  Summary
+
+   Assessing the suitability of the different SCHC-Lo route-over
+   multihop approaches requires considering the following dimensions:
+   network size, node memory capabilities, header overhead, routing
+   constraints / path optimality, and intra- or inter-network
+   communication.
+
+   SRO is best suited for small and static-SCHC-context networks, such
+   as a small home or a small office network (SRO may be used in larger
+   networks as well, although with a trade-off with header compression
+   performance and/or SCHC context management cost).  PRO and TRO offer
+   greater network scalability.  TRO's best applicability is in networks
+   where upwards traffic is dominant and RPL deployments are already in
+   place and (e.g., a smart grid network).  PRO does not require RPL and
+   can be a better fit when non-upwards traffic is significant (e.g.,
+   between any 2 nodes within the same network, as in a large home
+   network.)
+
+Appendix B.  Relationship with RFC 7973
+
+   As reported in RFC 7973, IEEE assigned an Ethertype (with value
+   0xA0ED) for "IPv6 datagrams using LoWPAN encapsulation".  As per RFC
+   7973, any IPv6 datagram using the Dispatch octet as defined in
+   Section 5.1 of RFC 4944, subsequently updated by RFC 6282, is
+   regarded as using LoWPAN encapsulation.
+
+   The present document also uses LoWPAN encapsulation, as it uses the
+   Dispatch octet as described in RFC 7973.  Therefore, the
+   functionality described in the present document can also benefit from
+   the mentioned Ethertype.
+
+Appendix C.  Destination prefix encoding for the Address Residue Length
+             field in PRO
+
+   The following table indicates the value of the Address Residue Length
+   field used in PRO (third column from the left), and its corresponding
+   meaning in terms of the bits of the prefix that are known by the
+   decompressor (fourth column from the left).  Note that the fourth
+   column uses notation "x" to represent a set of 4 bits, whereas "y"
+   indicates 1 bit.  The first column from the left provides additional
+   guidance, by indicating the upper integer of the number of 16-bit
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 51]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   groups in the known destination prefix, and the number of additional
+   bits in the known destination prefix compared with those of the
+   previous row.  The second column from the left also provides
+   additional guidance, by indicating the length of the known
+   destination prefix, in bits.
+
+
+
+ Gp1  Gp2  Gp3  Gp4  Gp5  Gp6  Gp7  Gp8
+xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx
+
++---------+----------+-----------+---------------------------------------------+
+|  Group  |  Prefix  |  Address  |                    Known                    |
+|  / hop  |  Length  |  Residue  |                 Destination                 |
+|    bits |          |  Length   |                   Prefix                    |
++---------+----------+-----------+---------------------------------------------+
+|  0 / 0  |    /0    |   00000   |  ------                                     |
++---------+----------+-----------+---------------------------------------------+
+|  1 / 16 |   /16    |   00001   |  xxxx::                                     |
++---------+----------+-----------+---------------------------------------------+
+|  2 / 16 |   /32    |   00010   |  xxxx:xxxx::                                |
++---------+----------+-----------+---------------------------------------------+
+|  3 / 16 |   /48    |   00011   |  xxxx:xxxx:xxxx::                           |
++---------+----------+-----------+---------------------------------------------+
+|  4 / 4  |   /52    |   00100   |  xxxx:xxxx:xxxx:x::                         |
++---------+----------+-----------+---------------------------------------------+
+|  4 / 4  |   /56    |   00101   |  xxxx:xxxx:xxxx:xx::                        |
++---------+----------+-----------+---------------------------------------------+
+|  4 / 4  |   /60    |   00110   |  xxxx:xxxx:xxxx:xxx::                       |
++---------+----------+-----------+---------------------------------------------+
+|  4 / 4  |   /64    |   00111   |  xxxx:xxxx:xxxx:xxxx::                      |
++---------+----------+-----------+---------------------------------------------+
+|  5 / 8  |   /72    |   01000   |  xxxx:xxxx:xxxx:xxxx:xx::                   |
++---------+----------+-----------+---------------------------------------------+
+|  5 / 8  |   /80    |   01001   |  xxxx:xxxx:xxxx:xxxx:xxxx::                 |
++---------+----------+-----------+---------------------------------------------+
+|  6 / 8  |   /88    |   01010   |  xxxx:xxxx:xxxx:xxxx:xxxx:xx::              |
++---------+----------+-----------+---------------------------------------------+
+|  6 / 8  |   /96    |   01011   |  xxxx:xxxx:xxxx:xxxx:xxxx:xxxx::            |
++---------+----------+-----------+---------------------------------------------+
+|  7 / 4  |   /100   |   01100   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:x::           |
++---------+----------+-----------+---------------------------------------------+
+|  7 / 4  |   /104   |   01101   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xx:           |
++---------+----------+-----------+---------------------------------------------+
+|  7 / 4  |   /108   |   01110   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxx::         |
++---------+----------+-----------+---------------------------------------------+
+|  7 / 4  |   /112   |   01111   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx::        |
++---------+----------+-----------+---------------------------------------------+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 52]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+|  8 / 1  |   /113   |   10000   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:y::      |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /114   |   10001   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:yy::     |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /115   |   10010   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:yyy::    |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /116   |   10011   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:x::      |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /117   |   10100   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xy::     |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /118   |   10101   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xyy::    |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /119   |   10110   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xyyy::   |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /120   |   10111   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xx::     |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /121   |   11000   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxy::    |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /122   |   11001   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxyy::   |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /123   |   11010   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxyyy::  |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /124   |   11011   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxx::    |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /125   |   11100   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxy::   |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /126   |   11101   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxyy::  |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /127   |   11110   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxyyy:: |
++---------+----------+-----------+---------------------------------------------+
+|  8 / 1  |   /128   |   11111   | xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx:xxxx     |
++---------+----------+-----------+---------------------------------------------+
+
+
+
+  Figure 38: Address Residue Length values and corresponding meaning
+
+Authors' Addresses
+
+   Carles Gomez
+   UPC
+   C/Esteve Terradas, 7
+   08860 Castelldefels
+   Spain
+   Email: carles.gomez@upc.edu
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 53]
+
+Internet-Draft     SCHC compression over IEEE 802.15.4         July 2026
+
+
+   Ana Minaburo
+   Consultant
+   Rue de Rennes
+   35510 Cesson-Sevigne
+   France
+   Email: anaminaburo@gmail.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Gomez & Minaburo         Expires 5 January 2027                [Page 54]

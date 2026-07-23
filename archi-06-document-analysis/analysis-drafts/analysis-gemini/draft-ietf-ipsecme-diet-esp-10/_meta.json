@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-ipsecme-diet-esp-10",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 67016,
+  "started": "2026-07-10T14:32:14Z",
+  "ended": "2026-07-10T14:33:10Z",
+  "duration_seconds": 56,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

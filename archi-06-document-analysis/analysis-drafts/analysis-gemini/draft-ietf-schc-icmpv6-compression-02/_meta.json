@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-schc-icmpv6-compression-02",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 67016,
+  "started": "2026-07-10T14:24:10Z",
+  "ended": "2026-07-10T14:26:00Z",
+  "duration_seconds": 110,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

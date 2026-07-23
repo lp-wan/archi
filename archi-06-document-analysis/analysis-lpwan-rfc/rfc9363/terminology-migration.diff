@@ -1,0 +1,209 @@
+--- rfc9363.txt
++++ rfc9363-migrated.txt
+@@ Section 1 (Introduction) @@
+ 1.  Introduction
+
+    SCHC is a compression and fragmentation mechanism for constrained
+-   networks defined in [RFC8724].  It is based on a static context
+-   shared by two entities at the boundary of the constrained network.
+-   [RFC8724] provides an informal representation of the Rules used
+-   either for compression/decompression (C/D) or fragmentation/
+-   reassembly (F/R).  The goal of this document is to formalize the
+-   description of the Rules to offer:
++   networks defined in [RFC8724] and framed by the SCHC Architecture
++   [DRAFT-SCHC-ARCH].  It is based on a static Context shared between
++   two or more SCHC Instances within a SCHC Domain.
++   [RFC8724] provides an informal representation of the Rules used
++   either for compression/decompression (C/D) or fragmentation/
++   reassembly (F/R).  The goal of this document is to formalize the
++   description of the Rules as a standardized Set of Rules (SoR) and
++   Data Model to offer:
+
+    *  the same definition on both ends, even if the internal
+       representation is different, and
+
+-   *  an update of the other end to set up some specific values (e.g.,
+-      IPv6 prefix, destination address, etc.).
++   *  a mechanism for a Domain Manager or Instance Manager to update an
++      Instance to set up specific values (e.g., IPv6 prefix, destination
++      address, etc.).
+
+-   [LPWAN-ARCH] illustrates the exchange of Rules using the YANG data
+-   model.
++   [DRAFT-SCHC-ARCH] illustrates the architectural context and the
++   exchange of Rules using the YANG data model.
+
+    This document defines a YANG data model [RFC7950] to represent both
+-   compression and fragmentation Rules, which leads to common
++   compression and fragmentation Rules (Context / SoR), which leads to a common
+    representation for values for all the Rules' elements.
+
+@@ Section 3 (Terminology) @@
+ 3.  Terminology
+
+-   This section defines the terminology and acronyms used in this
+-   document.  It extends the terminology of [RFC8376].
++   This section defines the terminology and acronyms used in this
++   document.  It extends the terminology of [RFC8376] and aligns with the
++   SCHC Architecture [DRAFT-SCHC-ARCH].
+
+    App:  Low-Power WAN (LPWAN) Application, as defined by [RFC8376].  An
+       application sending/receiving packets to/from the Dev.
+
+    Bi:  Bidirectional.  Characterizes a Field Descriptor that applies to
+       headers of packets traveling in either direction (Up and Dw; see
+       this glossary).
+
+    CDA:  Compression/Decompression Action.  Describes the pair of
+       actions that are performed at the compressor to compress a header
+       field and at the decompressor to recover the original value of the
+       header field.
+
+-   Context:  A set of Rules used to compress/decompress headers.
++   Context:  A Set of Rules (SoR) together with metadata (such as the Data
++      Model defined in this document), shared by two or more Instances.
+
+    Dev:  Device, as defined by [RFC8376].
+
+    DevIID:  Device Interface Identifier.  The IID that identifies the
+       Dev interface.
+
+    DI:  Direction Indicator.  This field tells which direction of packet
+       travel (Up, Dw, or Bi) a Field Descriptor applies to.  This allows
+       for asymmetric processing, using the same Rule.
+
++   Domain:  A logical grouping of Instances that share a common set of
++      Contexts for SCHC operations.
+
+    Dw:  Downlink direction for compression/decompression, from SCHC C/D
+-      in the network to SCHC C/D in the Dev.
++      in the network Instance to SCHC C/D in the device Instance.
+
++   Endpoint:  A logical entity that provides SCHC functionality by hosting
++      one or more SCHC Instances.
+
+    FID:  Field Identifier or Field ID.  This identifies the protocol and
+       field a Field Descriptor applies to.
+
+    FL:  Field Length.  This is the length of the original packet header
+       field.  It is expressed as a number of bits for header fields of
+       fixed lengths or as a type (e.g., variable, token length, ...) for
+       Field Lengths that are unknown at the time of Rule creation.  The
+       length of a header field is defined in the corresponding protocol
+       specification (such as IPv6 or UDP).
+
+    FP:  Field Position.  When a field is expected to appear multiple
+       times in a header, the Field Position specifies the occurrence
+       this Field Descriptor applies to (for example, first Uri-Path
+       option, second Uri-Path, etc. in a Constrained Application
+       Protocol (CoAP) header), counting from 1.  The value 0 is special
+       and means "don't care" (see Section 7.2 of [RFC8724]).
+
+    IID:  Interface Identifier.  See the IPv6 addressing architecture
+       [RFC7136].
+
++   Instance:  A logical component of an Endpoint that executes actual SCHC
++      operations (C/D, F/R) using its own Context and Instance
++      Configuration.
+
+    L2 Word:  This is the minimum subdivision of payload data that the
+       Layer 2 (L2) will carry.  In most L2 technologies, the L2 Word is
+       an octet.  In bit-oriented radio technologies, the L2 Word might
+       be a single bit.  The L2 Word size is assumed to be constant over
+       time for each device.
+
+    MO:  Matching Operator.  An operator used to match a value contained
+       in a header field with a value contained in a Rule.
+
+    RuleID:  Rule Identifier.  An identifier for a Rule.  SCHC C/D on
+-      both sides share the same RuleID for a given packet.  A set of
+-      RuleIDs are used to support SCHC F/R functionality.
++      participating Instances share the same RuleID for a given packet.
++      A set of RuleIDs are used to support SCHC F/R functionality.
+
++   Session:  A communication session between two or more Instances that
++      share a common Context for SCHC operations.
+
++   Set of Rules (SoR):  The collection of C/D, F/R, and no-compression Rules
++      available to an Instance.
+
+    TV:  Target Value.  A value contained in a Rule that will be matched
+       with the value of a header field.
+
+    Up:  Uplink direction for compression/decompression, from the Dev
+-      SCHC C/D to the network SCHC C/D.
++      SCHC C/D Instance to the network SCHC C/D Instance.
+
+@@ Section 4.1 (Compression Rules) @@
+ 4.1.  Compression Rules
+
+    [RFC8724] proposes an informal representation of the compression
+-   Rule.  A compression context for a device is composed of a set of
+-   Rules.  Each Rule contains information to describe a specific field
+-   in the header to be compressed.
++   Rule.  A Context for a SCHC Instance is composed of a Set of
++   Rules (SoR).  Each Rule contains information to describe a specific field
++   in the header to be compressed.
+
+@@ Section 6 (YANG Data Model docstrings) @@
+@@ description statement in module ietf-schc @@
+         This module specifies a global data model that can be used for
+-        Rule exchanges or modification.  It specifies both the data
++        Rule exchanges or modification within a SCHC Domain.  It specifies both the data
+         model format and the global identifiers used to describe some
+         operations in fields.
+         This data model applies to both compression and fragmentation.";
+
+@@ container schc description statement @@
+        description
+-        "A SCHC set of Rules is composed of a list of Rules that are
+-         used for compression, no-compression, or fragmentation.";
++        "A SCHC Context / Set of Rules (SoR) is composed of a list of Rules
++         that are used for compression, no-compression, or fragmentation
++         by a SCHC Instance.";
+
+@@ Section 8 (Security Considerations) @@
+ 8.  Security Considerations
+
+    The YANG module specified in this document defines a schema for data
+    that is designed to be accessed via network management protocols such
+    as NETCONF [RFC6241] or RESTCONF [RFC8040].  The lowest NETCONF layer
+    is the secure transport layer, and the mandatory-to-implement secure
+    transport is Secure Shell (SSH) [RFC6242].  The lowest RESTCONF layer
+    is HTTPS, and the mandatory-to-implement secure transport is TLS
+    [RFC8446].
+
+    The Network Configuration Access Control Model (NACM) [RFC8341]
+    provides the means to restrict access for particular NETCONF or
+    RESTCONF users to a preconfigured subset of all available NETCONF or
+    RESTCONF protocol operations and content.
+
+    There are a number of data nodes defined in this YANG module that are
+    writable/creatable/deletable (i.e., config true, which is the
+    default).  These data nodes may be considered sensitive or vulnerable
+    in some network environments.  Write operations (e.g., edit-config)
+    to these data nodes without proper protection can have a negative
+    effect on network operations.  These are the subtrees and data nodes
+    and their sensitivity/vulnerability:
+
+    /schc:  All the data nodes may be modified.  The Rule contains
+       sensitive information, such as the application IPv6 address where
+       the device's data will be sent after decompression.  An attacker
+       may try to modify other devices' Rules by changing the application
+-      address and may block communication or allows traffic
+-      eavesdropping.  Therefore, a device must be allowed to modify only
+-      its own rules on the remote SCHC instance.  The identity of the
+-      requester must be validated.  This can be done through
+-      certificates or access lists.  Modification may be allowed
+-      regarding the Field Descriptor (i.e., IPv6 addresses field
+-      descriptors should not be modified, but UDP dev port could be
+-      changed).
++      address and may block communication or allow traffic
++      eavesdropping.  Therefore, an Endpoint or management client must be
++      authorized to modify only the Contexts and Rules of SCHC Instances
++      within its authorized Domain, managed via the Domain Manager.  The
++      identity of the requester must be validated.  This can be done through
++      certificates or access lists.  Modification may be allowed
++      regarding the Field Descriptor (i.e., IPv6 addresses field
++      descriptors should not be modified, but UDP dev port could be
++      changed).

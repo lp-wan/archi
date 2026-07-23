@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-schc-schclet-00",
+  "agent": "claude",
+  "model": "default",
+  "host": "slug",
+  "pid": 13073,
+  "started": "2026-07-10T22:01:08Z",
+  "ended": "2026-07-10T22:09:53Z",
+  "duration_seconds": 525,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

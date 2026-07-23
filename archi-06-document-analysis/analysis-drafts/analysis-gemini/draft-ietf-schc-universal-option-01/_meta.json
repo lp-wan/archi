@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-schc-universal-option-01",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 67016,
+  "started": "2026-07-10T14:31:07Z",
+  "ended": "2026-07-10T14:32:14Z",
+  "duration_seconds": 67,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

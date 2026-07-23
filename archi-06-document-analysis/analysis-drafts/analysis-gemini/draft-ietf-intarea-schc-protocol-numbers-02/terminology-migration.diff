@@ -1,0 +1,586 @@
+Terminology and architectural-framing migration of
+draft-ietf-intarea-schc-protocol-numbers-02 to draft-ietf-schc-architecture-06.
+
+Assumes the three additive edits in schc-architecture-edits.md have been accepted
+(Architecture adaptation need: Trivial).
+
+Complete for all technical, architectural, and normative text. Boilerplate, Status
+of This Memo, Copyright Notice, Acknowledgments, and Authors' Addresses are omitted
+as unaffected. No location in this diff is blocked on an unaccepted Architecture
+change; there are no <<BLOCKED>> markers.
+
+Normative language (RFC 2119 / RFC 8174) is preserved unchanged throughout: the
+single MUST in Section 4 is neither relaxed nor strengthened, and the SHOULD in
+Section 3 is retained verbatim.
+
+Two changes are classified REQUIRED FOR CONCEPTUAL ALIGNMENT in verdicts.md and
+therefore do alter what the draft asserts, though not what any implementation does:
+the Section 1.2 decomposition of "session (called instance)", and the Section 6.3
+statement of RuleID scope. They are marked below.
+
+
+================================================================================
+Abstract
+================================================================================
+
+  This document requests an Internet Protocol Number, an Ethertype, and
+  UDP port assignment for SCHC.  The Internet Protocol Number request
+  is so that SCHC can be used for IP independent SCHC of other
+  transports such as UDP and ESP.  The Ethertype is to support generic
+  use of native SCHC over any IEEE 802 technology for IP and non-IP
+  protocols.  The UDP port request is to support End-to-End SCHC
+  through potentially blocking firewalls.
+
+(unchanged: the Abstract makes no architectural claim requiring migration)
+
+
+================================================================================
+Section 1.  Introduction
+================================================================================
+
+- This approach brakes down when dealing with Diet ESP [diet-esp].
++ This approach breaks down when dealing with Diet ESP [diet-esp].
+   When Next Header is ESP, it is challenging for the ESP process to
+   determine if an incoming ESP payload is regular ESP [RFC4303] or a
+   diet ESP payload.  Careful allocation of the incoming SPI
+   [ikev2-diet-esp] can mitigate this and have an implicit SCHC header,
+   but it is not sound protocol design.  If the Next Header in the IP
+   header were SCHC, not ESP, a clear segregation of incoming traffic is
+   directly supportable.
+
+- Additionally, SCHC can then be the Next Header within the ESP header
+- with 'regular' SCHC rules for processing this content.  This approach
+- will greatly simplify [diet-esp].
++ Additionally, SCHC can then be the Next Header within the ESP header
++ with 'regular' SCHC Rules for processing this content.  In the terms of
++ [schc-architecture], the outer and the inner SCHC operations are
++ performed by two Instances of the same Endpoint, addressing different
++ Strata of the protocol stack, each with its own Context and Instance
++ Configuration, and each reached by the Dispatcher from a distinct
++ Discriminator.  This approach will greatly simplify [diet-esp].
+
+  (Rationale: the draft already asserts nested SCHC in one sentence. -06
+  Section 4.2.2.4 permits multiple Instances per Endpoint and Section 3
+  defines Stratum as "the contiguous layers within which SCHC processing can
+  be applied". No behavior changes; the sentence acquires an architectural
+  reading. See risk R3 in verdicts.md: -06 works no nested example, so this
+  is framing, not a claim of demonstrated support.)
+
+   DTLS 1.3 [RFC9147] adds further complications.  DTLS 1.3 headers
+   themselves are typically already very compressed and SCHC would not
+   provide much value.  But the UDP header in front of DTLS would
+   benefit of a separate compression from the IP Header compression.
+   Where it is possible with ESP's SPI to mitigate inbound packet
+   processing challenges implicit SCHC would generate, DTLS header does
+   not safely even provide this and a SCHC IP number is necessary to
+   separate traffic.
+
+- New IETF work has started with the SCHC WH that is chartered to:
++ New IETF work has started with the SCHC WG that is chartered to:
+
+   |  provide specifications for the application of SCHC over underlying
+   |  layers, where underlying layers include but are not limited to UDP
+   |  tunnels, IP, PPP, and Ethernet, as well as the use of SCHC by
+   |  upper-layer protocols.
+
+   To achieve its charter, the SCHC working group needs the allocations
+   that are requested in this document.
+
+   These issues carry over to IP Header compression if SCHC were
+   available as an Ethertype (for 802 networking) and if SCHC were
+   available as a TCP/UDP port number (for firewall traversal
+   challenges).  At each layer, SCHC solves a problem that protocol
+   designers, using constrained networks, currently have to design
+   around.
+
++ In each of the three cases, the assigned value plays the same
++ architectural role: it is the Discriminator that indicates to the
++ Dispatcher of the receiving Endpoint that the frame or packet carries a
++ SCHC Datagram [schc-architecture].
+
+  (Rationale: -06 Appendix A.2.3 states this of these three codepoints by
+  name. Adding it once in the Introduction lets Sections 3 and 4 refer back
+  rather than repeat.)
+
+
+================================================================================
+Section 1.1.  Basic use case for SCHC as an Internet Protocol Number
+================================================================================
+
+   A mobile node, or network, may use different links over a period of
+   time.  In some cases the node has the multiple interfaces and, in
+   theory, could tune the compression to each interface.  In other
+   cases, it is the whole network that is mobile and individual nodes
+   have no "knowledge" of which link with what characteristics is
+   actively handling the traffic.  In either case, the node
+   administrator is aware that some links are constrained and use of
+   SCHC compression is highly recommended.
+
++ Because the Discriminator is carried in the IP header, it does not
++ depend on the underlying link.  A single Instance, whose Stratum is the
++ IP layer, therefore continues to apply across link transitions without
++ reconfiguration.
+
+  (Rationale: makes explicit why an IP Protocol Number, rather than a
+  per-link indication, answers the mobility argument this section makes.
+  -06 Section 1 states that in richer environments "topologies may be
+  arbitrary". No behavior changes.)
+
+   One example is an UA that uses different links over the duration of
+   an operation (i.e. flight).
+
+   *  Operation starts using Veriport's WiFi service.
+
+   *  On gaining altitude, UA transitions to a Cellular service.
+
+   *  On gaining more altitude, UA transitions to a constrained 700MHz
+      UHF service.
+
+   *  On approach to destination vertiport, link transition is reversed.
+
+   The UA could use SCHC compression only on the UHF link, but this may
+   complicate the implementation.
+
+-  A more complex example is an Unmanned Cargo Aircraft that has
+-  multiple avionics systems, all Ethernet connected to an onboard
+-  router that has the multiple interfaces.  Here the nodes each manage
+-  their own secure path to their ground-based server, but have no
+-  knowledge of which link is in use to intelligently use compression.
++  A more complex example is an Unmanned Cargo Aircraft that has
++  multiple avionics systems, all Ethernet connected to an onboard
++  router that has the multiple interfaces.  Here the nodes each manage
++  their own secure path to their ground-based server, but have no
++  knowledge of which link is in use to intelligently use compression.
++  Each avionics system hosts an Endpoint, and each maintains a Session
++  with an Instance on the ground-based server.  The onboard router
++  performs no SCHC processing; a Session is established between Instances
++  and is indifferent to intervening forwarding [schc-architecture].
+
+  (Rationale: -06 Section 4.2.3 defines a Session as "a communication
+  session between two or more Instances". The added sentences state what the
+  example already assumes -- the router is not a SCHC entity -- and forestall
+  a reading in which the router must terminate SCHC.)
+
+
+================================================================================
+Section 1.2.  Basic use case for SCHC as an Ethertype
+================================================================================
+
+REQUIRED FOR CONCEPTUAL ALIGNMENT. The draft's "the SCHC session (called
+instance)" fuses two concepts that -06 keeps distinct. The fusion is locally
+true of the LoRa topology being described, because preconfiguration of a
+single MAC peer pair forces a one-to-one correspondence, and it fails at the
+very point the draft extends the argument to Ethernet. The paragraph is
+rewritten rather than substituted. Note also that "MAC-Layer endpoints"
+denotes link-layer peers, NOT -06 Endpoints, and must not be translated;
+"more powerful endpoint", two sentences later, does denote an -06 Endpoint.
+
+-  In the case of a classical LPWAN link such as LoRa [RFC9011], the use
+-  of SCHC to compress the transported protocol, as well as the SCHC
+-  session (called instance) to use, are implicit.  The MAC-Layer
+-  endpoints are preconfigured so there can be only one session, and
+-  there can be only SCHC.  When extended to Ethernet and more powerful
+-  endpoint, this model is way too restrictive, and it is necessary to
+-  signal both the use of SCHC and the SCHC session to be used.  While
+-  the SCHC WG is charterd to produce the latter, the Ethertype defined
+-  in this document will be used to signal SCHC as the upper* layer
+-  protocol.
++  In the case of a classical LPWAN link such as LoRa [RFC9011], both the
++  use of SCHC to compress the transported protocol and the selection of
++  the SCHC Instance and Session that apply are implicit.  The MAC-layer
++  peers are preconfigured, so a single Instance and a single Session
++  exist on the link, and SCHC is the only upper-layer protocol carried;
++  the Discriminator is supplied entirely by the link layer.  When SCHC is
++  extended to Ethernet and to more capable Endpoints, this model is way
++  too restrictive: an Endpoint may host several Instances and take part
++  in several Sessions, so it is necessary to signal both the use of SCHC
++  and the information that the Dispatcher needs in order to select the
++  Instance and the Session.  While the SCHC WG is chartered to produce
++  the latter, the Ethertype defined in this document supplies the former:
++  it is the Discriminator that signals SCHC as the upper-layer protocol.
+
+  (Rationale: -06 Section 3 defines Instance as "a logical component of an
+  Endpoint that executes the actual SCHC operations" and Session as "a
+  communication session between two or more Instances that share a common
+  Context". -06 Appendix A.2.1 Tables 1 and 2 show that the two need not
+  correspond one-to-one: a gateway may hold one Instance serving many
+  Sessions, or one Instance per Session. Appendix A.2.1 also confirms the
+  link-layer reading of the LoRa case, treating the DevEUI as the source of
+  a Discriminator rather than as an Endpoint.
+
+  What the paragraph asserts changes: it no longer says that "session" and
+  "instance" are the same thing. What any implementation does does not
+  change, and the division of labour the draft draws -- Ethertype signals
+  SCHC, SCHC WG signals the rest -- is preserved exactly.)
+
+   As an example that will leverage this, Aircraft-to-anything (A2X)
+   [drip-a2x-adhoc-session] and Aircraft-to-Ground
+   [drip-efficient-a2g-comm] protocols are specific cases that can
+   benefit from SCHC as an Ethertype.  These can use IEEE 802 wireless
+   technology and lessen spectrum contention in high traffic or long-
+   range situations by minimizing the datagram size via SCHC.
+
+-  In the above uses, SCHC compresses the IPv6 header completely (all 40
+-  bytes), leaving only destination address (32 bytes, source address
+-  calcuated from content), or only 8 bytes (needs both addresses) at
+-  the cost of the 1-byte SCHC RuleID.  The 2-byte payload length may be
+-  needed in some cases (as in Section 4).
++  In the above uses, SCHC compresses the IPv6 header completely (all 40
++  bytes), leaving only destination address (32 bytes, source address
++  calculated from content), or only 8 bytes (needs both addresses) at
++  the cost of the 1-byte SCHC RuleID.  The 2-byte payload length may be
++  needed in some cases (as in Section 4), in which case it is carried in
++  the Compression Residue of the SCHC Datagram.
+
+  (Editorial typo fix, plus one clause tying the payload-length remark to
+  the normative requirement in Section 4. The "32 bytes" figure is left as
+  the authors wrote it: it is a substantive question about the draft's own
+  arithmetic, outside the scope of an architectural alignment review.)
+
+   Since the whole point of SCHC is to reduce payload size, SCHC
+   directly over an 802 technology cannot be addressed via the Ethernet
+   Protocol Assignment under the IANA OUI.  A distinct Ethertype is
+   needed by SCHC to actually reduce payload overhead.
+
+
+================================================================================
+Section 1.3.  Basic use case for SCHC as a UDP port number
+================================================================================
+
+   TBD
+
+(unchanged: no text to migrate. When written, the UDP port should be framed
+as a Discriminator, consistent with Section 1 and with -06 Appendix A.2.3,
+which names the UDP Port Number alongside the EtherType and the IP Protocol
+Number.)
+
+
+================================================================================
+Section 2.  Terms and Definitions
+================================================================================
+
+   2.1.  Requirements Terminology
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in BCP
+   14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
++ 2.2.  SCHC Terminology
++
++   This document uses the terms Endpoint, Instance, Session, Context,
++   Rule, RuleID, Datagram, Discriminator, and Dispatcher as defined in
++   [schc-architecture].  The terms Compression Residue and SCHC Packet
++   are used as defined in [RFC8724].
++
++   Note that the term "endpoint" is also used in this document in its
++   ordinary link-layer sense, to denote a MAC-layer peer; where the SCHC
++   Architecture concept is meant, the term is capitalised as Endpoint.
+
+  (Rationale: -06 Section 3 supplies all of these. The disambiguation note is
+  required because Section 1.2 uses "endpoint" in both senses. This subsection
+  is new; Section 2 currently contains only the RFC 2119 boilerplate, which is
+  unusual for a document that leans on SCHC vocabulary throughout.)
+
+
+================================================================================
+Section 3.  Internet Protocol Number for SCHC
+================================================================================
+
+   SCHC as the IP payload SHOULD be indicated in the IPv4 "Protocol"
+   field or the IPv6 "Next Header" field with a value of TBD1
+   (recommended: 145) as shown below:
+
+    +=========+=========+================+================+===========+
+    | Decimal | Keyword | Protocol       | IPv6 Extension | Reference |
+    |         |         |                | Header         |           |
+    +=========+=========+================+================+===========+
+    |    TBD1 | SCHC    | Static Context |                | This RFC  |
+    |   (145) |         | Header         |                |           |
+    |         |         | Compression    |                |           |
+    +---------+---------+----------------+----------------+-----------+
+
+                     Table 1: Internet Protocol Numbers
+
+  (Table 1 unchanged. The SHOULD is preserved verbatim.)
+
+-  The SCHC compressed header with payload is shown below.  The size of
+-  the SCHC RuleID is variable as described in [RFC8724].  An
+-  implementation should have a table of source IP address and RuleID
+-  size.  The addresses should be represented in prefix format to allow
+-  for groups of addresses having the same RuleID size.
++  The SCHC Datagram, followed by the payload, is shown below.  The size
++  of the SCHC RuleID is variable as described in [RFC8724], and MUST be
++  determinable by the receiving Instance before the Datagram is parsed
++  (Section 4.2.5.1 of [schc-architecture]).
++
++  This value of the IPv4 "Protocol" or IPv6 "Next Header" field is the
++  Discriminator: it indicates that the packet carries a SCHC Datagram.
++  The Dispatcher of the receiving Endpoint uses it, together with lower-
++  layer context -- typically the source IP address -- to select the
++  Instance, and thereby the Context and the RuleID size that apply.  An
++  implementation should therefore hold, as part of the dispatch
++  information of its Instance Configurations, a table associating source
++  IP addresses with the corresponding Instance and RuleID size.  The
++  addresses should be represented in prefix format to allow for groups of
++  addresses sharing the same Instance and RuleID size.
+
+  (Rationale: -06 Appendix A.2.3, of this codepoint: "That value serves as
+  the Discriminator: it indicates that the frame or packet carries a SCHC
+  Datagram, and the Dispatcher uses it, together with lower-layer context
+  (e.g., addresses or ports), to route the Datagram to the appropriate
+  Instance." -06 Section 4.2.2.4: "Datagrams are routed to the appropriate
+  Instance by the Dispatcher using the Discriminator and admission rules
+  based on information provided in the Instance Configuration." -06 Section
+  4.2.1.1 lists "Dispatch information" among the Instance Configuration
+  parameters.
+
+  The lower-case "should" of the original is preserved as lower-case
+  "should", so no new normative requirement is created. One new MUST is
+  introduced -- that the RuleID size be determinable before parsing -- and it
+  is not a new constraint on behavior: it is the prerequisite that the
+  original paragraph's own address table exists to satisfy, and it is now
+  stated by Architecture edit 3. An author who prefers to add no normative
+  keyword may write "must" in lower case, since it merely restates
+  [schc-architecture].)
+
+-      |------- Compressed Header -------|
+-      +---------------------------------+--------------------+
+-      |  RuleID  |  Compression Residue |      Payload       |
+-      +---------------------------------+--------------------+
+-
+-                          Figure 1: SCHC Packet
++      |--------- SCHC Datagram ---------|
++      +---------------------------------+--------------------+
++      |  RuleID  |  Compression Residue |      Payload       |
++      +---------------------------------+--------------------+
++
++                         Figure 1: SCHC Datagram
+
+  (Rationale: -06 Section 3: "Datagram: The unit exchanged between SCHC
+  Instances. A Datagram consists of a Rule Identifier (RuleID) and the result
+  of the SCHC operation (if non-empty), such as a compression residue or a
+  packet fragment. It may be followed by a Payload." That is Figure 1
+  exactly. The original caption "SCHC Packet" collides with -06's use of the
+  term for RFC 8724's compressed-header unit (-06 Section 4.2.2.1: "In
+  [RFC8724], a packet whose header has been compressed is called a SCHC
+  Packet"), and the original bracket label "Compressed Header" spans RuleID
+  and Residue -- which is what -06 calls the Datagram. Bit layout is
+  unchanged.)
+
+-  The RuleID may be statically configured per [RFC8724], or may be
+-  negotiated within a protocol as in IKE [ikev2-diet-esp].
++  The Context, and hence the RuleID, may be statically provisioned per
++  [RFC8724], or may be established out of band by another protocol, as in
++  IKE [ikev2-diet-esp].  In the latter case the IKEv2 exchange provisions
++  the Context binding before SCHC operation begins; it is not a
++  negotiation between the compressing and the decompressing Instances,
++  which [schc-architecture] does not permit.  This corresponds to a
++  Context that is "fetched on demand" in the terms of Section 1 of
++  [schc-architecture].
+
+  (Rationale: -06 Section 1 holds that SCHC "assumes that the Context is
+  static and provisioned before use, and that no negotiation takes place
+  between the compressing and decompressing entities. These assumptions
+  remain the foundation of this architecture," while allowing that in richer
+  environments "Contexts may be fetched on demand". The draft's sentence is
+  compliant on the second reading and non-compliant on the first, and does
+  not say which it means. The migrated text says. What the draft permits is
+  unchanged: IKEv2 is by construction an out-of-band exchange. See risk R4 in
+  verdicts.md.)
+
+
+================================================================================
+Section 4.  Ethertype for SCHC
+================================================================================
+
+-  The use of SCHC as an Ethertype is similar to that as in Section 3,
+-  above.  Immediately after the SCHC Ethertype is the RuleID as in
+-  Figure 1.  If the rules for the RuleID does not provide the datagram
+-  length, the datagram length MUST be explicit in the Compression
+-  Residue, as the 802 header may not provide the needed length
+-  information to properly process the datagram.
++  The use of SCHC as an Ethertype is similar to its use as an Internet
++  Protocol Number in Section 3, above.  The Ethertype is the
++  Discriminator: it indicates that the frame carries a SCHC Datagram, and
++  the Dispatcher of the receiving Endpoint uses it, together with lower-
++  layer context -- typically the source MAC address -- to select the
++  Instance.  Immediately after the SCHC Ethertype is the RuleID, as in
++  Figure 1.  If the Rule identified by the RuleID does not provide the
++  datagram length, the datagram length MUST be explicit in the
++  Compression Residue, as the 802 header may not provide the needed
++  length information to properly process the datagram.
++
++  Where a deployment instead defines a Control Header, as described in
++  Section 4.2.5.1 of [schc-architecture], its presence, placement, and
++  format must be known to the receiving Instance before the Datagram is
++  parsed.  Such a Control Header may also retain information that is
++  overwritten when the Ethertype designates SCHC, such as the original
++  EtherType identifying the compressed protocol.
+
+  (Rationale for the first hunk: -06 Appendix A.2.3, again verbatim for this
+  codepoint. "the rules for the RuleID" becomes "the Rule identified by the
+  RuleID", matching -06 Section 4.2.5: "The Rule identified by that RuleID
+  determines the format and interpretation of the remaining bits." The MUST
+  is carried across untouched -- it is neither relaxed to permit a Control
+  Header nor strengthened.
+
+  Rationale for the second hunk, classified OPTIONAL CLARIFICATION in
+  verdicts.md: -06 Appendix A.2.3 Figures 14 and 15 illustrate a Control
+  Header for precisely this SCHC-over-Ethernet case, carrying
+  "OrigEtherType = IPv6", and -06 Section 4.2.5.1 lists "Metadata (retain
+  information that is lost when performing the SCHC operation, e.g., save the
+  initial value of the EtherType field when it is changed to EtherType=SCHC)"
+  among the Control Header's services. The paragraph is additive and grants
+  no exemption from the preceding MUST: it describes an alternative framing a
+  deployment may define, not an alternative place to put the length.)
+
+
+================================================================================
+Section 5.  UDP Port Number for SCHC
+================================================================================
+
+   TBD
+
+(unchanged: no text to migrate.)
+
+
+================================================================================
+Section 6.  IANA Considerations
+================================================================================
+
+6.1.  IANA Internet Protocol Number Registry Update
+6.2.  IANA Ethertype Request
+
+(unchanged. The registry entries, the requested values, and the
+[intarea-rfc7042bis] process reference carry no SCHC architectural
+terminology.)
+
+
+6.3.  IANA SCHC Ethertype Registry
+
+REQUIRED FOR CONCEPTUAL ALIGNMENT, and dependent on Architecture edits 1 and
+2. This is the only section in which the migration resolves a question the
+draft leaves open. The draft's Sections 3 and 4 treat the RuleID as an index
+reached from the sender's identity -- Context-scoped -- while this section
+proposes IANA-registered RuleID ranges with meaning across deployments that
+have never shared a Context. -06 as published cannot adjudicate, because it
+never states the RuleID's uniqueness scope. With edits 1 and 2 accepted it
+can, and the answer is that the RuleID is Context-scoped. The registry is
+therefore recast as a reservation of RuleID ranges, not as a claim of global
+uniqueness. Note that "domains of use" is left in lower case: it is a
+partition of a codepoint space, and is not an -06 Domain, which is "a logical
+grouping of Instances that share a common set of Contexts" and never appears
+on the wire.
+
+-  A registry of SCHC RuleIDs for SCHC as an Ethertype may be needed.
+-  More discussion is needed to resolve this.  For example, split a
+-  1-byte RuleID in half.  The top half of 1-14 assigned to different
+-  domains of use, like for aviation.  A value of 15 designates that a
+-  2-byte RuleID is used.
++  A registry of SCHC RuleID values for SCHC as an Ethertype may be
++  needed.  More discussion is needed to resolve this.
++
++  In [schc-architecture], a RuleID identifies a Rule within a Context and
++  is not by itself a globally unique identifier; the Instance and the
++  Context that apply to a Datagram are selected by the Dispatcher from a
++  Discriminator.  A registry as discussed here would therefore not make
++  RuleID values globally unique.  It would reserve RuleID ranges whose
++  interpretation is agreed among the deployments that use the SCHC
++  Ethertype, so that a receiving Endpoint can determine the RuleID size,
++  and possibly the domain of use, before any Context-dependent portion of
++  the Datagram is interpreted.  Reserving RuleID ranges in this way is a
++  profile-level constraint of the kind permitted by Section 4.2.5.1 of
++  [schc-architecture]; a domain of use in this sense is a partition of the
++  RuleID value space and is distinct from a SCHC Domain.
++
++  For example, a 1-byte RuleID could be split in half.  The top half,
++  values 1-14, would be assigned to different domains of use, such as
++  aviation.  A value of 15 would designate that a 2-byte RuleID is used,
++  making the RuleID self-delimiting.
+
+  (Rationale: -06 Section 4.2.5.1 already accepts that "a profile may define
+  a fixed RuleID size and specify that RuleID values in a particular range
+  are followed by a Control Header having a known format," and that "those
+  framing semantics are independent of the C/D or F/R Rule selected by the
+  RuleID." Architecture edit 3 extends the same principle to the RuleID's own
+  size, naming the self-delimiting case. Architecture edits 1 and 2 supply
+  the scope statement that lets this section say what its registry does and
+  does not do.
+
+  The registry proposal itself is preserved, including its provisionality
+  ("may be needed", "More discussion is needed"), the 1-14 assignment, and
+  the value-15 escape. What changes is that the section no longer implies
+  global RuleID uniqueness, and no longer invites confusion between a domain
+  of use and a SCHC Domain. See risks R1, R2 and R5 in verdicts.md.)
+
+
+================================================================================
+Section 7.  Security Considerations
+================================================================================
+
+   TBD
+
+(unchanged: no text to migrate. When written, note that -06 Section 7 makes
+Context integrity and Context synchronisation the central architectural
+security concerns, and that this draft's Section 3 introduces an out-of-band
+Context provisioning path via IKEv2 whose authenticity therefore matters.)
+
+
+================================================================================
+Section 8.2.  Informative References
+================================================================================
+
+-  [schc-architecture]
+-             Pelov, A., Thubert, P., and A. Minaburo, "Static Context
+-             Header Compression (SCHC) Architecture", Work in Progress,
+-             Internet-Draft, draft-ietf-schc-architecture-01, 6 October
+-             2023, <https://datatracker.ietf.org/doc/html/draft-ietf-
+-             schc-architecture-01>.
++  [schc-architecture]
++             Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and M.
++             Dumay, "Static Context Header Compression (SCHC)
++             Architecture", Work in Progress, Internet-Draft, draft-ietf-
++             schc-architecture-06, 6 July 2026,
++             <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
++             architecture-06>.
+
+  (Rationale: the draft cites revision -01, five versions behind the one it is
+  being aligned to, and -01 predates the Endpoint / Instance / Session /
+  Domain / Discriminator / Dispatcher vocabulary this migration relies on.
+  Author list updated to match the -06 front page. This reference is cited
+  normatively in effect by the migrated Sections 1, 1.1, 1.2, 2.2, 3, 4 and
+  6.3; whether it should move to Section 8.1 is a decision for the authors,
+  and is not made here.)
+
+
+================================================================================
+Migration summary
+================================================================================
+
+Sections rewritten:            1, 1.1, 1.2, 2 (new 2.2), 3, 4, 6.3, 8.2
+Sections unchanged:            Abstract, 1.3, 2.1, 5, 6.1, 6.2, 7, 8.1
+Normative keywords added:      1 (Section 3, RuleID size determinability;
+                                 restates [schc-architecture] and may be
+                                 written lower-case at the authors' option)
+Normative keywords removed:    0
+Normative keywords weakened:   0
+Existing MUST/SHOULD altered:  0
+Blocked locations:             0
+
+Architectural judgment was exercised at exactly three points, each once:
+
+  1. Section 1.2 -- "session (called instance)" decomposed into Instance and
+     Session; recognising that "MAC-Layer endpoints" is a link-layer term and
+     must not become -06's Endpoint, while "more powerful endpoint" two
+     sentences later must.
+  2. Section 3 -- recognising that the source-IP-address table is dispatch
+     information reached through a Discriminator, not flat node-local state.
+  3. Section 6.3 -- resolving RuleID scope in the Context-scoped direction,
+     and recognising that "domains of use" is a false friend of -06's Domain.
+
+Every other change follows from these three decisions without further
+discretion. This is the evidence supporting the Transition difficulty verdict
+of Easy rather than Very Easy (three judgment calls, not zero) and rather than
+Medium (three, not one per section, and none propagating).

@@ -1,0 +1,143 @@
+--- rfc9391.txt
++++ rfc9391-schc-architecture-06.txt
+@@ -58,3 +58,18 @@
+ 3.  Terminology
+ 
+-   This document will follow the terms defined in [RFC8724], [RFC8376],
+-   and [TR23720].
++   This document follows the terms defined in [RFC8724], [RFC8376],
++   [TR23720], and [DRAFT-SCHC-ARCH].
++
++   SCHC Endpoint:  A logical entity that provides SCHC functionality by
++      hosting the SCHC processing code, as defined in [DRAFT-SCHC-ARCH].
++      Physical 3GPP nodes (Dev-UE, RGW-eNB, NGW-MME, Application Server)
++      host SCHC Endpoints.
++
++   SCHC Instance:  A logical component of an Endpoint that executes actual
++      SCHC operations (C/D and F/R) using a specific Context and Instance
++      Configuration, as defined in [DRAFT-SCHC-ARCH].
++
++   Session:  A communication session between two or more Instances that
++      share a common Context, as defined in [DRAFT-SCHC-ARCH].
++
++   Stratum:  The portion of the network protocol stack targeted by SCHC
++      (e.g., Application, PDCP, or NAS), defining the scope of protocol
++      headers addressed by Rules, as defined in [DRAFT-SCHC-ARCH].
++
++   Dispatcher:  A logical component of the Endpoint that routes incoming
++      packets to the appropriate Instance based on a Discriminator, as
++      defined in [DRAFT-SCHC-ARCH].
++
++   Discriminator:  Information element (e.g., 3GPP bearer ID, IP tunnel ID,
++      or API session metadata) used by the Dispatcher to route packets to
++      the appropriate Instance, as defined in [DRAFT-SCHC-ARCH].
++
++   Domain:  A logical grouping of Instances sharing a common set of
++      Contexts within the 3GPP network operator environment.
+ 
+@@ -90,4 +105,4 @@
+    In the 3GPP and the NB-IoT networks, header compression efficiently
+    brings Internet connectivity to the Device UE (Dev-UE), the radio
+-   (RGW-eNB) and network (NGW-MME) gateways, and the Application Server.
+-   This document describes the SCHC parameters supporting SCHC over the
++   (RGW-eNB) and network (NGW-MME) gateways, and the Application Server,
++   which act as SCHC Endpoints hosting SCHC Instances.
++   This document describes the SCHC parameters supporting SCHC over the
+@@ -267,4 +282,5 @@
+    3GPP standardizes NB-IoT and, in general, the interfaces and
+    functions of cellular technologies. Therefore, the introduction of
+-   SCHC entities to Dev-UE, RGW-eNB, and NGW-CSGN needs to be specified
++   SCHC Endpoints and Instances to Dev-UE, RGW-eNB, NGW-MME, and NGW-CSGN
++   needs to be specified
+    in the NB-IoT standard.
+ 
+@@ -273,3 +289,3 @@
+    The first use case is of the radio transmission (see Section 5.2.1)
+-   where the Dev-UE and the RGW-eNB can use the SCHC functionalities.
++   where SCHC Endpoints in the Dev-UE and RGW-eNB execute SCHC Instances
++   operating at the PDCP Stratum.
+ 
+@@ -277,3 +293,3 @@
+    The second is where the packets transmitted over the control path can
+-   also use SCHC when the transmission goes over the NGW-MME or NGW-SCEF
++   also use SCHC when SCHC Instances in the Dev-UE and NGW-MME operate at
++   the NAS Stratum (see Section 5.2.2).
+ 
+@@ -284,5 +300,6 @@
+    And the third covers the SCHC over Non-IP Data Delivery (NIDD)
+    connection or at least up to the operator network edge (see
+-   Section 5.1.1). In this case, SCHC functionalities are available in
+-   the application layer of the Dev-UE and the Application Servers or a
++   Section 5.1.1). In this case, SCHC Instances reside at the Application
++   Stratum of the Dev-UE Endpoint and the Application Server Endpoint (or a
+    broker function at the edge of the operator network). NGW-PGW or NGW-
+@@ -305,7 +322,9 @@
+ 5.1.1.  SCHC over Non-IP Data Delivery (NIDD)
+ 
+    This section specifies the use of SCHC over NIDD services of 3GPP.
+-   The NIDD services of 3GPP enable the transmission of SCHC packets
+-   compressed by the application layer. The packets can be delivered
++   The NIDD services of 3GPP enable the transmission of SCHC Datagrams
++   compressed by an Application-Stratum SCHC Instance. The packets can be
++   delivered
+    between the NGW-PGW and the Application Server or between the NGW-
+    SCEF and the Application Server, using IP-tunnels or API calls. In
+@@ -317,3 +336,5 @@
+    The IP tunnel identifier or API session context serves as a
++   Discriminator for the Dispatcher on the receiving Endpoint to route
++   incoming Datagrams to the correct SCHC Instance.
+ 
+@@ -321,4 +342,4 @@
+ 5.1.1.1.  SCHC Entities Placing over NIDD
+ 
+-   In the two scenarios using NIDD compression, SCHC entities are
+-   located almost on top of the stack. The NB-IoT connectivity services
++   In the two scenarios using NIDD compression, SCHC Instances are
++   located at the Application Stratum on top of the stack. The NB-IoT connectivity
++   services
+-   implement SCHC in the Dev-UE, an in the Application Server. The IP
++   implement SCHC Endpoints in the Dev-UE and in the Application Server,
++   which participate in an end-to-end SCHC Session. The IP
+@@ -348,3 +369,4 @@
+ 5.1.1.2.  Parameters for Static Context Header Compression and
+           Fragmentation (SCHC)
+ 
++   This section defines the SCHC Profile parameters for NIDD deployments
++   following Section 5 of [DRAFT-SCHC-ARCH].
++
+    These scenarios MAY use the SCHC header compression capability to
+@@ -489,4 +511,4 @@
+ 5.2.1.  Use of SCHC over the Radio Link
+ 
+    Deploying SCHC over the Radio Link only would require placing it as
+-   part of the protocol stack for data transfer between the Dev-UE and
+-   the RGW-eNB. This stack is the functional layer responsible for
++   a SCHC Instance operating at the PDCP Stratum between the Dev-UE
++   Endpoint and the RGW-eNB Endpoint. This stack is the functional layer
++   responsible for
+@@ -533,5 +555,7 @@
+ 5.2.1.1.  Placing SCHC Entities over the Radio Link
+ 
+-   The 3GPP architecture supports Robust Header Compression (ROHC)
++   SCHC Instances are hosted in the Dev-UE and RGW-eNB Endpoints within
++   the PDCP sublayer. The 3GPP architecture supports Robust Header Compression (ROHC)
+    [RFC5795] in the PDCP layer. Therefore, the architecture can deploy
+-   SCHC header compression entities similarly without the need for
++   SCHC header compression Instances similarly without the need for
+    significant changes in the 3GPP specifications.
+@@ -543,4 +567,6 @@
+    The RLC layer takes care of fragmentation except for the TM. In AM
+-   or UM, the SCHC fragmentation is unnecessary and SHOULD NOT be used.
++   or UM, SCHC fragmentation (F/R) is unnecessary and SHOULD NOT be used;
++   the Instance Configuration for these Instances enables Header Compression (C/D)
++   while disabling Fragmentation and Reassembly (F/R).
+ 
+@@ -583,5 +609,7 @@
+ 5.2.2.1.  Placing SCHC Entities over DoNAS
+ 
+-   SCHC resides in this scenario's Non-Access Stratum (NAS) protocol
+-   layer. The same principles as for Section 5.2.1 apply here as well.
++   SCHC Instances reside in this scenario at the Non-Access Stratum (NAS)
++   Stratum. The Dev-UE Endpoint and NGW-MME Endpoint host peer Instances
++   exchanging SCHC Datagrams. The same principles as for Section 5.2.1 apply
++   here as well, with SCHC F/R disabled in the Instance Configuration.

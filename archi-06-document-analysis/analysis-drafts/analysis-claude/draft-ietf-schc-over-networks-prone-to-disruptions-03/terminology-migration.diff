@@ -1,0 +1,531 @@
+# Terminology and architectural-framing migration diff
+# Draft under study : draft-ietf-schc-over-networks-prone-to-disruptions-03
+# Target vocabulary : draft-ietf-schc-architecture-06 (with the two Trivial edits
+#                     of schc-architecture-edits.md assumed accepted)
+#
+# Conventions:
+#   - lines beginning with "-" are removed original text (quoted verbatim,
+#     re-flowed from the 72-column plain-text rendering)
+#   - lines beginning with "+" are the proposed replacement text
+#   - unchanged sections are omitted; boilerplate, references, authors'
+#     addresses, and administrative metadata are omitted (no terminology
+#     impact)
+#   - RFC 2119/8174 keywords are preserved unchanged throughout
+#   - technical behavior is preserved, except at the single location marked
+#     [CONCEPTUAL-ALIGNMENT #2], per verdicts.md
+#
+# ============================================================================
+# Section 2.  Conventions and Definitions
+# ============================================================================
+
+  (append after the BCP 14 paragraph)
+
++ This document uses the terminology of the SCHC Architecture
++ [I-D.ietf-schc-architecture]: Endpoint, Instance, Instance
++ Configuration, Context, Set of Rules (SoR), Set of Variables (SoV),
++ Rule, RuleID, Session, Domain, Dispatcher, and Discriminator.  A
++ physical device may host a SCHC Endpoint, which in turn hosts one or
++ more SCHC Instances; a Session is a communication among two or more
++ Instances that share a common Context.  In this document, "SCHC
++ Gateway" and "SCHC Proxy" designate network-side and intermediate
++ hosts, respectively, each hosting a SCHC Endpoint.
+
+# ============================================================================
+# Section 3.  Devices Types  (first paragraph)
+# ============================================================================
+# EDITORIAL: stray markdown artifact.
+
+- ## ZE-Devices based in cellular Zero Energy (ZE) devices are ultra-
+- low-power small electronic circuits that can be used in Internet of
+- Things (IoT) applications.
++ Zero Energy (ZE) devices are ultra-low-power small electronic
++ circuits that can be used in Internet of Things (IoT) applications.
+
+# ============================================================================
+# Section 3.1.2.  User plane characteristics for a Cellular ZE-devices
+# ============================================================================
+
+- The requirements can be addressed with some additional complements to
+- support the deployment of SCHC into the cellular Zero Energy device
+- scenarios.  For example, adding support for object transport in
+- contrast to only IP packet support, and providing better management
+- of long delays.  In addition, a solution to enable the set up of the
+- contexts and rules that make sure there is alignment between the
+- network and the devices on the management of packets.  Part of this
+- can be accomplished by imagining that a complete object fits an
+- imaginary jumbo IP package and SCHC would then fragment such packet
+- into pieces that can be fitted in the radio transport block.
++ The requirements can be addressed with some additional complements to
++ support the deployment of SCHC into the cellular Zero Energy device
++ scenarios.  For example, adding support for object transport in
++ contrast to only IP packet support, and providing better management
++ of long delays.  In addition, a solution to enable the provisioning
++ of the Contexts (and their Sets of Rules) that makes sure there is
++ alignment between the Instances on the network side and on the
++ devices on the management of packets.  Part of this can be
++ accomplished by imagining that a complete object fits an imaginary
++ jumbo IP package and SCHC would then fragment such packet into pieces
++ that can be fitted in the radio transport block.
+
+- The big challenge in using SCHC in this fashion is how to configure
+- the SCHC fragmentation and reassembly entities.  A Dev using SCHC and
+- the endpoint where SCHC is terminated in the network with the
+- relevant context information so the transmitter and the receiver have
+- an understanding of what are the parameters of operation for this
+- particular case, which would depend on the network load and devices
+- power availability for transmission and the maximum allowed delay
+- configuration.
++ The big challenge in using SCHC in this fashion is how to configure
++ the SCHC Instances that perform fragmentation and reassembly.  The
++ Dev and the network each host a SCHC Endpoint, and their Instances
++ must share the relevant Context so the transmitter and the receiver
++ have an understanding of what are the parameters of operation for
++ this particular case, which would depend on the network load and
++ devices power availability for transmission and the maximum allowed
++ delay configuration.
+
+# ============================================================================
+# Section 3.1.2.1.  End-to-end view
+# ============================================================================
+
+- This means that the device has to be onboarded in the platform with a
+- unique identifier that is associated with the SCHC flow.  Then such
+- an identifier is utilized to map the transmissions to the
+- applications requiring the data.  In some cases, this identifier may
+- be supplied and configured out-of-band by auxiliary procedures, since
+- the device might not have the capability to onboard itself to and
+- endpoint.
++ This means that the device has to be onboarded in the platform with a
++ unique identifier that is associated with the SCHC Session.  This
++ identifier serves as the Discriminator used by the Dispatcher of the
++ network-side SCHC Endpoint to route incoming SCHC Datagrams to the
++ appropriate Instance and Session, and it is also utilized to map the
++ transmissions to the applications requiring the data.  In some cases,
++ this identifier may be supplied and configured out-of-band by
++ auxiliary procedures, since the device might not have the capability
++ to onboard itself to the platform.
+
+# ============================================================================
+# Section 3.2.2.  Disruptions in DtS-IoT
+# ============================================================================
+# The draft's per-transfer use of "session" is reworded; RFC 8724 F/R terms
+# (window, ACK, fragment) are unchanged.
+
+- Figure Figure 8 shows the message flow for sending a SCHC window with
+- its corresponding acknowledgement through a DtS-IoT environment.
++ Figure 8 shows the message flow for sending a SCHC window with its
++ corresponding acknowledgement through a DtS-IoT environment.  In this
++ flow, the End Device and the SCHC Gateway (SCHC GW) each host a SCHC
++ Endpoint whose Instances share a common Context and communicate
++ within a SCHC Session; the LEO satellite is a store-and-forward
++ element of the underlying network and performs no SCHC processing.
+
+-  Figure 8: Message flow for an SCHC session in a DtS-IoT environment.
++  Figure 8: Message flow for a SCHC fragmented-packet exchange within
++            a SCHC Session in a DtS-IoT environment.
+
+# ============================================================================
+# Section 4.  SCHC as a size and delay-optimized transmission mechanism
+# ============================================================================
+
+- The configuration and setup of SCHC object transfer session
+- considering the network and terminal states according to the needs of
+- each device matching to their use case becomes a critical
+- functionality to address. [new text]For this case SCHC would become a
+- simple transport protocol for the whole object instead of only
+- fragmenting IP packets which is different from what has been
+- specified by RFC [RFC8724].
++ The configuration and setup of the SCHC Session used for object
++ transfer, considering the network and terminal states according to
++ the needs of each device matching to their use case, becomes a
++ critical functionality to address.  For this case SCHC would become a
++ simple transport protocol for the whole object instead of only
++ fragmenting IP packets, which is different from what has been
++ specified by [RFC8724].  In architectural terms
++ [I-D.ietf-schc-architecture], the Stratum of the corresponding
++ Instances extends to the application layer: the unit admitted to the
++ Instance is the object itself, and the SCHC F/R functionality
++ provides its segmented, delay-tolerant transport.
+
+# ============================================================================
+# Section 4.1.  General architecture
+# ============================================================================
+
+- The Figure 10 shows a high configuration of the network communication
+- between a Device and an Application Server (App).  Dev has short-live
+- intermittent connections and needs a middle host called proxy that
+- will maintain the connection state even if the communication is
+- discontinued with the Dev and continued communication with the
+- Application Server.  The proxy may answer some requests instead of
+- the Dev.
++ The Figure 10 shows a high-level configuration of the network
++ communication between a Device and an Application Server (App).  The
++ Dev, the Proxy, and the Application Server each host a SCHC Endpoint.
++ The Dev has short-lived intermittent connections and needs a middle
++ host called the SCHC Proxy, whose Instances participate in two
++ Sessions that share the same Context (i.e., belong to the same
++ Domain): one Session with the Instance of the Dev and one Session
++ with the Instance of the Application Server.  The Proxy maintains the
++ Session state (Set of Variables) even if the communication is
++ discontinued with the Dev, while communication continues with the
++ Application Server.  The Proxy may answer some requests instead of
++ the Dev.
+
+# ============================================================================
+# Section 4.2.1.  Device-initiated transmissions
+# ============================================================================
+
+- Once a device is onboarded into a network, or during the network
+- connection procedure, it must be configured with a new threshold
+- value MAX_OBJECT_SIZE, measured in bytes).  This configuration could
+- be also pre-defined and notified to the network using out-of-band
+- methods.
++ Once a device is onboarded into a network, or during the network
++ connection procedure, its SCHC Instance must be configured, as part
++ of its Instance Configuration, with a new threshold value
++ MAX_OBJECT_SIZE (measured in bytes).  This configuration could also
++ be pre-defined and notified to the network using out-of-band methods.
+
+- To avoid collisions and help with the network management of multiple
+- devices accessing the network simultaneously, the configuration could
+- include a Best Effort Transfer Interval (BETI).  A BETI configuration
+- is meant to provide pacing information to the SCHC device.  After
+- each BETI the device attempts to transfer a number of SCHC tiles.
++ To avoid collisions and help with the network management of multiple
++ devices accessing the network simultaneously, the Instance
++ Configuration could include a Best Effort Transfer Interval (BETI).
++ A BETI configuration is meant to provide pacing information to the
++ SCHC Instance of the device.  After each BETI the device attempts to
++ transfer a number of SCHC tiles.
+
+- The number of tiles to send in each BETI, a Tile Count (TC)
+- parameter, is by default 1 but can be configured by the network to be
+- a higher number.
++ The number of tiles to send in each BETI, a Tile Count (TC) parameter
++ of the Instance Configuration, is by default 1 but can be configured
++ by the network to be a higher number.
+
+- The SCHC Rule for these devices may be a well-known rule that will
+- not need to be updated.  If the Proxy has several devices attached,
+- it must recognize which one is sending.
++ The SCHC Rule for these devices may be a well-known Rule, part of a
++ pre-provisioned Context that will not need to be updated.  If the
++ Endpoint of the Proxy serves several devices, its Dispatcher must use
++ a Discriminator (e.g., the device identity provided by the underlying
++ network, see Section 3.1.2.1) to route each incoming SCHC Datagram to
++ the appropriate Instance and Session.
+
+# ============================================================================
+# Section 4.2.2.  Network initiated transmission
+# ============================================================================
+
+- To accomplish this in a scenario where the compressor entity is in
+- the cellular network, it will need to have a copy of the object to be
+- delivered to the device to transmit it to the device according to a
+- suitable scheduling and agreed configuration.
++ To accomplish this in a scenario where the compressing Instance is
++ hosted on an Endpoint in the cellular network, that Instance will
++ need to have a copy of the object to be delivered to the device, to
++ transmit it to the device according to a suitable scheduling and
++ agreed configuration.
+
+# ============================================================================
+# Section 4.2.3.  SCHC context configuration and additional parameters
+# ============================================================================
+
+  (section title)
+- 4.2.3.  SCHC context configuration and additional parameters for ZE
+-         transmission
++ 4.2.3.  SCHC Context configuration and additional parameters for ZE
++         transmission
+
+# ----------------------------------------------------------------------------
+# Section 4.2.3.1.  Context provisioning
+# ----------------------------------------------------------------------------
+
+- SCHC successful header compression happens only when a common context
+- is shared between sender and receiver.  Typically, context
+- provisioning is outside the scope of SCHC RFC documents, mainly
+- because there may be several ways to implement it.  However, the most
+- constrained ZE devices, e.g., 3GPP ZE type 0, may not be able to
+- receive packets from the network, thus dramatically restricting
+- context provisioning possibilities.  Hence, this document also
+- discusses how a SCHC context may be provisioned to ZE devices with no
+- reception capabilities.
++ SCHC successful header compression happens only when a common Context
++ is shared between the sending and the receiving Instances.
++ Typically, Context provisioning is outside the scope of SCHC RFC
++ documents, mainly because there may be several ways to implement it.
++ However, the most constrained ZE devices, e.g., 3GPP ZE type 0, may
++ not be able to receive packets from the network, thus dramatically
++ restricting Context provisioning possibilities.  Hence, this document
++ also discusses how a SCHC Context may be provisioned to ZE devices
++ with no reception capabilities.
+
+- *  Standardized set of rules that ZE device manufacturers include in
+-    their firmware.  Viable solution but may lead to even more
+-    heterogeneity in the IoT ecosystem.  In fact, different vendors
+-    may support different non-overlapping subsets of SCHC contexts or
+-    none at all.
++ *  Standardized Set of Rules that ZE device manufacturers include in
++    their firmware.  Viable solution but may lead to even more
++    heterogeneity in the IoT ecosystem.  In fact, different vendors
++    may support different non-overlapping subsets of SCHC Contexts or
++    none at all.
+
+- *  Third-party entities or device owners upload and maintain the SCHC
+-    contexts, for example flashing the MCU.  Manual process and not
+-    really scalable.
++ *  Third-party entities or device owners upload and maintain the SCHC
++    Contexts, for example flashing the MCU.  Manual process and not
++    really scalable.
+
+- *  NFC or equivalent interfaces for SCHC context provisioning.  Add
+-    costs for the interface, it is a non-scalable manual process.
++ *  NFC or equivalent interfaces for SCHC Context provisioning.  Add
++    costs for the interface, it is a non-scalable manual process.
+
+- *  Use of well-known rules, provisioned at device configuration.
++ *  Use of well-known Rules, provisioned at device configuration.
+
+# ----------------------------------------------------------------------------
+# Section 4.2.3.2.  Context updating
+# ----------------------------------------------------------------------------
+
+- Since SCHC works with static context information, it is not likely
+- (or desired) to update the SCHC delay tolerant configurations very
+- often (e.g., more than once a week -- what exactly is "often" depends
+- on the device capabilities and typical communication frequency), so
+- the most feasible options are that the network would produce a set of
+- pre-configured configurations that are addressed individually with a
+- configuration ID.  This means that the network could configure, for
+- example, rules for one device for maximum SCHC packet size large,
+- medium, and small and use three context groups where it applies this
+- parameter setting.  In turn, the SCHC MAX_PACKET_SIZE will be set to
+- such values.
++ Since SCHC works with static Context information, it is not likely
++ (or desired) to update the SCHC delay tolerant configurations very
++ often (e.g., more than once a week -- what exactly is "often" depends
++ on the device capabilities and typical communication frequency), so
++ the most feasible options are that the network, through its Domain
++ management, would produce a set of pre-configured Contexts -- or
++ groups of F/R Rules within a Context -- each addressed individually
++ by an identifier that is unique within the Domain.  This means that
++ the network could configure, for example, F/R Rules for one device
++ for maximum SCHC packet size large, medium, and small, and use three
++ such Contexts (or Rule groups) where it applies this parameter
++ setting.  In turn, the SCHC MAX_PACKET_SIZE will be set to such
++ values.
+
+- The SCHC standard fragmentation inactivity timers and fragmentation
+- retransmission timers can be also set according to the scheduling
+- calculation and the expected time of delivery (based on the schedule)
+- for the large packets.  Those timers are applied to the fragments
+- that are transmitted and their acknowledgments.
++ The SCHC standard fragmentation inactivity timers and fragmentation
++ retransmission timers can be also set according to the scheduling
++ calculation and the expected time of delivery (based on the schedule)
++ for the large packets.  The configured values are parameters of the
++ F/R Rules of the Context; the running timers and counters are
++ per-Session state, held in the Set of Variables (SoV) of the
++ Instances.  Those timers are applied to the fragments that are
++ transmitted and their acknowledgments.
+
+- The network can use the expected scheduling time for one of the rule
+- groups and set several parameters according to multiple scheduling
+- situations, for example, extra-long delay, long delay, medium delay,
+- sort delay, and no delay.
++ The network can use the expected scheduling time for one of these
++ groups of F/R Rules and set several parameters according to multiple
++ scheduling situations, for example, extra-long delay, long delay,
++ medium delay, short delay, and no delay.
+
+- The profile also would have information in reference to the maximum
+- number of Attempts, meaning how many retransmissions of one packet
+- (after the retransmission timer has expired) should be attempted
+- before aborting the transmission.
++ The deployment profile also would have information in reference to
++ the maximum number of Attempts, meaning how many retransmissions of
++ one packet (after the retransmission timer has expired) should be
++ attempted before aborting the transmission.
+
+# ----------------------------------------------------------------------------
+# Section 4.2.3.3.  Payload compression
+# ----------------------------------------------------------------------------
+# Normative MUST preserved.
+
+- Since the compression (and decompression) functionality is already
+- implemented in the device, then the same engine could be re-utilized
+- to provide compression of the payload when possible.  This would mean
+- that a section of the context MUST be dedicated to the payload and
+- separated from the header compression part.
++ Since the compression (and decompression) functionality is already
++ implemented in the device, then the same engine could be re-utilized
++ to provide compression of the payload when possible.  This would mean
++ that a section of the Context MUST be dedicated to the payload and
++ separated from the header compression part.  The Context may specify
++ the Parser and/or Data Model used to delineate the payload fields, as
++ described in [I-D.ietf-schc-architecture].
+
+- This type of payload compression is devised specifically for key-
+- value-based formats, such as JSON.  However, other types of formats
+- may be supported as long as the compressor implements the logic to
+- parse the semantics behind the FID.
++ This type of payload compression is devised specifically for key-
++ value-based formats, such as JSON.  However, other types of formats
++ may be supported as long as the Parser used by the compressing
++ Instance implements the logic to parse the semantics behind the FID.
+
+# ----------------------------------------------------------------------------
+# Section 4.2.3.4.  Fragmentation parameters
+# ----------------------------------------------------------------------------
+
+- As it is difficult to reconfigure these devices because energy is
+- needed for additional processing and receiving data, the best
+- approach is to create some profiles that match the different types of
+- devices.
++ As it is difficult to reconfigure these devices because energy is
++ needed for additional processing and receiving data, the best
++ approach is to create some deployment profiles that match the
++ different types of devices.  Each profile selects the F/R Rule
++ parameters of the Contexts used by the corresponding devices.
+
+# ============================================================================
+# Section 4.3.  SCHC for Low Power Wide Area (LPWA) Devices
+# ============================================================================
+# No SCHC-architectural terms requiring change ("the network could cache the
+# object" is underlying/application-level caching).  Unchanged.
+
+# ============================================================================
+# Section 4.4.  SCHC in DtS-IoT devices
+# ============================================================================
+# "fragmenter (end device)" is RFC 8724 vocabulary and is kept.  Unchanged
+# except as below.
+
+# ----------------------------------------------------------------------------
+# Section 4.4.1.  LEO Satellite as a SCHC Proxy
+# ----------------------------------------------------------------------------
+
+- In this mechanism, the LEO satellite has the function of SCHC proxy.
+- The SCHC proxy has two features to improve SCHC performance with
+- local acknowledgments and retransmissions.  These messages are
+- employed to trigger local (and faster) error recovery.  In both
+- communication directions, it is recommended to use the fragmentation
+- mode assigned by each profile.
++ In this mechanism, the LEO satellite hosts a SCHC Endpoint acting as
++ a SCHC Proxy.  The SCHC Proxy has two features to improve SCHC
++ performance with local acknowledgments and retransmissions.  These
++ messages are employed to trigger local (and faster) error recovery.
++ In both communication directions, it is recommended to use the
++ fragmentation mode assigned by each profile.
+
+- *  In uplink communications, the SCHC Proxy locally acknowledges SCHC
+-    regular fragments with an SCHC ACK message.  Local acknowledgments
+-    split the SCHC connection between the end-device and SCHC Gateway.
+-    When local acknowledgments are used, the responsibility for
+-    retrieving any fragments after the proxy SCHC has acknowledged
+-    them lies with the proxy.
++ *  In uplink communications, the SCHC Proxy locally acknowledges SCHC
++    regular fragments with a SCHC ACK message.  Local acknowledgments
++    split the end-to-end SCHC exchange between the end-device and the
++    SCHC Gateway into two Sessions that share the same Context (i.e.,
++    belong to the same Domain): one Session between the Instance of
++    the end-device and the Instance of the SCHC Proxy, and one Session
++    between the Instance of the SCHC Proxy and the Instance of the
++    SCHC Gateway.  When local acknowledgments are used, the
++    responsibility for delivering any fragments that the SCHC Proxy
++    has acknowledged lies with the Proxy.  The local-acknowledgment
++    behavior itself is defined at profile level and is not an
++    architectural property of Sessions.
+
+- *  In downlink communications, the SCHC Proxy retransmits locally the
+-    regular SCHC fragments that losses between SCHC Proxy and end-
+-    device.
++ *  In downlink communications, the SCHC Proxy retransmits locally the
++    SCHC regular fragments lost between the SCHC Proxy and the end-
++    device.
+
+# ----------------------------------------------------------------------------
+# Section 4.4.1.1.  Device-initiated transmissions
+# ----------------------------------------------------------------------------
+
+- The figure Figure 11 shows the transmission of a SCHC window in an
+- uplink communication using the SCHC message flows defined in
+- [RFC8724].  The transmission of a SCHC window can be divided into two
+- phases:
++ Figure 11 shows the transmission of a SCHC window in an uplink
++ communication using the SCHC message flows defined in [RFC8724].  The
++ two phases below take place in the two Sessions described in
++ Section 4.4.1: Phase 1 in the Session between the end-device and the
++ SCHC Proxy, and Phase 2 in the Session between the SCHC Proxy and the
++ SCHC Gateway.  The transmission of a SCHC window can be divided into
++ two phases:
+
+# [CONCEPTUAL-ALIGNMENT #2] The following change aligns the text with
+# Figure 11 (which shows the Phase-2 ACK terminating at the LEO satellite)
+# and with the two-Session structure.  See verdicts.md, modification #2.
+
+- *  *Phase 2:* The LEO satellite sends the tiles stored in phase 1 to
+-    the SCHC gateway.  The SCHC gateway receives the tiles and
+-    responds to the end device with an SCHC ACK message.
++ *  *Phase 2:* The LEO satellite sends the tiles stored in phase 1 to
++    the SCHC Gateway.  The SCHC Gateway receives the tiles and
++    responds to the SCHC Proxy with a SCHC ACK message, as shown in
++    Figure 11.
+
+# ----------------------------------------------------------------------------
+# Section 4.4.2.  SCHC with FEC mechanism
+# ----------------------------------------------------------------------------
+# Normative MAY preserved.
+
+- In this mechanism, the end-device (fragmenter) and the SCHC gateway
+- (reassembler) use a Forward Error Correction mechanism (FEC) to
+- protect the tiles.  In this mechanism, the successful transmission of
+- tiles MAY be confirmed by a SCHC ACK message.  Figure Figure 12 shows
+- the transmission of a SCHC session with FEC mechanism in a DtS-IoT
+- environment.  More details over the implementation in draft-munoz-
+- schc-over-dts-iot
++ In this mechanism, the end-device (fragmenter) and the SCHC Gateway
++ (reassembler) use a Forward Error Correction (FEC) mechanism to
++ protect the tiles.  The FEC function is a SCHC function of the
++ corresponding Instances (e.g., realized as a SCHClet) and is
++ indicated in their Instance Configuration; the FEC protocol itself is
++ out of scope of this document.  In this mechanism, the successful
++ transmission of tiles MAY be confirmed by a SCHC ACK message.
++ Figure 12 shows a fragmented transmission using the FEC mechanism
++ within a SCHC Session in a DtS-IoT environment.  More details on the
++ implementation are given in [I-D.munoz-schc-over-dts-iot].
+
+-    Figure 12: Transmission of an SCHC session using an FEC mechanism
++    Figure 12: Fragmented transmission within a SCHC Session using an
++               FEC mechanism
+
+# ============================================================================
+# Section 7.  Normative References  (addition required by the new terminology)
+# ============================================================================
+
++ (add, as informative reference)
++ [I-D.ietf-schc-architecture]
++            Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and
++            M. Dumay, "Static Context Header Compression (SCHC)
++            Architecture", Work in Progress, Internet-Draft,
++            draft-ietf-schc-architecture-06.
++
++ (add, as informative reference)
++ [I-D.munoz-schc-over-dts-iot]
++            Munoz-Lara, R., et al., "SCHC over Direct-to-Satellite
++            IoT", Work in Progress, Internet-Draft,
++            draft-munoz-schc-over-dts-iot.
+
+# ============================================================================
+# End of migration diff
+# ============================================================================
+# Coverage note: Sections 1, 3 (device descriptions), 3.1.1 (topologies),
+# 3.2/3.2.1 (DtS descriptions), 4.2 (empty heading), 5, and 6 contain no SCHC
+# architectural terminology requiring migration and are unchanged.  Figure
+# ASCII art (Figures 6-12) is unchanged; box labels ("Dev (SCHC)",
+# "Proxy (SCHC)", "SCHC GW") remain valid shorthand for the Endpoints defined
+# in the migrated prose.  No location required an unaccepted Architecture
+# change; the two locations that depend on Architecture edits (application-
+# layer Stratum in Section 4; intermediary Endpoint in Sections 4.1/4.4.1)
+# rely on Edits 1 and 2 of schc-architecture-edits.md, assumed accepted.

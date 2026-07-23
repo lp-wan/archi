@@ -1,0 +1,528 @@
+# Terminology and Architectural-Framing Migration Diff
+# Target draft: draft-corneo-schc-ctx-mgmt-00
+# Reference architecture: draft-ietf-schc-architecture-06
+
+--- draft-corneo-schc-ctx-mgmt-00.txt
++++ draft-corneo-schc-ctx-mgmt-00-migrated.txt
+@@ -14,12 +14,12 @@
+ Abstract
+ 
+-   This document defines extensions to the Static Context Header
+-   Compression (SCHC) framework that improve context management
++   This document defines extensions to the Static Context Header
++   Compression (SCHC) Architecture that improve context management
+    efficiency.  Two categories of mechanisms are introduced: rule
+    referencing CDAs (ref and ref-edit) that enable composable rule
+-   definitions and reduce context storage, and a rule fragment branching
++   definitions and reduce context storage, and a Rule Fragment branching
+    CDA (branch) with associated Matching Operators that enable dynamic
+    multi-layer protocol compression without combinatorial rule
+    explosion.
+
+@@ -127,11 +127,12 @@
+ 1.  Introduction
+ 
+-   Static Context Header Compression (SCHC), defined in [RFC8724],
+-   provides a mechanism for compressing protocol headers over
+-   constrained networks by defining rules in a context shared between
+-   sender and receiver.
++   Static Context Header Compression (SCHC), defined in [RFC8724] and the
++   SCHC Architecture [draft-ietf-schc-architecture-06], provides a
++   mechanism for compressing protocol headers over constrained networks
++   by executing C/D operations within SCHC Instances using a shared Context.
+ 
+    SCHC was initially designed for low-power wide-area networks serving
+-   a small number of devices with small, static contexts.  As the
++   a small number of devices with small, static Contexts.  As the
+    framework evolved to support scalable deployments, diverse
+    technologies (cellular traffic, space communication), and multi-layer
+@@ -139,11 +140,11 @@
+    several limitations emerged:
+ 
+-   *  As the number and heterogeneity of devices increase, the context
+-      size grows.  Dynamic approaches such as payload compression
++   *  As the number and heterogeneity of Instances increase, the Context
++      size grows.  Dynamic approaches such as payload compression
+       further increase the number of rules, potentially adding duplicate
+-      or partially duplicate field descriptions.  Context updates become
+-      frequent, increasing protocol overhead and energy consumption.
++      or partially duplicate field descriptions.  Context updates and
++      synchronizations become frequent, increasing overhead.
+ 
+    *  As the rule set grows, rule matching time increases, potentially
+@@ -158,11 +159,11 @@
+       requires its own rule.
+ 
+    This document addresses these limitations by defining:
+ 
+-   *  Rule referencing CDAs (Section 4) that allow rules to reference
+-      and compose other rules, reducing duplication.
++   *  Rule referencing CDAs (Section 4) that allow Rules to reference
++      and compose other Rules in the Set of Rules, reducing duplication.
+ 
+-   *  A rule fragment branching mechanism (Section 5) that enables
+-      dynamic selection of rule fragments based on packet content,
++   *  A Rule Fragment branching mechanism (Section 5) that enables
++      dynamic selection of Rule Fragments based on packet content,
+       eliminating combinatorial explosion.
+
+@@ -185,25 +186,27 @@
+ 3.  Terminology
+ 
+    The following terms are used in this document:
+ 
+    Adjacent Field Descriptors:  A set of field descriptions within one
+       rule that belong to a single protocol layer.
+ 
+-   Deprecated Rule:  A rule (or subset of a rule) that has been selected
+-      to be merged into a new rule using referencing CDAs.
+- 
+-   Merged Rule:  A rule that includes at least one of the referencing
+-      CDAs defined in this document.
+- 
+-   Rule Fragment:  A rule designed to compress a portion of a packet
+-      (e.g., a single protocol layer) and intended to be composed with
+-      other rule fragments via branching.
+- 
++   Deprecated Rule:  A Rule (or subset of a Rule) that has been selected
++      to be merged into a new Rule using referencing CDAs.
++ 
++   Merged Rule:  A Rule that includes at least one of the referencing
++      CDAs defined in this document.
++ 
++   Rule Fragment:  A Rule designed to compress a portion of a packet
++      (e.g., a single protocol layer) and intended to be composed with
++      other Rules or Rule Fragments via branching, as defined in
++      [draft-ietf-schc-architecture-06].
++ 
++   Note: For terms such as Endpoint, Instance, Session, Context, and Domain
++   Manager, this document inherits the definitions in Section 3 of
++   [draft-ietf-schc-architecture-06].
+
+@@ -202,18 +205,18 @@
+ 4.  Rule Referencing
+ 
+-   This section defines two novel Compression/Decompression Actions
+-   (CDAs) that enable SCHC rules to reference other rules in the
+-   context.  These CDAs reduce context storage requirements and enable
+-   composable rule definitions.
++   This section defines two novel Compression/Decompression Actions
++   (CDAs) that enable SCHC Rules to reference other Rules in the
++   Context.  These CDAs reduce Context storage requirements and enable
++   composable Rule definitions.
+ 
+ 4.1.  The ref(N) CDA
+ 
+-   The "ref" CDA references an existing rule within the SCHC context.
+-   When a field description uses ref(N), the compressor/decompressor
+-   MUST suspend processing of the current rule and apply Rule N to the
+-   corresponding portion of the packet.  Once Rule N has been fully
+-   processed, the compressor/decompressor MUST resume processing the
+-   next field description in the original rule.
++   The "ref" CDA references an existing Rule within the SCHC Context.
++   When a field description uses ref(N), the SCHC Instance (specifically
++   its C/D function) MUST suspend processing of the current Rule and
++   apply Rule N to the corresponding portion of the packet.  Once Rule N
++   has been fully processed, the SCHC Instance MUST resume processing
++   the next field description in the original Rule.
+ 
+    The argument N is the Rule ID of the referenced rule.
+
+@@ -305,14 +308,14 @@
+-   In both cases, when the compressor/decompressor encounters a
+-   referencing CDA, it loads Rule 2 and applies it to the IPv6 header
+-   portion of the packet before resuming with the transport layer
+-   fields.  For Rule 4, the ref-edit(2,1) CDA first replaces the IPv6
+-   Next Header field description in Rule 2 with the override (TV = 6),
+-   then applies the modified rule.
++   In both cases, when the SCHC Instance encounters a referencing CDA,
++   it loads Rule 2 and applies it to the IPv6 header portion of the
++   packet before resuming with the transport layer fields.  For Rule 4,
++   the ref-edit(2,1) CDA first replaces the IPv6 Next Header field
++   description in Rule 2 with the override (TV = 6), then applies the
++   modified Rule.
+ 
+ 4.2.  The ref-edit(N,M) CDA
+ 
+-   The "ref-edit" CDA extends ref(N) by allowing modification of
+-   specific field descriptions in the referenced rule.  The argument N
+-   is the Rule ID of the referenced rule, and M indicates the number of
+-   field descriptions immediately following the ref-edit field that
+-   specify modifications.
++   The "ref-edit" CDA extends ref(N) by allowing modification of
++   specific field descriptions in the referenced Rule.  The argument N
++   is the Rule ID of the referenced Rule, and M indicates the number of
++   field descriptions immediately following the ref-edit field that
++   specify modifications.
+ 
+-   When processing ref-edit(N,M), the compressor/decompressor MUST:
++   When processing ref-edit(N,M), the SCHC Instance MUST:
+ 
+-   1.  Load the referenced Rule N.
++   1.  Load the referenced Rule N from the Context.
+ 
+    2.  For each of the next M field descriptions in the current rule,
+        find the field description in Rule N with a matching Field ID
+        (FID).
+ 
+    3.  Replace the matched field description in Rule N with the one from
+        the current rule.
+ 
+    4.  Apply the modified Rule N to the packet.
+
+@@ -358,22 +361,26 @@
+ 4.3.  Context Compression Procedure
+ 
+-   The ref(N) and ref-edit(N,M) CDAs enable context compression
+-   procedures that merge rules sharing common field descriptions.  One
+-   way to realize this is a procedure that operates as follows:
++   The ref(N) and ref-edit(N,M) CDAs enable Context compression
++   procedures that merge Rules sharing common field descriptions.  Within
++   the SCHC Architecture, this optimization procedure is managed by the
++   Domain Manager and Instance Managers to generate and provision optimized
++   Contexts.  The procedure operates as follows:
+ 
+-   1.  Iterate all rules in the context.  For each rule, identify sets
+-       of adjacent field descriptions (field descriptions belonging to
+-       the same protocol layer).
++   1.  Iterate all Rules in the Context.  For each Rule, identify sets
++       of adjacent field descriptions (field descriptions belonging to
++       the same protocol layer).
+ 
+-   2.  Group identical sets of adjacent field descriptions that appear
+-       in multiple rules.
++   2.  Group identical sets of adjacent field descriptions that appear
++       in multiple Rules.
+ 
+-   3.  For each group exceeding a configured threshold of occurrences:
+-       a.  Create a new rule containing the shared adjacent field
+-       descriptions. b.  For each original rule containing the group,
+-       create a merged rule that uses ref(N) to reference the new rule,
+-       plus any remaining field descriptions.
+- 
+-   4.  Signal the new rules to all SCHC endpoints.  Once confirmed,
+-       deprecated rules MAY be removed from the context.
++   3.  For each group exceeding a configured threshold of occurrences:
++       a.  Create a new Rule containing the shared adjacent field
++       descriptions. b.  For each original Rule containing the group,
++       create a merged Rule that uses ref(N) to reference the new Rule,
++       plus any remaining field descriptions.
++ 
++   4.  Distribute the updated Context containing the new Rules to all
++       participating SCHC Instances using the Domain Manager's context
++       synchronization plane.  Once confirmed, deprecated Rules MAY be
++       removed from the Context.
+
+@@ -380,24 +387,24 @@
+ 5.  Rule Fragment Branching
+ 
+-   This section defines a novel Compression/Decompression Action (CDA)
+-   and a novel Matching Operator (MO) that enable dynamic composition of
+-   SCHC rule fragments at compression time.  These mechanisms allow a
+-   single rule to branch into different rule fragments based on packet
+-   content, solving the combinatorial explosion problem when compressing
+-   multi-layer protocol stacks or protocols with optional/variable
+-   headers.
++   This section defines a novel Compression/Decompression Action (CDA)
++   and a novel Matching Operator (MO) that enable dynamic composition of
++   SCHC Rule Fragments at compression time.  These mechanisms allow a
++   single Rule to branch into different Rule Fragments based on packet
++   content, solving the combinatorial explosion problem when compressing
++   multi-layer protocol stacks or protocols with optional/variable
++   headers.
+ 
+ 5.1.  The branch CDA
+ 
+-   The "branch" CDA encodes a selection among alternative rule fragments
+-   into the compression residual. branch takes as argument either a Rule
+-   ID identifying the next rule fragment to apply, or NULL indicating
+-   that no further rule processing follows.
++   The "branch" CDA encodes a selection among alternative Rule Fragments
++   into the compression residual. branch takes as argument either a Rule
++   ID identifying the next Rule Fragment to apply, or NULL indicating
++   that no further Rule processing follows.
+ 
+    A field description using branch contains a mapping table where each
+    entry associates:
+ 
+    *  A Target Value (TV)
+ 
+-   *  A Rule ID (or NULL) to apply next
++   *  A Rule ID (or NULL) of the Rule Fragment to apply next
+ 
+    *  A residual value to encode in the compressed packet
+@@ -413,15 +420,15 @@
+-   When the compressor encounters a field with branch CDA, it MUST:
++   When the compressing Instance encounters a field with branch CDA, it MUST:
+ 
+    1.  Encode the residual value corresponding to the matched entry.
+ 
+    2.  Queue the associated Rule ID for subsequent processing.
+ 
+-   When the decompressor encounters a branch residual, it MUST:
++   When the decompressing Instance encounters a branch residual, it MUST:
+ 
+    1.  Decode the residual to determine the index into the mapping
+        table.
+ 
+    2.  Use the corresponding Rule ID to decompress the next portion of
+        the packet.
+ 
+-   A branch to NULL indicates that no further rule processing follows
+-   after the current rule completes.
++   A branch to NULL indicates that no further Rule processing follows
++   after the current Rule completes.
+ 
+    Two mechanisms determine which branch to take:
+@@ -433,14 +440,14 @@
+-      UDP as the next protocol.  This also applies to IPv6 extension
+-      headers (Fragment, Destination Options, Hop-by-Hop), each of which
+-      carries its own Next Header field — enabling a chain of branch
+-      decisions through successive extension headers until the transport
+-      layer is reached.  The branch selection is encoded as a residual
+-      derived from matching the field value against a mapping table.
++      UDP as the next protocol.  This also applies to IPv6 extension
++      headers (Fragment, Destination Options, Hop-by-Hop), each of which
++      carries its own Next Header field — enabling a chain of branch
++      decisions through successive extension headers until the transport
++      layer is reached.  The branch selection is encoded as a residual
++      derived from matching the field value against a mapping table in
++      the Context.
+ 
+    *  Implicit matching (match-rule MO, see Section 5.3): Used when no
+       single header field identifies what follows.  For example, after a
+       UDP header, there is no field indicating whether the payload is
+       RTP, CoAP, or something else.  The compressor must attempt to
+-      match each candidate rule against the payload content — for
+-      instance, checking whether the payload starts with RTP version = 2
+-      and valid SSRC fields.  The branch selection is encoded as a
+-      residual indicating which rule succeeded.
++      match each candidate Rule Fragment against the payload content —
++      for instance, checking whether the payload starts with RTP version
++      = 2 and valid SSRC fields.  The branch selection is encoded as a
++      residual indicating which Rule Fragment succeeded.
+ 
+ 5.1.1.  Field Length Semantics
+ 
+    The Field Length (FL) value of a field description using branch
+    determines its usage:
+ 
+    *  FL > 0: The field corresponds to an actual packet header field of
+       the indicated length.  The branch is determined by the field value
+       present in the packet (used with match-mapping MO).
+ 
+    *  FL = 0: There is no corresponding field in the packet.  The branch
+-      residual encodes which rule fragment is used to compress the
+-      remainder of the packet after the current rule completes.  This is
+-      used when the next protocol is implicit (used with match-rule MO).
++      residual encodes which Rule Fragment is used to compress the
++      remainder of the packet after the current Rule completes.  This is
++      used when the next protocol is implicit (used with match-rule MO).
+ 
+ 5.1.2.  Processing Order
+ 
+-   When a rule contains multiple field descriptions with branch CDA, the
+-   Field Position (FP) determines the invocation order.  Rule fragments
+-   are processed depth-first: a loaded rule fragment, including any
+-   branch within it, MUST be fully processed before the next queued
+-   branch from the parent rule is invoked.
++   When a Rule contains multiple field descriptions with branch CDA, the
++   Field Position (FP) determines the invocation order.  Rule Fragments
++   are processed depth-first: a loaded Rule Fragment, including any
++   branch within it, MUST be fully processed before the next queued
++   branch from the parent Rule is invoked.
+ 
+-   Specifically, the compressor maintains a branch queue per rule.
+-   After completing all CDAs in the current rule, the compressor
+-   processes the queue starting with the lowest invocation number.  Each
+-   dequeued Rule ID is loaded and its matching and compression
+-   operations are performed.  The packet pointer (Current_Location)
+-   advances as each rule fragment is processed.
++   Specifically, the compressing Instance maintains a branch queue per Rule.
++   After completing all CDAs in the current Rule, the compressing Instance
++   processes the queue starting with the lowest invocation number.  Each
++   dequeued Rule ID is loaded and its matching and compression
++   operations are performed.  The packet pointer (Current_Location)
++   advances as each Rule Fragment is processed.
+ 
+-   This sequential processing imposes a constraint on rule fragment
+-   design: rule fragments MUST be split at protocol boundaries where
++   This sequential processing imposes a constraint on Rule Fragment
++   design: Rule Fragments MUST be split at protocol boundaries where
+    different subsequent processing of the packet can occur.  A branch
+    decision point can only appear at a location where the preceding
+-   fields have been fully compressed by the current rule fragment.
+-   Placing a branch mid-way through a protocol header is not supported,
+-   as the queue processes complete rule fragments in order.
++   fields have been fully compressed by the current Rule Fragment.
++   Placing a branch mid-way through a protocol header is not supported,
++   as the queue processes complete Rule Fragments in order.
+ 
+ 5.1.3.  Failure Handling
+ 
+-   If a loaded rule fragment fails to match the packet at the current
+-   location, the entire compression operation for this packet MUST fail.
+-   The compressor MUST transmit the packet uncompressed (using Rule ID
+-   0).
++   If a loaded Rule Fragment fails to match the packet at the current
++   location, the entire compression operation for this packet MUST fail.
++   The compressing Instance MUST transmit the packet uncompressed (using
++   Rule ID 0, applying the no-compression Rule).
+ 
+    A branch to NULL terminates further processing, even if there are
+-   queued invocations in parent rules.
++   queued invocations in parent Rules.
+ 
+    As a consequence, when the packet content following a branch point
+-   may be unknown or not covered by any rule fragment, the branch
++   may be unknown or not covered by any Rule Fragment, the branch
+    mapping SHOULD include a branch(NULL) entry as a fallback.  Without
+    it, an unrecognized field value (in match-mapping) or a payload
+    matching no candidate rule (in match-rule) will cause complete
+-   compression failure.  Including branch(NULL) allows the compressor to
+-   gracefully terminate rule processing at that point, leaving the
+-   remainder of the packet uncompressed in the SCHC residual.
++   compression failure.  Including branch(NULL) allows the compressing
++   Instance to gracefully terminate Rule processing at that point,
++   leaving the remainder of the packet uncompressed in the SCHC
++   residual.
+
+@@ -621,11 +628,11 @@
+ 5.3.  The match-rule MO
+ 
+-   The "match-rule" MO is a novel Matching Operator for use with branch
+-   when FL = 0 (no corresponding packet field).  It determines which
+-   rule fragment matches the remainder of the packet by attempting to
+-   match each referenced rule in order.
++   The "match-rule" MO is a novel Matching Operator for use with branch
++   when FL = 0 (no corresponding packet field).  It determines which
++   Rule Fragment matches the remainder of the packet by attempting to
++   match each referenced Rule in order.
+ 
+    The match-rule MO takes a list of Rule IDs as argument.  For each
+-   referenced Rule ID, in list order, the compressor MUST:
++   referenced Rule ID, in list order, the compressing Instance MUST:
+ 
+    1.  Save the current packet location.
+ 
+-   2.  Load the referenced rule and perform all its matching operations
++   2.  Load the referenced Rule and perform all its matching operations
+        starting at the current location.
+ 
+    3.  If all fields match successfully, return the index of this rule.
+ 
+    4.  If any field fails to match, reset the packet location and
+        proceed to the next Rule ID in the list.
+ 
+-   If no rule matches and no NULL entry exists, the match-rule MO fails.
++   If no Rule matches and no NULL entry exists, the match-rule MO fails.
+    If the list contains a NULL entry, it automatically matches when
+    reached.  Therefore, a NULL entry SHOULD be placed last in the list;
+    any entries after NULL will never be evaluated.
+
+@@ -904,22 +911,23 @@
+    The compression proceeds as follows:
+ 
+-   1.  The compressor iterates through the rule set and attempts to
+-       match each rule against the packet.  Rule 2 (Figure 5) is
+-       selected as the initial rule because its IPv6 field descriptions
+-       (Version, Diffserv, Flow Label, Hop Limit, prefixes, IIDs) all
+-       match the packet.  Note that Rule 2 here uses branch rather than
+-       a fixed Next Header value, so matching succeeds regardless of the
+-       transport protocol.
++   1.  The compressing Instance iterates through the Set of Rules and
++       attempts to match each Rule against the packet.  Rule 2 (Figure 5)
++       is selected as the initial Rule because its IPv6 field
++       descriptions (Version, Diffserv, Flow Label, Hop Limit, prefixes,
++       IIDs) all match the packet.  Note that Rule 2 here uses branch
++       rather than a fixed Next Header value, so matching succeeds
++       regardless of the transport protocol.
+ 
+    2.  IPv6 fields are matched and compressed.  The Next Header field
+        (value 17) matches the first mapping entry.  The compressor
+-       encodes residual 0b000 and queues Rule 3 for processing.
++       Instance encodes residual 0b000 and queues Rule 3 for processing
++       after Rule 2 completes.
+ 
+-   3.  After completing Rule 2, the compressor loads Rule 3 (Figure 7).
+-       UDP fields are matched and compressed.
++   3.  After completing Rule 2, the compressing Instance loads Rule 3
++       (Figure 7). UDP fields are matched and compressed.
+ 
+    4.  The match-rule MO at the end of Rule 3 loads Rule 8 and attempts
+        matching against the UDP payload.  RTP version = 2 matches the
+        first field.  All other RTP fields match.  The compressor encodes
+-       residual 0b00 and processes Rule 8.
++       Instance encodes residual 0b00 and processes Rule 8.
+
+@@ -939,12 +947,12 @@
+ 7.1.  Circular Reference Attacks
+ 
+-   The ref(N), ref-edit(N,M), and branch CDAs create directed references
+-   between rules.  If not validated, a malicious or misconfigured
+-   context could contain circular references (e.g., Rule A references
+-   Rule B which references Rule A), causing the compressor or
+-   decompressor to enter an infinite loop.
++   The ref(N), ref-edit(N,M), and branch CDAs create directed references
++   between Rules in the Context.  If not validated, a malicious or
++   misconfigured Context could contain circular references (e.g., Rule A
++   references Rule B which references Rule A), causing the executing
++   Instance to enter an infinite loop during processing.
+ 
+-   Implementations MUST detect circular references when a context is
+-   provisioned or updated.  A simple approach is to verify that the rule
++   The Domain Manager and Instance Managers MUST detect circular
++   references when a Context is provisioned or updated.  A simple
++   approach is to verify that the rule reference graph is a directed
++   acyclic graph (DAG) before context deployment.
+ 
+ 7.2.  Resource Exhaustion Attacks
+ 
+-   Deeply nested rule references, large branch mapping tables, or
+-   extensive match-rule candidate lists can consume significant
+-   processing time and memory on constrained devices.  An attacker able
+-   to provision or influence context content could craft rules designed
+-   to exhaust device resources.
++   Deeply nested Rule references, large branch mapping tables, or
++   extensive match-rule candidate lists can consume significant
++   processing time and memory on constrained devices.  An attacker able
++   to provision or influence Context content could craft Rules designed
++   to exhaust Instance or Endpoint resources.
+ 
+-   Implementations SHOULD enforce limits on:
++   Instances and Endpoint implementations SHOULD enforce limits on:
+ 
+-   *  Maximum reference chain depth (number of nested ref/ref-edit/
+-      branch invocations).
++   *  Maximum reference chain depth (number of nested ref/ref-edit/
++      branch invocations).
+ 
+-   *  Maximum number of entries in a branch mapping table.
++   *  Maximum number of entries in a branch mapping table.
+ 
+-   *  Maximum number of candidate rules evaluated by match-rule.
++   *  Maximum number of candidate Rules evaluated by match-rule.
+ 
+    *  Total processing time for a single packet compression/
+       decompression operation.
+ 
+    If any limit is exceeded, the implementation MUST abort processing
+-   and transmit the packet uncompressed.
++   and transmit the packet uncompressed using Rule ID 0.
+ 
+ 7.3.  Context Integrity
+ 
+-   The security of these mechanisms depends on the integrity of the
+-   shared context.  Unauthorized modification of rules (e.g.,
+-   redirecting a ref(N) to a different rule, or altering branch
+-   mappings) could cause incorrect compression or decompression, leading
+-   to data corruption or information disclosure.  Context provisioning
+-   and update mechanisms MUST ensure integrity and authenticity of rule
+-   definitions.
++   The security of these mechanisms depends on the integrity of the
++   shared Context.  Unauthorized modification of Rules (e.g.,
++   redirecting a ref(N) to a different Rule, or altering branch
++   mappings) could cause incorrect compression or decompression, leading
++   to data corruption or information disclosure.  Context provisioning
++   and update mechanisms controlled by the Domain Manager MUST ensure
++   integrity and authenticity of Rule definitions.

@@ -1,0 +1,182 @@
+# Terminology-migration diff: draft-ietf-schc-over-ppp-00 -> SCHC Architecture -06
+
+# Purpose: migrate the draft's terminology and architectural framing to
+# draft-ietf-schc-architecture-06 while preserving all technical behavior.
+# Adaptation need is None, so no diff location depends on an unaccepted
+# Architecture change. Only terminology / framing text is changed; the profile
+# parameters (RuleID numbering, No-ACK fragmentation, padding, MAX_PACKET_SIZE)
+# and the IPV6CP/URI signaling are preserved unchanged.
+#
+# Diff is chunked by document section. Unchanged sections, boilerplate,
+# acknowledgments, normative references, and administrative metadata are omitted
+# except where a terminology change reaches them.
+
+
+## Section 1 - Introduction
+
+- The "SCHC Architecture" [I-D.pelov-lpwan-architecture] enables a peer
+- to peer SCHC operation in addition to the classical device to network
+- LPWAN paradigm, e.g., over a PPP connection.  To enable SCHC over PPP
+- and therefore Ethernet and Wi-Fi, this specification extends
+- [RFC5172] to signal SCHC as an additional compression method for use
+- over PPP.
++ The "SCHC Architecture" [I-D.ietf-schc-architecture] enables a peer-
++ to-peer SCHC operation in addition to the classical Device-to-network
++ LPWAN paradigm, e.g., over a PPP connection.  In the terms of that
++ architecture, each peer runs a SCHC Endpoint that hosts one SCHC
++ Instance, the two Instances share a common Context, and they
++ communicate within a SCHC Session carried over the PPP connection.  To
++ enable SCHC over PPP and therefore Ethernet and Wi-Fi, this
++ specification extends [RFC5172] to signal SCHC as an additional
++ compression method for use over PPP.
+
+
+## Section 3 - Extending RFC 5172
+
+- With this specification, a PPP session defines a vitual link where a
+- SCHC context is established with a particular set of Rules, which is
+- indicated at the set up of the PPP session as follows:
++ With this specification, each PPP session carries a SCHC Session over a
++ virtual link.  Each peer's SCHC Endpoint associates one SCHC Instance
++ with that PPP session, and the two Instances share a common SCHC
++ Context whose Set of Rules (SoR) is indicated at the set up of the PPP
++ session as follows:
+
+  [RFC5172] defines an IPV6CP option called the IPv6-Compression-
+  Protocol Configuration option with a type of 2.  The option contains
+  an IPv6-Compression-Protocol field value that indicates a compression
+  protocol and an optional data field as shown in Figure 1:
+
+# (Figure 1 unchanged.)
+
+- This specification indicates a new IPv6-Compression-Protocol field
+- value for [SCHC] (see Section 5), and enables to transport a Uniform
+- Resource Identifier (URI) [RFC3986] of the set of rules in the
+- optional data.  The default format for the set of rules is YANG using
+- the "Data Model for SCHC" [SCHC_DATA_MODEL] encoded in JSON as
+- specified in [RFC7951].  The size of the URL is computed based on the
+- Length of the option as Length-4.  If the encoding is asymetrical,
+- the initiator of the session is considered downstream, playing the
+- role of the device in an LPWAN network.
++ This specification indicates a new IPv6-Compression-Protocol field
++ value for [SCHC] (see Section 5), and enables to transport a Uniform
++ Resource Identifier (URI) [RFC3986] of the Set of Rules in the
++ optional data.  Signaling the URI at session setup is how the shared
++ Context is fetched on demand, as described for PPP in the SCHC
++ Architecture [I-D.ietf-schc-architecture].  The default format for the
++ Set of Rules is YANG using the "YANG Data Model for SCHC" [RFC9363]
++ encoded in JSON as specified in [RFC7951].  The size of the URI is
++ computed based on the Length of the option as Length-4.  If the Rules
++ are asymmetric, the SCHC Instance that initiates the PPP session plays
++ the role of the Device defined in [SCHC], following the role
++ convention of the SCHC Architecture; the peer Instance plays the
++ complementary (network-side) role.
+
+
+## Section 4 - Profiling SCHC for high speed links
+## Section 4.1 - Mapping the SCHC Architecture
+
+- This specification leverages SCHC between an end point that is an IP
+- Host and possibly a serial DTE (Data Terminal Equipment), and another
+- that is an IP Node (either another IP Host or a Router) and possibly
+- a serial DCE (Data Control Equipment), or a more modern physical or
+- emulated endpoint, e.g., Ethernet devices that echange IP packets
+- over PPPoE.
+-
+- Both endpoints MUST support the function of SCHC Compressor/
+- Decompressor (C/D) as shown in Figure 2.
++ This specification leverages SCHC between a SCHC Endpoint hosted on an
++ IP Host and possibly a serial DTE (Data Terminal Equipment), and
++ another SCHC Endpoint hosted on an IP Node (either another IP Host or a
++ Router) and possibly a serial DCE (Data Control Equipment), or on a
++ more modern physical or emulated node, e.g., Ethernet devices that
++ exchange IP packets over PPPoE.  Each Endpoint associates one SCHC
++ Instance with the PPP connection; the PPP connection itself serves as
++ the Discriminator, and PPP demultiplexing acts as the Dispatcher that
++ routes SCHC Datagrams to that Instance.
++
++ The Instance on each Endpoint MUST support the SCHC Compression/
++ Decompression (C/D) function as shown in Figure 2.
+
+# (Figure 2 unchanged.)
+
+- The SCHC Fragmenter/Reassembler (F/R) is generally not needed,
+- because the maximum transmission unit (MTU) is expected to be large
+- enough and SCHC only reduces the frame size vs. native IP.  But it
+- may be used to obtain a small protocol-independant frame size for the
+- compressed packets, possibly way smaller than MTU.
++ The SCHC Fragmentation/Reassembly (F/R) function is generally not
++ needed, because the maximum transmission unit (MTU) is expected to be
++ large enough and SCHC only reduces the frame size vs. native IP.  But
++ it may be used to obtain a small protocol-independent frame size for
++ the SCHC Datagrams, possibly way smaller than MTU.
+
+- A context may be generated for a particular upper layer application,
+- such as a control loop using an industrial automation protocol, to
+- protect the particular flow with a DetNet service.  The context can
+- be asymetric, e.g., when connecting a primary and a secondary
+- endpoints, a client and a server, or a programmable logic controller
+- with a sensor or an actuator.
++ A Context may be generated for a particular upper layer application,
++ such as a control loop using an industrial automation protocol, to
++ protect the particular flow with a DetNet service.  The Context may
++ contain asymmetric Rules, in which case the two Instances play
++ distinct roles, e.g., when connecting a primary and a secondary
++ Endpoint, a client and a server, or a programmable logic controller
++ with a sensor or an actuator.
+
+
+## Section 4.2 - SCHC Parameters
+# (Normative profile parameters preserved; only the wire-unit term is aligned to
+#  the -06 "SCHC Datagram", defined as RuleID + result + Payload.)
+
+  RuleID numbering scheme:  The RuleID for a compression rule is
+     expressed as 2 bytes.  The first (leftmost) 2 bits of that RuleId
+     MUST be set to 0 This leaves 14 bits to index the rule.  A SCHC
+-     compressed packet is always in the form:
++     Datagram is always in the form:
+
+# (Figure 3 bit layout unchanged.)
+-                       Figure 3: SCHC Compressed Packet
++                       Figure 3: SCHC Datagram (compressed, no fragment)
+
+# The No-ACK fragmentation text, DTag/FCN layout (Figure 4), MAX_PACKET_SIZE,
+# and Padding definitions are unchanged: they are RFC 8724 profile parameters
+# that -06 leaves to the deployment/profile (RFC 8724 Appendix D; -06 s4.2.2.2).
+
+
+## Section 4.2.1 - Resulting Packet Format
+# (Figures 5 and 6 and their surrounding text are unchanged. The stack-operation
+#  and PPPoE frame layout describe wire encapsulation that -06 does not alter.
+#  "SCHC Compression" / "SCHC Fragmentation" box labels match the -06 C/D and
+#  F/R functions and need no change.)
+
+
+## Section 8 - Informative References
+
+- [I-D.pelov-lpwan-architecture]
+-            Pelov, A., Thubert, P., and A. Minaburo, "LPWAN Static
+-            Context Header Compression (SCHC) Architecture", Work in
+-            Progress, Internet-Draft, draft-pelov-lpwan-architecture-
+-            02, 29 April 2021, <https://datatracker.ietf.org/doc/html/
+-            draft-pelov-lpwan-architecture-02>.
++ [I-D.ietf-schc-architecture]
++            Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and M.
++            Dumay, "Static Context Header Compression (SCHC)
++            Architecture", Work in Progress, Internet-Draft, draft-
++            ietf-schc-architecture-06, 6 July 2026,
++            <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
++            architecture-06>.
+
+# SCHC_DATA_MODEL is superseded by the published RFC; move to Normative
+# References (or retain as informative) as RFC 9363:
+- [SCHC_DATA_MODEL]
+-            Minaburo, A. and L. Toutain, "Data Model for Static
+-            Context Header Compression (SCHC)", Work in Progress,
+-            Internet-Draft, draft-ietf-lpwan-schc-yang-data-model-21,
+-            9 October 2022, <https://datatracker.ietf.org/doc/html/
+-            draft-ietf-lpwan-schc-yang-data-model-21>.
++ [RFC9363]  Minaburo, A. and L. Toutain, "A YANG Data Model for Static
++            Context Header Compression (SCHC)", RFC 9363,
++            DOI 10.17487/RFC9363, March 2023,
++            <https://www.rfc-editor.org/rfc/rfc9363>.

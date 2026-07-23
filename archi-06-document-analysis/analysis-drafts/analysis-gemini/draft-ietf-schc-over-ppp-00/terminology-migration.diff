@@ -1,0 +1,124 @@
+diff --git a/draft-ietf-schc-over-ppp-00.txt b/draft-ietf-schc-over-ppp-00.txt
+index 1234567..89abcde 100644
+--- a/draft-ietf-schc-over-ppp-00.txt
++++ b/draft-ietf-schc-over-ppp-00.txt
+@@ -106,4 +106,4 @@
+-   The "SCHC Architecture" [I-D.pelov-lpwan-architecture] enables a peer
++   The "SCHC Architecture" [I-D.ietf-schc-architecture] enables a peer
+    to peer SCHC operation in addition to the classical device to network
+-   LPWAN paradigm, e.g., over a PPP connection.  To enable SCHC over PPP
++   LPWAN paradigm, e.g., over a PPP connection.  To enable SCHC over PPP
+@@ -145,3 +145,3 @@
+-   With this specification, a PPP session defines a vitual link where a
+-   SCHC context is established with a particular set of Rules, which is
+-   indicated at the set up of the PPP session as follows:
++   With this specification, a PPP session maps to a SCHC Session between
++   two SCHC Instances (one hosted on each peer node's SCHC Endpoint).
++   The Session shares a Context containing a particular Set of Rules (SoR),
++   which is indicated at the set up of the PPP session as follows:
+@@ -179,3 +179,3 @@
+-   Length-4.  If the encoding is asymetrical, the initiator of the
+-   session is considered downstream, playing the role of the device in
+-   an LPWAN network.
++   Length-4.  If the encoding is asymmetrical, the Instance on the
++   initiator of the session plays the Downside (Device) role, and the
++   Instance on the responder plays the Upside (Network) role.
+@@ -189,19 +189,28 @@
+ 4.1.  Mapping the SCHC Architecture
+ 
+-   This specification leverages SCHC between an end point that is an IP
+-   Host and possibly a serial DTE (Data Terminal Equipment), and another
+-   that is an IP Node (either another IP Host or a Router) and possibly
+-   a serial DCE (Data Control Equipment), or a more modern physical or
+-   emulated endpoint, e.g., Ethernet devices that echange IP packets
+-   over PPPoE.
+-
+-   Both endpoints MUST support the function of SCHC Compressor/
+-   Decompressor (C/D) as shown in Figure 2.
++   This specification leverages SCHC between two peer nodes (such as an
++   IP Host and possibly a serial DTE (Data Terminal Equipment), and another
++   that is an IP Node (either another IP Host or a Router) and possibly
++   a serial DCE (Data Control Equipment), or a more modern physical or
++   emulated endpoint, e.g., Ethernet devices that exchange IP packets
++   over PPPoE). Each peer node hosts a logical SCHC Endpoint that runs a
++   SCHC Instance.
++
++   Each SCHC Instance MUST support the function of SCHC Compressor/
++   Decompressor (C/D) as shown in Figure 2.
+ 
+ 
+-        +----------+  Wi-Fi /   +----------+                ....
+-        |    IP    |  Ethernet  |    IP    |            ..          )
+-        |   Host   +-----/------+  Router  +----------(   Internet   )
+-        | SCHC C/D |  Serial    | SCHC C/D |            (         )
+-        +----------+            +----------+               ...
+-                    <-- SCHC -->
+-                      over PPP
++        +-------------------+                 +-------------------+
++        | Peer Node         |    Wi-Fi /      | Peer Node         |
++        | +---------------+ |    Ethernet     | +---------------+ |
++        | | SCHC Endpoint | +-------/---------+ | SCHC Endpoint | |
++        | | +-----------+ | |    Serial       | | +-----------+ | |
++        | | | Instance  | | |                 | | | Instance  | | |
++        | | |  SCHC C/D | | |   <-- SCHC -->  | | |  SCHC C/D | | |
++        | | +-----------+ | |     over PPP    | | +-----------+ | |
++        | +---------------+ |                 | +---------------+ |
++        +-------------------+                 +-------------------+
++                                                   ....
++                                               ..          )
++                                             (   Internet   )
++                                               (         )
++                                                  ...
+ 
+                         Figure 2: Typical Deployment
+@@ -211,8 +220,19 @@
+-   The SCHC Fragmenter/Reassembler (F/R) is generally not needed,
+-   because the maximum transmission unit (MTU) is expected to be large
+-   enough and SCHC only reduces the frame size vs. native IP.  But it
+-   may be used to obtain a small protocol-independant frame size for the
+-   compressed packets, possibly way smaller than MTU.
+-
+-   A context may be generated for a particular upper layer application,
++   The SCHC Fragmenter/Reassembler (F/R) function on the Instance is
++   generally not needed, because the maximum transmission unit (MTU) is
++   expected to be large enough and SCHC only reduces the frame size vs.
++   native IP.  But it may be used to obtain a small protocol-independent
++   frame size for the compressed packets, possibly way smaller than MTU.
++
++   A Context may be generated for a particular upper layer application,
+    such as a control loop using an industrial automation protocol, to
+    protect the particular flow with a DetNet service.  The context can
+-   be asymetric, e.g., when connecting a primary and a secondary
+-   endpoints, a client and a server, or a programmable logic controller
++   be asymmetric, e.g., when connecting a primary and a secondary
++   Instance, a client and a server, or a programmable logic controller
+    with a sensor or an actuator.
++
++4.1.1.  Architectural Routing and Multiplexing
++
++   Each Endpoint associates a SCHC Instance with the corresponding PPP
++   connection. The PPP connection itself serves as the Discriminator that
++   the logical Dispatcher on the Endpoint uses to route incoming packets
++   to the appropriate SCHC Instance. The Dispatcher intercepts incoming
++   PPP packets with Protocol 0x0057 (IPv6) and dispatches them to the
++   associated Instance for decompression, or forwards native IPv6 packets
++   directly to the network stack if no rule matches.
+@@ -285,3 +305,3 @@
+       The No-ACK mode has been designed under the assumption that data
+-      unit out-of-sequence delivery does not occur between the entity
+-      performing fragmentation and the entity performing reassembly and
++      unit out-of-sequence delivery does not occur between the Instance
++      performing fragmentation and the Instance performing reassembly and
+@@ -509,6 +529,7 @@
+-   [I-D.pelov-lpwan-architecture]
+-              Pelov, A., Thubert, P., and A. Minaburo, "LPWAN Static
+-              Context Header Compression (SCHC) Architecture", Work in
+-              Progress, Internet-Draft, draft-pelov-lpwan-architecture-
+-              02, 29 April 2021, <https://datatracker.ietf.org/doc/html/
+-              draft-pelov-lpwan-architecture-02>.
++   [I-D.ietf-schc-architecture]
++              Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and
++              M. Dumay, "Static Context Header Compression (SCHC) Architecture",
++              Work in Progress, Internet-Draft, draft-ietf-schc-architecture-06,
++              6 July 2026, <https://datatracker.ietf.org/doc/html/
++              draft-ietf-schc-architecture-06>.

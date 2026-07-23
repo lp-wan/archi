@@ -1,0 +1,304 @@
+# Terminology and Architectural Migration Diff for RFC 9011
+
+--- rfc9011.txt (original)
++++ rfc9011.txt (migrated to SCHC Architecture -06)
+
+Section 1. Introduction
+
+-   The SCHC specification [RFC8724] describes generic header compression
+-   and fragmentation techniques that can be used on all Low-Power Wide
+-   Area Network (LPWAN) technologies defined in [RFC8376].  Even though
+-   those technologies share a great number of common features like star-
+-   oriented topologies, network architecture, devices with
+-   communications that are mostly quite predictable, etc., they do have
+-   some slight differences with respect to payload sizes, reactiveness,
+-   etc.
++   The SCHC specification [RFC8724] describes generic header compression
++   and fragmentation techniques that can be used on all Low-Power Wide
++   Area Network (LPWAN) technologies defined in [RFC8376]. The SCHC
++   Architecture [DRAFT-SCHC-ARCH] defines the logical framework and
++   core components—such as Endpoints, Instances, Sessions, Contexts,
++   and Domains—whereby SCHC processing is deployed and managed.
++   Even though LPWAN technologies share common features like star-oriented
++   topologies, network architecture, and predictable communications,
++   they have slight differences with respect to payload sizes, reactiveness,
++   and framing.
+
+-   SCHC provides a generic framework that enables those devices to
+-   communicate on IP networks.  However, for efficient performance, some
+-   parameters and modes of operation need to be set appropriately for
+-   each of the LPWAN technologies.
++   SCHC provides a generic framework that enables those devices to
++   communicate on IP networks.  However, for efficient performance, some
++   parameters, Instance Configurations, and modes of operation need to
++   be set appropriately for each of the LPWAN technologies.
+
+
+Section 2. Terminology
+
+    This section defines the terminology and abbreviations used in this
+    document.  For all other definitions, please look up the SCHC
+-   specification [RFC8724].
++   specification [RFC8724] and the SCHC Architecture [DRAFT-SCHC-ARCH].
+
++   Context:  A Set of Rules (SoR) together with metadata, shared by two or
++      more Instances, as defined in [DRAFT-SCHC-ARCH].
++
++   Discriminator:  An information element (such as DevEUI or FPort range)
++      used by the Dispatcher to route SCHC Datagrams to the target Instance.
++
++   Dispatcher:  A logical component of the Endpoint that routes incoming
++      packets to the appropriate Instance based on admission rules and
++      Discriminators.
++
++   Domain:  A logical grouping of Instances that share a common set of
++      Contexts for SCHC operations, such as a LoRaWAN network domain.
++
++   Endpoint:  A logical entity that provides SCHC functionality by hosting
++      one or more SCHC Instances.
++
++   Instance:  A logical component of an Endpoint that executes SCHC
++      operations (C/D and F/R) using a specific Context and Instance
++      Configuration.
++
++   Session:  A communication session between two or more Instances that
++      share a common Context within a Domain.
++
++   Set of Rules (SoR):  The collection of C/D, F/R, and no-compression Rules
++      available to an Instance.
++
++   Set of Variables (SoV):  Runtime parameters and session variables (such
++      as fragmentation timers, retransmission counters, and window state)
++      associated with an active Session.
+
+
+Section 3. SCHC Overview
+
+-   It defines:
+-
+-   1.  Compression mechanisms to avoid transporting information known by
+-       both sender and receiver over the air.  Known information is part
+-       of the "context".  This component is called the "SCHC
+-       Compression/Decompression" (SCHC C/D).
+-
+-   2.  Fragmentation mechanisms to allow SCHC Packet transportation on a
+-       small, and potentially variable, MTU.  This component is called
+-       the "SCHC Fragmentation/Reassembly" (SCHC F/R).
+-
+-   Context exchange or pre-provisioning is out of scope of this
+-   document.
++   It defines:
++
++   1.  Compression mechanisms to avoid transporting information known by
++       both sender and receiver over the air.  Known information is part
++       of the Context (Set of Rules).  This function is called "SCHC
++       Compression/Decompression" (SCHC C/D).
++
++   2.  Fragmentation mechanisms to allow SCHC Packet transportation on a
++       small, and potentially variable, MTU.  This function is called
++       "SCHC Fragmentation/Reassembly" (SCHC F/R).
++
++   Context provisioning, distribution, and domain management are out of
++   scope of this document.
+
+-      Device                                                App
+-   +----------------+                                +----+ +----+ +----+
+-   | App1 App2 App3 |                                |App1| |App2| |App3|
+-   |                |                                |    | |    | |    |
+-   |       UDP      |                                |UDP | |UDP | |UDP |
+-   |      IPv6      |                                |IPv6| |IPv6| |IPv6|
+-   |                |                                |    | |    | |    |
+-   |SCHC C/D and F/R|                                |    | |    | |    |
+-   +--------+-------+                                +----+ +----+ +----+
+-            |  +---+     +----+    +----+    +----+     .      .      .
+-            +~ |RGW| === |NGW | == |SCHC| == |SCHC|...... Internet ....
+-               +---+     +----+    |F/R |    |C/D |
+-                                   +----+    +----+
+-   |<- - - - LoRaWAN - - ->|
+-
+-                           Figure 1: Architecture
++      Endpoint (Device)                                      App
++   +--------------------+                            +----+ +----+ +----+
++   | App1  App2   App3  |                            |App1| |App2| |App3|
++   |                    |                            |    | |    | |    |
++   |       UDP          |                            |UDP | |UDP | |UDP |
++   |      IPv6          |                            |IPv6| |IPv6| |IPv6|
++   |                    |                            |    | |    | |    |
++   |   SCHC Instance    |                            |    | |    | |    |
++   |   (C/D & F/R)      |                            |    | |    | |    |
++   +---------+----------+                            +----+ +----+ +----+
++             |  +---+     +----+    +--------------------+    .      .
++             +~ |RGW| === |NGW | == |   SCHC Endpoint    |..... Internet
++                +---+     +----+    |   (SCHC Gateway)   |
++                                    | SCHC Instance(s)   |
++                                    +--------------------+
++   |<- - - - LoRaWAN Domain - - ->|
++
++                           Figure 1: Architecture
+
+-   Figure 1 represents the architecture for compression/decompression;
+-   it is based on the terminology from [RFC8376].  The device is sending
+-   application flows using IPv6 or IPv6/UDP protocols.  These flows
+-   might be compressed by a SCHC C/D to reduce header size, and
+-   fragmented by the SCHC F/R.  The resulting information is sent on a
+-   Layer 2 (L2) frame to an LPWAN Radio Gateway (RGW) that forwards the
+-   frame to a Network Gateway (NGW).  The NGW sends the data to a SCHC
+-   F/R for reassembly, if required, then to a SCHC C/D for
+-   decompression.  The SCHC C/D shares the same rules with the device.
+-   The SCHC C/D and SCHC F/R can be located on the NGW or in another
+-   place as long as a communication is established between the NGW and
+-   the SCHC F/R, then SCHC F/R and SCHC C/D.  The SCHC C/D and SCHC F/R
+-   in the device and the SCHC gateway MUST share the same set of rules.
+-   After decompression, the packet can be sent on the Internet to one or
+-   several LPWAN Application Servers (App).
++   Figure 1 represents the architecture for compression/decompression
++   and fragmentation aligned with [DRAFT-SCHC-ARCH].  The End Device hosts
++   a SCHC Endpoint running a SCHC Instance that executes C/D and F/R
++   functions.  Application flows using IPv6 or IPv6/UDP are processed
++   by the Instance using a shared Context.  The resulting SCHC Datagram is
++   sent over a Layer 2 (L2) frame to a Radio Gateway (RGW) that forwards
++   it to a Network Gateway (NGW).  The NGW delivers the datagram to the
++   SCHC Gateway Endpoint, where a Dispatcher routes it to the target
++   SCHC Instance.  The SCHC Gateway Instance performs reassembly (F/R)
++   if required, and header decompression (C/D) using the matching Context.
++   The Instances on the Device and SCHC Gateway participate in a SCHC
++   Session within the Domain and MUST share a compatible Context (SoR).
++   After decompression, the packet is forwarded on the Internet to target
++   Application Servers (App).
+
+-   The SCHC C/D and SCHC F/R process is bidirectional, so the same
+-   principles can be applied to the other direction.
++   The SCHC Session is bidirectional, so the same principles apply in both
++   uplink and downlink directions.
+
+
+Section 4. LoRaWAN Architecture
+
+-   An overview of the LoRaWAN protocol and architecture [LORAWAN-SPEC]
+-   is described in [RFC8376].  The mapping between the LPWAN
+-   architecture entities as described in [RFC8724] and the ones in
+-   [LORAWAN-SPEC] is as follows:
+-
+-   *  Devices are LoRaWAN End Devices (e.g., sensors, actuators, etc.).
+-      There can be a very high density of devices per radio gateway
+-      (LoRaWAN gateway).  This entity maps to the LoRaWAN end device.
+-
+-   *  The RGW is the endpoint of the constrained link.  This entity maps
+-      to the LoRaWAN Gateway.
+-
+-   *  The NGW is the interconnection node between the Radio Gateway and
+-      the SCHC gateway (LoRaWAN Application Server).  This entity maps
+-      to the LoRaWAN Network Server.
+-
+-   *  The SCHC C/D and SCHC F/R are handled by the LoRaWAN Application
+-      Server.
++   An overview of the LoRaWAN protocol and architecture [LORAWAN-SPEC]
++   is described in [RFC8376].  The mapping between LoRaWAN entities
++   and the SCHC Architecture [DRAFT-SCHC-ARCH] entities is as follows:
++
++   *  Devices are LoRaWAN End Devices hosting a SCHC Endpoint with a SCHC
++      Instance. There can be a very high density of devices per Radio
++      Gateway.
++
++   *  The RGW is the endpoint of the constrained radio link (LoRaWAN Gateway).
++      It is transparent to the SCHC layer.
++
++   *  The NGW is the interconnection node between the Radio Gateway and the
++      SCHC Gateway (LoRaWAN Network Server). It passes lower-layer device
++      identifiers (DevEUI) to the SCHC Gateway.
++
++   *  The SCHC Gateway is a SCHC Endpoint hosted on the LoRaWAN Application
++      Server, executing SCHC Instances for connected End Devices.
+
+-   The SCHC C/D and SCHC F/R are performed on the LoRaWAN end device and
+-   the Application Server (called the SCHC gateway).  While the point-
+-   to-point link between the device and the Application Server
+-   constitutes a single IP hop, the ultimate endpoint of the IP
+-   communication may be an Internet node beyond the Application Server.
+-   In other words, the LoRaWAN Application Server (SCHC gateway) acts as
+-   the first-hop IP router for the device.  The Application Server and
+-   Network Server may be co-located, which effectively turns the
+-   Network/Application Server into the first-hop IP router.
++   SCHC operations are executed by SCHC Instances on the End Device and
++   the Application Server (SCHC Gateway). The point-to-point path between
++   the Device Instance and the SCHC Gateway Instance forms an implicit
++   SCHC Session across the Domain. While this path constitutes a single IP
++   hop, the ultimate destination may be an Internet node beyond the SCHC
++   Gateway. The SCHC Gateway acts as the first-hop IP router for the device.
+
+
+Section 4.2. Device Addressing
+
+-  +--------+         +---------+        +---------+          +----------+
+-  | Device | <=====> | Network | <====> | SCHC    | <======> | Internet |
+-  |        | DevAddr | Gateway | DevEUI | Gateway | IPv6/UDP |          |
+-  +--------+         +---------+        +---------+          +----------+
+-
+-                       Figure 4: LoRaWAN Addresses
++  +----------+         +---------+        +----------+          +----------+
++  | Endpoint | <=====> | Network | <====> | Endpoint | <======> | Internet |
++  | (Device) | DevAddr | Gateway | DevEUI | (Gateway)| IPv6/UDP |          |
++  +----------+         +---------+        +----------+          +----------+
++
++                       Figure 4: LoRaWAN Addresses
+
+    To communicate with the SCHC gateway, the Network Gateway MUST
+    identify the devices by a unique 64-bit device identifier called the
+-   "DevEUI".
++   "DevEUI". On the SCHC Gateway Endpoint, the Dispatcher uses the DevEUI
++   as a primary Discriminator to route incoming Datagrams to the correct
++   SCHC Instance.
+
+
+Section 5.1. LoRaWAN FPort and RuleID
+
+    The FPort field is part of the SCHC Message, as shown in Figure 5.
+    The SCHC C/D and the SCHC F/R SHALL concatenate the FPort field with
+    the LoRaWAN payload to recompose the SCHC Message.
+
+    | FPort | LoRaWAN payload  |
+    + ------------------------ +
+    |       SCHC Message       |
+
+                      Figure 5: SCHC Message in LoRaWAN
+
+-   All RuleIDs can use arbitrary values inside the FPort range allowed
+-   by the LoRaWAN specification [LORAWAN-SPEC] and MUST be shared by the
+-   device and SCHC gateway prior to the communication with the selected
+-   rule.  The uplink and downlink fragmentation FPorts MUST be
+-   different.
++   All RuleIDs can use arbitrary values inside the FPort range allowed
++   by the LoRaWAN specification [LORAWAN-SPEC] and MUST be part of the
++   Context shared between the Device Instance and the SCHC Gateway Instance
++   prior to communication. The uplink and downlink fragmentation FPorts
++   MUST be different. When an End Device communicates with multiple SCHC
++   Gateway Instances, distinct sets of FPort values are assigned to each
++   SCHC Gateway Instance, serving as a secondary Discriminator element for
++   the Dispatcher.
+
+
+Section 5.2. RuleID Management
+
+-   An application can have multiple fragmented datagrams between a
+-   device and one or several SCHC gateways.  A set of FPort values is
+-   REQUIRED for each SCHC gateway instance the device is required to
+-   communicate with.  The application can use additional uplinks or
+-   downlink-fragmented parameters but SHALL implement at least the
+-   parameters defined in this document.
++   An application can have multiple fragmented datagrams between a
++   device and one or several SCHC gateways.  A set of FPort values is
++   REQUIRED for each SCHC Gateway Instance the device is required to
++   communicate with. The FPort set acts as a Discriminator for Instance
++   selection by the Dispatcher. The application can use additional
++   fragmentation parameters but SHALL implement at least the parameters
++   defined in this document.
+
+
+Section 5.6. Fragmentation
+
+-   The fragmentation parameters are different for uplink- and downlink-
+-   fragmented datagrams and are successively described in the next
+-   sections.
++   The fragmentation parameters and runtime state (Set of Variables, SoV)
++   are different for uplink- and downlink-fragmented Sessions and are
++   successively described in the next sections.

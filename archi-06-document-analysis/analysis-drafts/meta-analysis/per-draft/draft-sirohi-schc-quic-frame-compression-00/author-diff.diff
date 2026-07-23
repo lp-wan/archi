@@ -1,0 +1,805 @@
+# Author-facing consolidated migration diff for draft-sirohi-schc-quic-frame-compression-00
+
+Source: copied from the most complete available terminology migration diff (Gemini). Consolidated analysis records any source disagreements.
+
+--- draft-sirohi-schc-quic-frame-compression-00.txt
++++ draft-sirohi-schc-quic-frame-compression-00-migrated.txt
+@@ -14,18 +14,18 @@
+ Abstract
+ 
+    This document explores whether Static Context Header Compression
+-   (SCHC) can be applied to the metadata carried in QUIC frames.  QUIC
++   (SCHC) can be applied to the metadata carried in QUIC frames.  QUIC
+    already uses compact frame encodings and variable-length integers, so
+    any compressed representation has to recover enough bytes to pay for
+    its own integration overhead.  The document compares several possible
+-   organizations for SCHC rules, discusses how frame compression could
++   organizations for SCHC Rules, discusses how frame compression could
+    be integrated, and analyzes representative STREAM and ACK frame
+    examples.
+ 
+    The analysis suggests that SCHC compression of QUIC frames is
+-   technically possible, but that generic or base rules are likely to
++   technically possible, but that generic or base Rules are likely to
+    provide only modest savings at best.  More substantial savings
+-   require predictable traffic, pre-provisioned or negotiated rules,
++   require predictable traffic, pre-provisioned or negotiated Rules,
+    bundling of several frames under one rule, or a negotiated QUIC
+    payload syntax with low per-packet overhead.  This document is
+    exploratory.  It does not define an interoperable QUIC extension,
+@@ -131,18 +131,18 @@
+ 1.  Introduction
+ 
+    QUIC [RFC9000] provides a secure, reliable, multiplexed transport
+    over UDP.  QUIC packets carry one or more frames in the packet
+    payload.  Those frames carry application data, acknowledgments, flow-
+    control updates, and other transport information.
+ 
+    QUIC frame encodings are already compact.  Most core frame types fit
+    in one byte, and integer fields are encoded using QUIC variable-
+    length integers.  This makes QUIC efficient for general Internet use,
+    but frame metadata can still matter when packets are small or when
+    every transmitted byte has high cost.  Examples include constrained
+    links, specialized machine-to-machine deployments, and space
+    communication scenarios.
+ 
+-   SCHC [RFC8724] compresses protocol fields using rules shared by the
+-   sender and receiver.  A rule can remove fields that are fixed,
+-   predictable, or known from a static context.  Only the residual
+-   values that cannot be inferred by the decompressor have to be sent.
++   SCHC [RFC8724] compresses protocol fields using Rules shared by the
++   compressing and decompressing Instances.  A Rule can remove fields that are fixed,
++   predictable, or known from a static Context.  Only the residual
++   values that cannot be inferred by the decompressor have to be sent.
+ 
+    This document explores applying SCHC to QUIC frame metadata.  The
+    term "frame metadata" includes QUIC Frame Types and frame-specific
+    fields such as Stream ID, Offset, Length, Largest Acknowledged, ACK
+    Delay, and ACK ranges.  Application data carried by STREAM frames is
+    not compressed by the mechanisms considered here.
+ 
+    The scope is intentionally exploratory.  The document asks when SCHC
+-   can reduce QUIC frame overhead enough to justify the required changes
+-   to QUIC packet construction, parsing, context management, and
+-   implementation complexity.  It does not define a QUIC extension, a
+-   SCHC profile for QUIC frames, a transport parameter, or any final
+-   wire format.
++   can reduce QUIC frame overhead enough to justify the required changes
++   to QUIC packet construction, parsing, Context management, and
++   implementation complexity.  It does not define a QUIC extension, a
++   SCHC profile for QUIC frames, a transport parameter, or any final
++   wire format.
+ 
+ 2.  Background and Scope
+ 
+ 2.1.  QUIC Frames
+@@ -190,26 +190,26 @@
+ 2.2.  SCHC
+ 
+-   SCHC defines a rule-based compression framework.  A SCHC rule
+-   contains field descriptors, matching operators, target values, and
+-   compression/decompression actions.  The sender selects a rule that
+-   matches a packet or header description, sends a Rule ID and any
+-   required residue, and the receiver reconstructs the original fields
+-   using the same rule.
++   SCHC defines a rule-based compression framework.  A SCHC Rule
++   contains field descriptors, matching operators, target values, and
++   compression/decompression actions (CDAs).  The compressing Instance selects a Rule that
++   matches a packet or header description, sends a RuleID and any
++   required residue (forming a SCHC Datagram), and the decompressing Instance reconstructs the original fields
++   using the same Rule.
+ 
+-   SCHC is designed for environments where both endpoints share a static
+-   context.  That context can be provisioned, configured, or otherwise
+-   agreed before compression is used.  The SCHC YANG data model
+-   [RFC9363] and management approaches such as
+-   [I-D.toutain-schc-coreconf-management] are relevant building blocks
+-   for deployments that need managed SCHC contexts.
++   SCHC is designed for environments where both Endpoints host Instances that share a static
++   Context.  That Context can be provisioned, configured, or otherwise
++   agreed before compression is used.  The SCHC YANG data model
++   [RFC9363] and management approaches such as
++   [I-D.toutain-schc-coreconf-management] are relevant building blocks
++   for deployments that need managed SCHC Contexts.
+ 
+-   RFC 8724 defines SCHC compression for IPv6 and UDP headers and the
+-   generic SCHC rule model.  It does not define field descriptors or
+-   compression behavior for QUIC frames.  Applying SCHC to QUIC frames
+-   would therefore require a QUIC-specific profile or an equivalent set
+-   of deployment rules.
++   RFC 8724 defines SCHC compression for IPv6 and UDP headers and the
++   generic SCHC Rule model.  It does not define field descriptors or
++   compression behavior for QUIC frames.  Applying SCHC to QUIC frames
++   would therefore require a QUIC-specific profile or an equivalent set
++   of deployment Rules.
+ 
+    The related draft [I-D.sirohi-schc-quic-compression] discusses
+    applying SCHC to accessible outer packet fields, including IP, UDP,
+    and QUIC header fields.  This document focuses on the inner QUIC
+    frame sequence that becomes visible only inside participating QUIC
+-   endpoints.
++   Endpoints.
+ 
+ 2.3.  Scope and Assumptions
+ 
+    The examples and discussion in this document use the following
+    assumptions:
+ 
+-   *  compression is performed inside participating QUIC endpoints;
++   *  compression is performed inside participating QUIC Endpoints;
+ 
+    *  frame compression occurs before QUIC payload encryption;
+ 
+    *  frame decompression occurs after QUIC payload decryption;
+ 
+    *  compressed bytes remain protected by normal QUIC packet
+       protection;
+ 
+    *  application data compression is out of scope;
+ 
+    *  the main examples are STREAM and ACK frames; and
+ 
+    *  packets that cannot be compressed profitably can be sent using
+       ordinary QUIC frame encoding.
+ 
+    The document does not assume that a compressor can read encrypted
+    QUIC frames in the network.  It also does not assume that a SCHC rule
+-   can change QUIC transport semantics.  After decompression, the
+-   receiver has to process the reconstructed logical frames as ordinary
+-   QUIC frames.
++   can change QUIC transport semantics.  After decompression, the
++   decompressing Instance has to process the reconstructed logical frames as ordinary
++   QUIC frames.
+ 
+ 3.  Problem Statement
+ 
+    QUIC frame compression is not equivalent to ordinary network-layer
+    header compression.  Several properties make it harder to apply SCHC
+    efficiently.
+ 
+    First, a QUIC packet can contain multiple frames.  The frame sequence
+    can vary from packet to packet, and frames can appear in different
+    orders.  A single packet might contain only a STREAM frame, only an
+    ACK frame, an ACK followed by a STREAM frame, multiple STREAM frames,
+    control frames, or padding.
+ 
+    Second, some important frame syntaxes are optional or variable.
+    STREAM frames can include or omit Offset and Length fields.  ACK
+    frames can contain a variable number of acknowledgment ranges.
+    Control frames often carry values whose meaning depends on the
+-   current connection state.
++   current Session state.
+ 
+    Third, QUIC already compresses small fields by design.  A one-byte
+    Frame Type and a one-byte variable-length integer leave little
+    redundancy for a general-purpose compression scheme to remove.  If a
+-   compressed representation has to carry a QUIC extension Frame Type, a
+-   length, and a Rule ID, those bytes can consume the expected savings.
++   compressed representation has to carry a QUIC extension Frame Type, a
++   length, and a RuleID, those bytes can consume the expected savings.
+ 
+-   Fourth, the rule-selection problem is non-trivial.  A sender can
+-   choose a rule for a complete frame sequence, for each frame, for a
+-   generic frame shape, or for a deployment-specific traffic pattern.
+-   Each choice changes both the achievable compression and the
+-   robustness of the design.
++   Fourth, the Rule-matching process is non-trivial.  A compressing Instance can
++   choose a Rule for a complete frame sequence, for each frame, for a
++   generic frame shape, or for a deployment-specific traffic pattern.
++   Each choice changes both the achievable compression and the
++   robustness of the design.
+ 
+    The central question is therefore:
+ 
+       Under which assumptions can SCHC reduce QUIC frame overhead enough
+-      to justify the required integration and implementation complexity?
++      to justify the required integration and implementation complexity?
+ 
+    This document does not attempt to answer that question for every
+    deployment.  Instead, it identifies design options, explains their
+    costs, and gives representative size calculations.
+ 
+ 4.  Possible Compression Organizations
+ 
+ 4.1.  One Rule for the Complete Frame Sequence
+ 
+-   One approach is to define a SCHC rule for a complete expected
+-   sequence of frames in one QUIC packet payload.  Examples include:
++   One approach is to define a SCHC Rule for a complete expected
++   sequence of frames in one QUIC packet payload.  Examples include:
+ 
+    *  a packet containing exactly one STREAM frame;
+ 
+    *  a packet containing exactly one ACK frame;
+ 
+    *  a packet containing an ACK followed by one STREAM frame; and
+ 
+    *  a packet containing a fixed sequence of several STREAM frames.
+ 
+    This approach can provide high compression when traffic is
+-   predictable.  The selected rule can imply the number of frames, their
+-   order, their Frame Types, and the presence or absence of optional
+-   fields.  A single Rule ID can replace several ordinary Frame Types
+-   and can also remove repeated or derived values.
++   predictable.  The selected Rule can imply the number of frames, their
++   order, their Frame Types, and the presence or absence of optional
++   fields.  A single RuleID can replace several ordinary Frame Types
++   and can also remove repeated or derived values.
+ 
+-   For example, a rule for "ACK followed by STREAM on a known stream"
+-   can elide the ACK Range Count when it is known to be zero, elide the
+-   STREAM Frame Type, elide the known Stream ID, and use the remaining
+-   packet length to derive the STREAM Length.  The fixed rule overhead
+-   is shared across both logical frames.
++   For example, a Rule for "ACK followed by STREAM on a known stream"
++   can elide the ACK Range Count when it is known to be zero, elide the
++   STREAM Frame Type, elide the known Stream ID, and use the remaining
++   packet length to derive the STREAM Length.  The fixed Rule overhead
++   is shared across both logical frames.
+ 
+-   Complete-sequence rules are therefore most attractive for controlled
+-   traffic with stable packet shapes.  They are less attractive for
+-   general QUIC traffic, where scheduling, congestion control, loss
+-   recovery, and application behavior can change the frame sequence
+-   dynamically.
++   Complete-sequence Rules are therefore most attractive for controlled
++   traffic with stable packet shapes.  They are less attractive for
++   general QUIC traffic, where scheduling, congestion control, loss
++   recovery, and application behavior can change the frame sequence
++   dynamically.
+ 
+ 4.2.  One Rule per Frame
+ 
+-   A second approach is to compress each QUIC frame independently.  A
+-   STREAM rule compresses a STREAM frame, an ACK rule compresses an ACK
+-   frame, and so on.  The compressed packet payload is then a sequence
+-   of compressed-frame encodings.
++   A second approach is to compress each QUIC frame independently.  A
++   STREAM Rule compresses a STREAM frame, an ACK Rule compresses an ACK
++   frame, and so on.  The compressed packet payload is then a sequence
++   of compressed-frame encodings.
+ 
+-   This approach gives better rule reuse.  The same STREAM rule can be
+-   used regardless of whether the packet also carries an ACK frame or a
+-   control frame.  Frame ordering remains flexible, and the rule set
+-   does not need a separate rule for every complete packet shape.
++   This approach gives better Rule reuse.  The same STREAM Rule can be
++   used regardless of whether the packet also carries an ACK frame or a
++   control frame.  The Set of Rules (SoR) does not need a separate Rule for every complete packet shape.
+ 
+-   The cost is per-frame overhead.  Each compressed frame needs enough
+-   information for the receiver to identify the rule and find the next
+-   compressed or native frame.  That usually implies a Rule ID and
+-   either an explicit length, an implicit fixed size, or a rule-specific
+-   delimiter.
++   The cost is per-frame overhead.  Each compressed frame needs enough
++   information for the decompressing Instance to identify the Rule and find the next
++   compressed or native frame.  That usually implies a RuleID and
++   either an explicit length, an implicit fixed size, or a Rule-specific
++   delimiter.
+ 
+    For small frames, this overhead can exceed the removed bytes.  For
+-   example, a one-byte Rule ID used to remove a one-byte Frame Type does
+-   not help if an additional delimiter is also required.  A per-frame
+-   approach is therefore flexible but often weak for isolated small
+-   frames.
++   example, a one-byte RuleID used to remove a one-byte Frame Type does
++   not help if an additional delimiter is also required.  A per-frame
++   approach is therefore flexible but often weak for isolated small
++   frames.
+ 
+ 4.3.  Generic Frame Rules
+ 
+-   A conservative baseline is to define generic rules that preserve most
+-   values and remove only fields that are constant or structurally
+-   predictable.  For example, a generic STREAM rule might imply the
+-   STREAM frame variant while still carrying the Stream ID, Offset,
+-   Length, and data.  A generic ACK rule might remove a zero ACK Range
+-   Count only when the rule explicitly matches that case.
++   A conservative baseline is to define generic Rules that preserve most
++   values and remove only fields that are constant or structurally
++   predictable.  For example, a generic STREAM Rule might imply the
++   STREAM frame variant while still carrying the Stream ID, Offset,
++   Length, and data.  A generic ACK Rule might remove a zero ACK Range
++   Count only when the Rule explicitly matches that case.
+ 
+-   Generic rules require few deployment assumptions.  They can operate
+-   using static context only and can support a broad set of connections.
+-   They are also easier to reason about because most QUIC values are
+-   still transmitted directly.
++   Generic Rules require few deployment assumptions.  They can operate
++   using static Context only and can support a broad set of connections.
++   They are also easier to reason about because most QUIC values are
++   still transmitted directly.
+ 
+-   The downside is modest compression.  If the rule only removes a one-
+-   byte Frame Type but the compressed representation adds a Rule ID and
+-   a length, the packet becomes larger.  Generic rules are useful as an
+-   evaluation baseline, but they are unlikely to justify a QUIC
+-   extension by themselves.
++   The downside is modest compression.  If the Rule only removes a one-
++   byte Frame Type but the compressed representation adds a RuleID and
++   a length, the packet becomes larger.  Generic Rules are useful as an
++   evaluation baseline, but they are unlikely to justify a QUIC
++   extension by themselves.
+ 
+ 4.4.  Traffic-Specific or Stateful Rules
+ 
+-   More aggressive rules can exploit information that is known in a
+-   particular deployment.  Possible examples include:
++   More aggressive Rules can exploit information that is known in a
++   particular deployment.  Possible examples include:
+ 
+    *  known Stream IDs for long-lived application streams;
+ 
+    *  predictable STREAM offsets;
+ 
+    *  known or derived STREAM lengths;
+ 
+    *  ACK Range Count equal to zero;
+ 
+    *  fixed ACK Delay encodings;
+ 
+    *  delta encoding of Largest Acknowledged;
+ 
+    *  ECN counters derived from packet numbers in controlled
+       deployments; and
+ 
+-   *  values derived from earlier frames in the same compressed
+-      container.
++   *  values derived from earlier frames in the same compressed
++      container.
+ 
+-   These rules can provide better compression, but the assumptions have
+-   to remain true at the receiver.  If a value is derived from prior
+-   packet state, the design has to remain correct when packets are lost,
+-   reordered, duplicated, or retransmitted.  That is difficult for QUIC
+-   because packet delivery order is not guaranteed and QUIC recovery
+-   retransmits information rather than retransmitting the same packet
+-   bytes [RFC9002].
++   These Rules can provide better compression, but the assumptions have
++   to remain true at the decompressing Instance.  If a value is derived from prior
++   packet or Session state (stored in the Set of Variables (SoV)), the design has to remain correct when packets are lost,
++   reordered, duplicated, or retransmitted.  That is difficult for QUIC
++   because packet delivery order is not guaranteed and QUIC recovery
++   retransmits information rather than retransmitting the same packet
++   bytes [RFC9002].
+ 
+-   Deriving values inside one compressed container is usually safer than
+-   deriving values across packets.  For example, the offset of a second
+-   STREAM fragment in the same container can be computed from the first
+-   fragment's offset and length.  That information arrives atomically
+-   after decryption of the same packet.
++   Deriving values inside one compressed container is usually safer than
++   deriving values across packets.  For example, the offset of a second
++   STREAM fragment in the same container can be computed from the first
++   fragment's offset and length.  That information arrives atomically
++   after decryption of the same packet.
+ 
+-   Stateful compression can improve the compression ratio, but it adds
+-   state synchronization, fallback behavior, and error handling.  It is
+-   most plausible in closed deployments that can bound reordering and
+-   loss behavior or that already maintain synchronized compression
+-   state.
++   Stateful compression can improve the compression ratio, but it adds
++   state synchronization (resynchronizing the Set of Variables (SoV)), fallback behavior, and error handling.  It is
++   most plausible in closed deployments that can bound reordering and
++   loss behavior or that already maintain synchronized compression
++   state.
+ 
+ 5.  Integration with QUIC
+ 
+-   This section describes three possible ways to integrate SCHC frame
+-   compression with QUIC.  They are alternatives for analysis, not
+-   protocol definitions.
++   This section describes three possible ways to integrate SCHC frame
++   compression with QUIC.  They are alternatives for analysis, not
++   protocol definitions.
+ 
+ 5.1.  Negotiated Alternative Packet-Payload Syntax
+ 
+    The most efficient approach is to negotiate an alternative syntax for
+    eligible QUIC packet payloads.  After negotiation, selected 1-RTT
+-   packet payloads would contain a SCHC representation instead of the
+-   ordinary sequence of QUIC frames.  The first field in the protected
+-   payload could be a Rule ID that identifies the complete frame
+-   sequence or an uncompressed escape format.
++   packet payloads would contain a SCHC Datagram instead of the
++   ordinary sequence of QUIC frames.  The first field in the protected
++   payload could be a RuleID that identifies the complete frame
++   sequence or an uncompressed escape format.
+ 
+    This approach has low per-packet overhead.  The Rule ID can replace
+-   the ordinary first Frame Type, and no extension Frame Type is needed.
+-   If the rule describes the complete protected payload, no container
+-   length is needed either.  This gives the best theoretical compression
+-   and makes complete-sequence rules more attractive.
++   the ordinary first Frame Type, and no extension Frame Type is needed.
++   If the Rule describes the complete protected payload, no container
++   length is needed either.  This gives the best theoretical compression
++   and makes complete-sequence Rules more attractive.
+ 
+-   A reserved Rule ID could identify an uncompressed frame sequence.
+-   That would provide a simple escape path while keeping the alternative
+-   syntax active.  However, the negotiation, context activation, and
+-   error handling would still have to be specified precisely.
++   A reserved RuleID could identify an uncompressed frame sequence.
++   That would provide a simple escape path while keeping the alternative
++   syntax active.  However, the negotiation, Context activation, and
++   error handling would still have to be specified precisely.
+ 
+ 5.2.  Generic Compressed-Frame Extension
+ 
+    A less invasive option is to define a QUIC extension frame that
+    encapsulates one or more compressed frames.  A packet could contain
+    ordinary QUIC frames, a compressed-frame container, or both.  The
+-   container body would include a Rule ID and any compression residue.
++   container body would include a RuleID and any compression residue, forming a SCHC Datagram.
+ 
+-   A conceptual format is:
+-
+-   +=======================+==================+====================+
+-   | Extension Frame Type  | Container Length | SCHC Representation|
+-   +=======================+==================+====================+
++   The Extension Frame Type and Container Length act as a Control Header placed before the RuleID of the SCHC Datagram. A conceptual format is:
++
++   +==========================================+====================+
++   |              Control Header              |   SCHC Datagram    |
++   +=======================+==================+==========+=========+
++   | Extension Frame Type  | Container Length |  RuleID  | Residue |
++   +=======================+==================+==========+=========+
+ 
+    This approach fits the existing QUIC frame parser model.  Unknown
+-   extension frames can be handled using ordinary QUIC extension rules
+-   when negotiation has not enabled the feature.  Native and compressed
+-   frames can coexist, and a sender can use the compressed container
+-   only when it is smaller than the ordinary encoding.
++   extension frames can be handled using ordinary QUIC extension rules
++   when negotiation has not enabled the feature.  Native and compressed
++   frames can coexist, and a compressing Instance can use the compressed container
++   only when it is smaller than the ordinary encoding.
+ 
+    The cost is overhead.  The extension Frame Type consumes at least one
+    byte and possibly more, depending on the assigned codepoint.  The
+    container needs a length unless it is constrained to consume the rest
+-   of the packet.  The SCHC representation also needs a Rule ID or an
+-   equivalent rule selector.
++   of the packet.  The SCHC Datagram also needs a RuleID.
+ 
+    This design can amortize the overhead when several frames are
+    compressed together.  It is weaker for a single small frame, where
+    the extension Frame Type, length, and Rule ID may cost as much as the
+    original frame metadata.
+ 
+ 5.3.  Extension Frame per Compressed Frame Type
+ 
+    A third option is to allocate distinct QUIC extension Frame Types for
+    specific compressed frame shapes.  For example, one extension Frame
+    Type could mean "compressed STREAM with known Stream ID and no
+    explicit length", while another could mean "compressed single-range
+    ACK".
+ 
+    This approach makes frame semantics clearer.  The extension Frame
+-   Type itself can act as a compact rule selector, so an additional Rule
+-   ID might not be needed for simple cases.  A parser can also know the
+-   basic shape immediately from the Frame Type.
++   Type itself can act as a Dispatcher Discriminator and a compact RuleID selector, so an additional RuleID
++   might not be needed for simple cases.  A parser can also know the
++   basic shape immediately from the Frame Type.
+ 
+-   The drawbacks are significant.  Many rule variants would require many
+-   codepoints, and extension Frame Types above 63 require at least two
+-   bytes in QUIC variable-length integer encoding.  If the compressed
+-   Frame Type itself occupies two bytes, the savings for already-small
+-   frames can disappear.
++   The drawbacks are significant.  Many Rule variants would require many
++   codepoints, and extension Frame Types above 63 require at least two
++   bytes in QUIC variable-length integer encoding.  If the compressed
++   Frame Type itself occupies two bytes, the savings for already-small
++   frames can disappear.
+ 
+ 6.  Implementation Architectures
+ 
+ 6.1.  Unified SCHC Compressor
+ 
+-   One logical SCHC context could describe IP, UDP, accessible QUIC
+-   header fields, and inner QUIC frames.  In principle, a single rule
+-   could represent a complete packet pattern across several layers.
+-   This could provide cross-layer optimization and avoid duplicated
+-   context decisions.
++   One logical SCHC Context could describe IP, UDP, accessible QUIC
++   header fields, and inner QUIC frames.  In principle, a single Rule
++   could represent a complete packet pattern across several layers.
++   This could provide cross-layer optimization and avoid duplicated
++   Context decisions. In the terminology of the SCHC Architecture, this corresponds
++   to a single SCHC Instance on a SCHC Endpoint whose Context spans multiple
++   Strata (IP, UDP, QUIC headers, and QUIC frames).
+ 
+    The main difficulty is placement.  QUIC frame bytes are encrypted,
+    while IP, UDP, and accessible QUIC header fields are outside the
+    encrypted payload.  A compressor that operates on all fields at once
+    has to be tightly coupled to QUIC packet construction, QUIC packet
+    protection, and lower-layer encapsulation.
+ 
+-   This model may be useful for tightly integrated endpoints in a
+-   specialized stack.  It is likely difficult to reuse in ordinary QUIC
+-   implementations because it crosses the QUIC encryption boundary.
++   This model may be useful for tightly integrated Endpoints in a
++   specialized stack.  It is likely difficult to reuse in ordinary QUIC
++   implementations because it crosses the QUIC encryption boundary.
+ 
+ 6.2.  Separate Inner and Outer Compressors
+ 
+-   A more practical model is to use separate compressors:
+-
+-   *  an inner compressor inside QUIC handles frames before payload
+-      encryption; and
+-
+-   *  an outer compressor handles IP, UDP, and accessible QUIC header
+-      fields after packet construction.
++   A more practical model is to use separate SCHC Instances or Endpoints:
++
++   *  an inner SCHC Instance (operating at the QUIC frame Stratum) inside QUIC
++      handles frames before payload encryption; and
++
++   *  an outer SCHC Instance (operating at the IP/UDP/QUIC header Stratum)
++      handles IP, UDP, and accessible QUIC header fields after packet construction.
+ 
+-   The inner compressor sees logical QUIC frame objects or plaintext
+-   frame bytes.  The outer compressor sees only fields that are visible
+-   outside QUIC packet protection.  Each compressor has its own rule
+-   set, Rule IDs, and error handling.
++   The inner Instance sees logical QUIC frame objects or plaintext
++   frame bytes.  The outer Instance sees only fields that are visible
++   outside QUIC packet protection.  Each Instance has its own Context,
++   RuleID space, and error handling. Under the SCHC Architecture, these are
++   represented as two separate Endpoints (or two Instances) operating on
++   different Strata on the same physical equipment, maintaining separate Sessions.
+ 
+-   This separation matches the security boundary.  It also allows
+-   existing SCHC implementations for IP and UDP to be reused more
+-   easily.  The cost is that cross-layer optimization becomes harder
+-   because the inner and outer compressors make separate decisions.
++   This separation matches the security boundary.  It also allows
++   existing SCHC implementations for IP and UDP to be reused more
++   easily.  The cost is that cross-layer optimization becomes harder
++   because the inner and outer Instances make separate decisions.
+ 
+-   This split architecture appears to be the most practical
+-   implementation model for experimentation.
++   This split architecture of separate Endpoints operating at different Strata appears to be
++   the most practical implementation model for experimentation.
+ 
+ 7.  Example Compression Analysis
+ 
+    Unless otherwise stated, the examples use the following sizing
+    assumptions:
+ 
+    *  QUIC variable-length integers use their shortest valid encoding;
+ 
+-   *  a generic compressed-frame extension Frame Type occupies one byte;
++   *  a generic compressed-frame extension Frame Type (Control Header field) occupies one byte;
+ 
+-   *  a container length occupies one byte when the container body
+-      length is at most 63 bytes and two bytes otherwise;
++   *  a container length (Control Header field) occupies one byte when the container body
++      length is at most 63 bytes and two bytes otherwise;
+ 
+-   *  a SCHC Rule ID occupies one byte;
++   *  a SCHC RuleID occupies one byte;
+ 
+-   *  a negotiated alternative packet-payload syntax carries one Rule
+-      ID;
++   *  a negotiated alternative packet-payload syntax carries one RuleID;
+ 
+    *  a terminal container consumes the rest of the packet and therefore
+       omits an explicit container length; and
+ 
+    *  application data bytes are unchanged.
+@@ -712,18 +712,18 @@
+                Table 1: Representative STREAM Metadata Sizes
+ 
+-   The generic extension is larger in these examples because it
+-   preserves most values while adding an extension Frame Type, a
+-   container length, and a Rule ID.  It removes little or no metadata
+-   that QUIC has not already encoded compactly.
++   The generic extension is larger in these examples because it
++   preserves most values while adding an extension Frame Type and container
++   length (as a Control Header) and a RuleID.  It removes little or no metadata
++   that QUIC has not already encoded compactly.
+ 
+    The traffic-specific extension becomes useful when it can remove a
+    multi-byte Stream ID or other fields.  For a known four-byte Stream
+    ID and a 64-byte terminal STREAM payload, the native metadata is 5
+    bytes and the compressed extension overhead is 4 bytes.  The saving
+    is only 1 byte because the 64-byte stream data makes the container
+    length require two bytes.
+ 
+    The alternative packet-payload syntax is more efficient because it
+-   avoids the extension Frame Type and container length.  If the rule
+-   identifies a known Stream ID and the data consumes the remainder of
+-   the packet payload, a single Rule ID can represent the frame
+-   metadata.  This gives better compression, but it requires a deeper
+-   change to QUIC payload parsing.
++   avoids the extension Frame Type and container length Control Header.  If the Rule
++   identifies a known Stream ID and the data consumes the remainder of
++   the packet payload, a single RuleID can represent the frame
++   metadata.  This gives better compression, but it requires a deeper
++   change to QUIC payload parsing.
+ 
+-   STREAM offsets are sensitive to state assumptions.  Sending an Offset
+-   residue can still save bytes when the Stream ID is known.  Deriving
+-   an Offset from previous packets is unsafe without additional
+-   synchronization because QUIC packets can be lost and reordered.
+-   Deriving an Offset from earlier STREAM fragments in the same
+-   compressed container is safer because the reference information is
+-   carried in the same protected payload.
++   STREAM offsets are sensitive to state assumptions.  Sending an Offset
++   residue can still save bytes when the Stream ID is known.  Deriving
++   an Offset from previous packets (via the Set of Variables (SoV)) is unsafe without additional
++   synchronization because QUIC packets can be lost and reordered.
++   Deriving an Offset from earlier STREAM fragments in the same
++   compressed container is safer because the reference information is
++   carried in the same protected payload.
+ 
+ 7.2.  ACK Frames
+@@ -817,11 +817,11 @@
+    The first row illustrates the main problem for ACK compression.  A
+    small native ACK is already close to the minimum size.  An extension
+    container can remove the zero ACK Range Count and derive First ACK
+-   Range from Largest Acknowledged, but the extension Frame Type,
+-   length, and Rule ID consume the savings.
++   Range from Largest Acknowledged, but the extension Frame Type,
++   length, and RuleID consume the savings.
+ 
+    ACK compression becomes more attractive when the integration overhead
+    is lower or when several frames are compressed together.  It can also
+-   be useful when deployment-specific rules make ACK fields derivable.
++   be useful when deployment-specific Rules make ACK fields derivable.
+    However, ACK values are dynamic and are tied to QUIC loss detection
+    and RTT estimation.  Any reconstructed ACK has to be semantically
+    equivalent to the ACK that would have been sent natively.
+ 
+    Multi-range ACKs are harder to compress generically.  The number of
+    ranges and the Gap and ACK Range Length values vary with loss and
+-   reordering.  A rule that fixes the number of ranges can save a small
+-   amount of structure, but a generic rule usually has to transmit the
++   reordering.  A Rule that fixes the number of ranges can save a small
++   amount of structure, but a generic Rule usually has to transmit the
+    range list.
+ 
+@@ -845,9 +845,9 @@
+ 7.3.  Net Savings
+ 
+    Every analysis has to count all compression overhead.  Relevant
+    overhead includes:
+ 
+-   *  the Rule ID or equivalent rule selector;
++   *  the RuleID or equivalent Rule selector;
+ 
+    *  any QUIC extension Frame Type;
+ 
+    *  a container length or delimiter;
+ 
+    *  per-frame delimiters when several compressed frames are
+       independent;
+ 
+-   *  residue fields that are not inferred by the rule;
++   *  residue fields that are not inferred by the Rule;
+ 
+    *  padding or byte alignment introduced by the profile; and
+ 
+    *  any fallback marker for uncompressed frame sequences.
+@@ -926,11 +926,11 @@
+    The ACK-plus-STREAM examples show why bundling matters.  One
+-   extension Frame Type, one length, and one Rule ID can represent both
+-   logical frames.  The fixed overhead is amortized, and the rule can
+-   remove fields from both frames.
++   extension Frame Type, one length, and one RuleID can represent both
++   logical frames.  The fixed overhead is amortized, and the Rule can
++   remove fields from both frames.
+ 
+    The alternative payload syntax gives the best byte savings because it
+    has the lowest integration overhead.  It is also the most invasive
+    option because it changes how protected QUIC payloads are
+    interpreted.
+ 
+    These examples do not include processing cost.  A sender still has to
+-   identify candidate rules, evaluate matches, compute residues, and
+-   compare the compressed size with the native encoding.  If the sender
+-   then falls back to native QUIC, wire savings are zero but rule
+-   evaluation cost has already been paid.
++   identify candidate Rules, evaluate matches, compute residues, and
++   compare the compressed size with the native encoding.  If the sender
++   then falls back to native QUIC, wire savings are zero but Rule
++   evaluation cost has already been paid.
+ 
+ 8.  Discussion and Conclusions
+ 
+-   SCHC compression of QUIC frames is technically possible when
+-   compression and decompression are integrated into the QUIC endpoints.
+-   The compressed representation can be protected by normal QUIC packet
+-   protection because compression occurs before encryption and
+-   decompression occurs after decryption.
++   SCHC compression of QUIC frames is technically possible when
++   compression and decompression are integrated into the QUIC Endpoints.
++   The compressed representation (SCHC Datagram) can be protected by normal QUIC packet
++   protection because compression occurs before encryption and
++   decompression occurs after decryption.
+ 
+-   Generic static rules are likely to provide modest savings at best.
+-   QUIC already encodes small Frame Types and integer values compactly,
+-   and a compressed extension has to pay for its own Frame Type, length,
+-   and Rule ID.  For small isolated frames, the compressed
+-   representation can be the same size as native QUIC or larger.
++   Generic static Rules are likely to provide modest savings at best.
++   QUIC already encodes small Frame Types and integer values compactly,
++   and a compressed extension has to pay for its own Frame Type, length,
++   and RuleID.  For small isolated frames, the compressed
++   representation can be the same size as native QUIC or larger.
+ 
+-   Extension-frame approaches are easier to deploy incrementally because
+-   ordinary and compressed frames can coexist.  Their fixed overhead is
+-   the main limitation.  They become more attractive when several
+-   logical frames are compressed together or when a rule removes a
+-   multi-byte field such as a known Stream ID.
++   Extension-frame approaches are easier to deploy incrementally because
++   ordinary and compressed frames can coexist.  Their fixed overhead is
++   the main limitation.  They become more attractive when several
++   logical frames are compressed together or when a Rule removes a
++   multi-byte field such as a known Stream ID.
+ 
+    A negotiated alternative packet-payload syntax offers better
+    compression because it avoids an extension Frame Type and often
+    avoids a container length.  It also requires deeper QUIC integration,
+-   explicit negotiation, clear fallback, and precise error handling.
++   explicit negotiation, clear fallback, and precise Context and error handling.
+ 
+-   Whole-packet and traffic-specific rules can provide better savings
+-   when traffic is predictable.  Examples include known streams, fixed
+-   frame combinations, ACK Range Count equal to zero, and values derived
+-   within the same compressed container.  Stateful compression across
+-   packets can improve results, but it introduces robustness and
+-   synchronization problems in the presence of loss, reordering, and
+-   retransmission.
++   Whole-packet and traffic-specific Rules can provide better savings
++   when traffic is predictable.  Examples include known streams, fixed
++   frame combinations, ACK Range Count equal to zero, and values derived
++   within the same compressed container.  Stateful compression across
++   packets (relying on Set of Variables (SoV) updates) can improve results, but it introduces robustness and
++   synchronization problems in the presence of loss, reordering, and
++   retransmission.
+ 
+-   A split implementation appears practical.  An inner compressor inside
+-   QUIC can handle frame metadata before encryption, while an outer
+-   compressor can handle IP, UDP, and accessible QUIC header fields
+-   after packet construction.  This matches the QUIC security boundary
+-   and allows reuse of existing SCHC components.
++   A split implementation appears practical.  An inner Instance inside
++   QUIC can handle frame metadata before encryption, while an outer
++   Instance can handle IP, UDP, and accessible QUIC header fields
++   after packet construction.  This matches the QUIC security boundary
++   and allows reuse of existing SCHC components.
+ 
+    The approach is unlikely to be attractive for ordinary Internet QUIC
+    traffic.  Traffic is diverse, frame combinations vary, and the
+    expected savings from frame metadata are small compared with the
+-   required implementation and context-management machinery.
++   required implementation and Context-management machinery.
+ 
+    The approach may be useful where links are highly constrained,
+    bandwidth is expensive, endpoints are under common control, and rules
+-   can be pre-provisioned or managed by mechanisms such as SCHC
+-   CORECONF.  Space communication scenarios and other controlled
+-   constrained deployments are plausible examples.
++   can be pre-provisioned or managed by mechanisms such as SCHC
++   CORECONF.  Space communication scenarios and other controlled
++   constrained deployments are plausible examples.
+ 
+    Trace-based evaluation is needed before selecting a concrete design.
+    Such evaluation should measure both frame-metadata reduction and
+    complete packet reduction.  It should also measure CPU cost, latency,
+-   energy, rule-set size, fallback frequency, and robustness under loss
+-   and reordering.
++   energy, rule-set (SoR) size, fallback frequency, and robustness under loss
++   and reordering.

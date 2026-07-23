@@ -1,0 +1,1120 @@
+
+
+
+
+Static Context Header Compression                              L. Corneo
+Internet-Draft                                             M. Westerlund
+Intended status: Standards Track                                Ericsson
+Expires: 7 January 2027                                      6 July 2026
+
+
+                   SCHC Context Management Extensions
+                     draft-corneo-schc-ctx-mgmt-00
+
+Abstract
+
+   This document defines extensions to the Static Context Header
+   Compression (SCHC) framework that improve context management
+   efficiency.  Two categories of mechanisms are introduced: rule
+   referencing CDAs (ref and ref-edit) that enable composable rule
+   definitions and reduce context storage, and a rule fragment branching
+   CDA (branch) with associated Matching Operators that enable dynamic
+   multi-layer protocol compression without combinatorial rule
+   explosion.
+
+About This Document
+
+   This note is to be removed before publishing as an RFC.
+
+   Status information for this document may be found at
+   https://datatracker.ietf.org/doc/draft-corneo-schc-ctx-mgmt/.
+
+   Discussion of this document takes place on the Static Context Header
+   Compression Working Group mailing list (mailto:schc@ietf.org), which
+   is archived at https://mailarchive.ietf.org/arch/browse/schc/.
+   Subscribe at https://www.ietf.org/mailman/listinfo/schc/.
+
+   Source for this draft and an issue tracker can be found at
+   https://github.com/lorenzocorneo/draft-corneo-schc-ctx-mgmt.
+
+Status of This Memo
+
+   This Internet-Draft is submitted in full conformance with the
+   provisions of BCP 78 and BCP 79.
+
+   Internet-Drafts are working documents of the Internet Engineering
+   Task Force (IETF).  Note that other groups may also distribute
+   working documents as Internet-Drafts.  The list of current Internet-
+   Drafts is at https://datatracker.ietf.org/drafts/current/.
+
+
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                 [Page 1]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   Internet-Drafts are draft documents valid for a maximum of six months
+   and may be updated, replaced, or obsoleted by other documents at any
+   time.  It is inappropriate to use Internet-Drafts as reference
+   material or to cite them other than as "work in progress."
+
+   This Internet-Draft will expire on 7 January 2027.
+
+Copyright Notice
+
+   Copyright (c) 2026 IETF Trust and the persons identified as the
+   document authors.  All rights reserved.
+
+   This document is subject to BCP 78 and the IETF Trust's Legal
+   Provisions Relating to IETF Documents (https://trustee.ietf.org/
+   license-info) in effect on the date of publication of this document.
+   Please review these documents carefully, as they describe your rights
+   and restrictions with respect to this document.  Code Components
+   extracted from this document must include Revised BSD License text as
+   described in Section 4.e of the Trust Legal Provisions and are
+   provided without warranty as described in the Revised BSD License.
+
+Table of Contents
+
+   1.  Introduction  . . . . . . . . . . . . . . . . . . . . . . . .   3
+   2.  Conventions and Definitions . . . . . . . . . . . . . . . . .   4
+   3.  Terminology . . . . . . . . . . . . . . . . . . . . . . . . .   4
+   4.  Rule Referencing  . . . . . . . . . . . . . . . . . . . . . .   4
+     4.1.  The ref(N) CDA  . . . . . . . . . . . . . . . . . . . . .   4
+     4.2.  The ref-edit(N,M) CDA . . . . . . . . . . . . . . . . . .   6
+     4.3.  Context Compression Procedure . . . . . . . . . . . . . .   7
+   5.  Rule Fragment Branching . . . . . . . . . . . . . . . . . . .   7
+     5.1.  The branch CDA  . . . . . . . . . . . . . . . . . . . . .   8
+       5.1.1.  Field Length Semantics  . . . . . . . . . . . . . . .   9
+       5.1.2.  Processing Order  . . . . . . . . . . . . . . . . . .   9
+       5.1.3.  Failure Handling  . . . . . . . . . . . . . . . . . .  10
+     5.2.  The match-mapping MO with branch  . . . . . . . . . . . .  10
+     5.3.  The match-rule MO . . . . . . . . . . . . . . . . . . . .  12
+     5.4.  Interaction Between branch and ref(N) . . . . . . . . . .  13
+   6.  Examples  . . . . . . . . . . . . . . . . . . . . . . . . . .  13
+     6.1.  IPv6/UDP/TCP Rule Composition Using ref(N) and
+           ref-edit(N,M) . . . . . . . . . . . . . . . . . . . . . .  13
+     6.2.  Multi-Protocol Branching with branch  . . . . . . . . . .  14
+       6.2.1.  UDP Rule Fragment (Rule 3)  . . . . . . . . . . . . .  14
+       6.2.2.  TCP Rule Fragment (Rule 4)  . . . . . . . . . . . . .  14
+       6.2.3.  IPv6 Fragment Header Rule Fragment (Rule 5) . . . . .  15
+       6.2.4.  IPv6-in-IPv6 Tunneling Rule Fragment (Rule 7) . . . .  15
+       6.2.5.  RTP Rule Fragment (Rule 8)  . . . . . . . . . . . . .  16
+     6.3.  Compression Walkthrough . . . . . . . . . . . . . . . . .  16
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                 [Page 2]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   7.  Security Considerations . . . . . . . . . . . . . . . . . . .  17
+     7.1.  Circular Reference Attacks  . . . . . . . . . . . . . . .  17
+     7.2.  Resource Exhaustion Attacks . . . . . . . . . . . . . . .  18
+     7.3.  Context Integrity . . . . . . . . . . . . . . . . . . . .  18
+   8.  IANA Considerations . . . . . . . . . . . . . . . . . . . . .  18
+   9.  References  . . . . . . . . . . . . . . . . . . . . . . . . .  18
+     9.1.  Normative References  . . . . . . . . . . . . . . . . . .  18
+     9.2.  Informative References  . . . . . . . . . . . . . . . . .  19
+   Authors' Addresses  . . . . . . . . . . . . . . . . . . . . . . .  20
+
+1.  Introduction
+
+   Static Context Header Compression (SCHC), defined in [RFC8724],
+   provides a mechanism for compressing protocol headers over
+   constrained networks by defining rules in a context shared between
+   sender and receiver.
+
+   SCHC was initially designed for low-power wide-area networks serving
+   a small number of devices with small, static contexts.  As the
+   framework evolved to support scalable deployments, diverse
+   technologies (cellular traffic, space communication), and multi-layer
+   protocol stacks, several limitations emerged:
+
+   *  As the number and heterogeneity of devices increase, the context
+      size grows.  Dynamic approaches such as payload compression
+      further increase the number of rules, potentially adding duplicate
+      or partially duplicate field descriptions.  Context updates become
+      frequent, increasing protocol overhead and energy consumption.
+
+   *  As the rule set grows, rule matching time increases, potentially
+      creating bottlenecks and additional latency.
+
+   *  Compressing multiple protocol layers (e.g., IPv6/UDP/RTP) in
+      combined rules forces duplication of lower-layer field
+      descriptions across rules, creating a combinatorial explosion.
+      Supporting N variants of IPv6 addresses with M upper-layer
+      protocols requires N*M rules.
+
+   *  Protocols with variable or optional headers (e.g., IPv6 extension
+      headers) cannot be efficiently compressed, as each combination
+      requires its own rule.
+
+   This document addresses these limitations by defining:
+
+   *  Rule referencing CDAs (Section 4) that allow rules to reference
+      and compose other rules, reducing duplication.
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                 [Page 3]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   *  A rule fragment branching mechanism (Section 5) that enables
+      dynamic selection of rule fragments based on packet content,
+      eliminating combinatorial explosion.
+
+2.  Conventions and Definitions
+
+   The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
+   "SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
+   "OPTIONAL" in this document are to be interpreted as described in
+   BCP 14 [RFC2119] [RFC8174] when, and only when, they appear in all
+   capitals, as shown here.
+
+3.  Terminology
+
+   The following terms are used in this document:
+
+   Adjacent Field Descriptors:  A set of field descriptions within one
+      rule that belong to a single protocol layer.
+
+   Deprecated Rule:  A rule (or subset of a rule) that has been selected
+      to be merged into a new rule using referencing CDAs.
+
+   Merged Rule:  A rule that includes at least one of the referencing
+      CDAs defined in this document.
+
+   Rule Fragment:  A rule designed to compress a portion of a packet
+      (e.g., a single protocol layer) and intended to be composed with
+      other rule fragments via branching.
+
+4.  Rule Referencing
+
+   This section defines two novel Compression/Decompression Actions
+   (CDAs) that enable SCHC rules to reference other rules in the
+   context.  These CDAs reduce context storage requirements and enable
+   composable rule definitions.
+
+4.1.  The ref(N) CDA
+
+   The "ref" CDA references an existing rule within the SCHC context.
+   When a field description uses ref(N), the compressor/decompressor
+   MUST suspend processing of the current rule and apply Rule N to the
+   corresponding portion of the packet.  Once Rule N has been fully
+   processed, the compressor/decompressor MUST resume processing the
+   next field description in the original rule.
+
+   The argument N is the Rule ID of the referenced rule.
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                 [Page 4]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   When ref(N) is used, the Target Value (TV) and Field Length (FL)
+   fields in the referencing field description are not used for
+   compression.  Instead, the TVs and FLs of the referenced Rule N
+   apply.
+
+   The following example illustrates the use of ref(N).  Consider a
+   dedicated IPv6 compression rule (Rule 2):
+
+   Rule 2
+   +----------------+--+--+--+---------+--------+------------+
+   | FID            |FL|FP|DI| TV      | MO     | CDA        |
+   +----------------+--+--+--+---------+--------+------------+
+   |IPv6 Version    |4 |1 |Bi|6        | ignore | not-sent   |
+   |IPv6 Diffserv   |8 |1 |Bi|0        | equal  | not-sent   |
+   |IPv6 Flow Label |20|1 |Bi|0        | equal  | not-sent   |
+   |IPv6 Length     |16|1 |Bi|         | ignore | compute-*  |
+   |IPv6 Next Header|8 |1 |Bi|17       | equal  | not-sent   |
+   |IPv6 Hop Limit  |8 |1 |Bi|255      | ignore | not-sent   |
+   |IPv6 DevPrefix  |64|1 |Bi|FE80::/64| equal  | not-sent   |
+   |IPv6 DevIID     |64|1 |Bi|         | ignore | DevIID     |
+   |IPv6 AppPrefix  |64|1 |Bi|FE80::/64| equal  | not-sent   |
+   |IPv6 AppIID     |64|1 |Bi|::1      | equal  | not-sent   |
+   +----------------+--+--+--+---------+--------+------------+
+
+                 Figure 1: Dedicated IPv6 Compression Rule
+
+   A UDP compression rule can then reference Rule 2 for the IPv6
+   portion:
+
+   Rule 3
+   +--------------+--+--+--+---+-------+------------+
+   | FID          |FL|FP|DI| TV| MO    | CDA        |
+   +--------------+--+--+--+---+-------+------------+
+   |IPv6 Rule     |  |1 |Bi|   | ignore| ref(2)     |
+   +--------------+--+--+--+---+-------+------------+
+   |UDP DevPort   |16|1 |Dw|123| equal | not-sent   |
+   |UDP DevPort   |16|1 |Up|124| equal | not-sent   |
+   |UDP AppPort   |16|1 |Dw|124| equal | not-sent   |
+   |UDP AppPort   |16|1 |Up|123| equal | not-sent   |
+   |UDP Length    |16|1 |Bi|   | ignore| compute-*  |
+   |UDP checksum  |16|1 |Bi|   | ignore| compute-*  |
+   +--------------+--+--+--+---+-------+------------+
+
+           Figure 2: UDP Rule Referencing IPv6 Rule 2 via ref(N)
+
+   Similarly, a TCP compression rule can reuse the same IPv6 rule.
+   However, since Rule 2 specifies Next Header = 17 (UDP) with MO =
+   equal, a TCP rule cannot use ref(2) directly — the Next Header value
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                 [Page 5]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   would fail to match TCP packets (Next Header = 6).  Instead, Rule 4
+   uses ref-edit(2,1) to override the Next Header field description,
+   demonstrating why ref-edit is necessary when a referenced rule
+   contains a field value that differs for the referencing protocol:
+
+   Rule 4
+   +-----------------+--+--+--+---+-------+--------------+
+   | FID             |FL|FP|DI| TV| MO    | CDA          |
+   +-----------------+--+--+--+---+-------+--------------+
+   |IPv6 Rule        |  |1 |Bi|   | ignore| ref-edit(2,1)|
+   |IPv6 Next Header |8 |1 |Bi|6  | equal | not-sent     |
+   +-----------------+--+--+--+---+-------+--------------+
+   |TCP DevPort      |16|1 |Dw|321| equal | not-sent     |
+   |TCP DevPort      |16|1 |Up|421| equal | not-sent     |
+   |TCP AppPort      |16|1 |Dw|421| equal | not-sent     |
+   |TCP AppPort      |16|1 |Up|321| equal | not-sent     |
+   |TCP Length       |16|1 |Bi|   | ignore| compute-*    |
+   |TCP checksum     |16|1 |Bi|   | ignore| compute-*    |
+   +-----------------+--+--+--+---+-------+--------------+
+
+        Figure 3: TCP Rule Referencing IPv6 Rule 2 via ref-edit(N,M)
+
+   In both cases, when the compressor/decompressor encounters a
+   referencing CDA, it loads Rule 2 and applies it to the IPv6 header
+   portion of the packet before resuming with the transport layer
+   fields.  For Rule 4, the ref-edit(2,1) CDA first replaces the IPv6
+   Next Header field description in Rule 2 with the override (TV = 6),
+   then applies the modified rule.
+
+4.2.  The ref-edit(N,M) CDA
+
+   The "ref-edit" CDA extends ref(N) by allowing modification of
+   specific field descriptions in the referenced rule.  The argument N
+   is the Rule ID of the referenced rule, and M indicates the number of
+   field descriptions immediately following the ref-edit field that
+   specify modifications.
+
+   When processing ref-edit(N,M), the compressor/decompressor MUST:
+
+   1.  Load the referenced Rule N.
+
+   2.  For each of the next M field descriptions in the current rule,
+       find the field description in Rule N with a matching Field ID
+       (FID).
+
+   3.  Replace the matched field description in Rule N with the one from
+       the current rule.
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                 [Page 6]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   4.  Apply the modified Rule N to the packet.
+
+   The following example modifies the AppIID field from Rule 2:
+
+   +--------------+---+--+--+---------+--------+--------------+
+   | FID          |FL |FP|DI| TV      | MO     | CDA          |
+   +--------------+---+--+--+---------+--------+--------------+
+   |IPv6 Rule     |   |1 |Bi|         | ignore | ref-edit(2,1)|
+   |IPv6 AppIID   |64 |1 |Bi| ::3     | equal  | not-sent     |
+   +--------------+---+--+--+---------+--------+--------------+
+
+           Figure 4: Using ref-edit to Override AppIID in Rule 2
+
+   Here, the decompressor loads Rule 2, locates the IPv6 AppIID field
+   description, replaces its TV with ::3, and then applies the modified
+   rule.
+
+4.3.  Context Compression Procedure
+
+   The ref(N) and ref-edit(N,M) CDAs enable context compression
+   procedures that merge rules sharing common field descriptions.  One
+   way to realize this is a procedure that operates as follows:
+
+   1.  Iterate all rules in the context.  For each rule, identify sets
+       of adjacent field descriptions (field descriptions belonging to
+       the same protocol layer).
+
+   2.  Group identical sets of adjacent field descriptions that appear
+       in multiple rules.
+
+   3.  For each group exceeding a configured threshold of occurrences:
+       a.  Create a new rule containing the shared adjacent field
+       descriptions. b.  For each original rule containing the group,
+       create a merged rule that uses ref(N) to reference the new rule,
+       plus any remaining field descriptions.
+
+   4.  Signal the new rules to all SCHC endpoints.  Once confirmed,
+       deprecated rules MAY be removed from the context.
+
+5.  Rule Fragment Branching
+
+   This section defines a novel Compression/Decompression Action (CDA)
+   and a novel Matching Operator (MO) that enable dynamic composition of
+   SCHC rule fragments at compression time.  These mechanisms allow a
+   single rule to branch into different rule fragments based on packet
+   content, solving the combinatorial explosion problem when compressing
+   multi-layer protocol stacks or protocols with optional/variable
+   headers.
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                 [Page 7]
+
+Internet-Draft             Context Management                  July 2026
+
+
+5.1.  The branch CDA
+
+   The "branch" CDA encodes a selection among alternative rule fragments
+   into the compression residual. branch takes as argument either a Rule
+   ID identifying the next rule fragment to apply, or NULL indicating
+   that no further rule processing follows.
+
+   A field description using branch contains a mapping table where each
+   entry associates:
+
+   *  A Target Value (TV)
+
+   *  A Rule ID (or NULL) to apply next
+
+   *  A residual value to encode in the compressed packet
+
+   The number of bits in the residual is determined by the number of
+   entries in the mapping table.
+
+   When the compressor encounters a field with branch CDA, it MUST:
+
+   1.  Encode the residual value corresponding to the matched entry.
+
+   2.  Queue the associated Rule ID for subsequent processing.
+
+   When the decompressor encounters a branch residual, it MUST:
+
+   1.  Decode the residual to determine the index into the mapping
+       table.
+
+   2.  Use the corresponding Rule ID to decompress the next portion of
+       the packet.
+
+   A branch to NULL indicates that no further rule processing follows
+   after the current rule completes.
+
+   Two mechanisms determine which branch to take:
+
+   *  Explicit field matching (match-mapping MO, see Section 5.2): Used
+      when a protocol header field directly indicates what follows.  For
+      example, the IPv6 Next Header field value 17 explicitly identifies
+      UDP as the next protocol.  This also applies to IPv6 extension
+      headers (Fragment, Destination Options, Hop-by-Hop), each of which
+      carries its own Next Header field — enabling a chain of branch
+      decisions through successive extension headers until the transport
+      layer is reached.  The branch selection is encoded as a residual
+      derived from matching the field value against a mapping table.
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                 [Page 8]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   *  Implicit matching (match-rule MO, see Section 5.3): Used when no
+      single header field identifies what follows.  For example, after a
+      UDP header, there is no field indicating whether the payload is
+      RTP, CoAP, or something else.  The compressor must attempt to
+      match each candidate rule against the payload content — for
+      instance, checking whether the payload starts with RTP version = 2
+      and valid SSRC fields.  The branch selection is encoded as a
+      residual indicating which rule succeeded.
+
+5.1.1.  Field Length Semantics
+
+   The Field Length (FL) value of a field description using branch
+   determines its usage:
+
+   *  FL > 0: The field corresponds to an actual packet header field of
+      the indicated length.  The branch is determined by the field value
+      present in the packet (used with match-mapping MO).
+
+   *  FL = 0: There is no corresponding field in the packet.  The branch
+      residual encodes which rule fragment is used to compress the
+      remainder of the packet after the current rule completes.  This is
+      used when the next protocol is implicit (used with match-rule MO).
+
+5.1.2.  Processing Order
+
+   When a rule contains multiple field descriptions with branch CDA, the
+   Field Position (FP) determines the invocation order.  Rule fragments
+   are processed depth-first: a loaded rule fragment, including any
+   branch within it, MUST be fully processed before the next queued
+   branch from the parent rule is invoked.
+
+   Specifically, the compressor maintains a branch queue per rule.
+   After completing all CDAs in the current rule, the compressor
+   processes the queue starting with the lowest invocation number.  Each
+   dequeued Rule ID is loaded and its matching and compression
+   operations are performed.  The packet pointer (Current_Location)
+   advances as each rule fragment is processed.
+
+   This sequential processing imposes a constraint on rule fragment
+   design: rule fragments MUST be split at protocol boundaries where
+   different subsequent processing of the packet can occur.  A branch
+   decision point can only appear at a location where the preceding
+   fields have been fully compressed by the current rule fragment.
+   Placing a branch mid-way through a protocol header is not supported,
+   as the queue processes complete rule fragments in order.
+
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                 [Page 9]
+
+Internet-Draft             Context Management                  July 2026
+
+
+5.1.3.  Failure Handling
+
+   If a loaded rule fragment fails to match the packet at the current
+   location, the entire compression operation for this packet MUST fail.
+   The compressor MUST transmit the packet uncompressed (using Rule ID
+   0).
+
+   A branch to NULL terminates further processing, even if there are
+   queued invocations in parent rules.
+
+   As a consequence, when the packet content following a branch point
+   may be unknown or not covered by any rule fragment, the branch
+   mapping SHOULD include a branch(NULL) entry as a fallback.  Without
+   it, an unrecognized field value (in match-mapping) or a payload
+   matching no candidate rule (in match-rule) will cause complete
+   compression failure.  Including branch(NULL) allows the compressor to
+   gracefully terminate rule processing at that point, leaving the
+   remainder of the packet uncompressed in the SCHC residual.
+
+5.2.  The match-mapping MO with branch
+
+   When branch is used with a non-zero FL, the existing match-mapping MO
+   (defined in [RFC8724]) is used to determine which branch to take.
+   The TV field contains an array of values.  The MO matches when the
+   packet field value equals one of the TV entries, and the index of the
+   matching entry selects the corresponding branch argument.
+
+   The following example shows an IPv6 rule using match-mapping with
+   branch on the Next Header field:
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                [Page 10]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   Rule 2
+   +----------------+--+--+--+---------+--------+--------------+------+
+   | FID            |FL|FP|DI| TV      | MO     | CDA          | Sent |
+   +----------------+--+--+--+---------+--------+--------------+------+
+   |IPv6 Version    |4 |1 |Bi|6        | ignore | not-sent     |      |
+   |IPv6 Diffserv   |8 |1 |Bi|0        | equal  | not-sent     |      |
+   |IPv6 Flow Label |20|1 |Bi|0        | equal  | not-sent     |      |
+   |IPv6 Length     |16|1 |Bi|         | ignore | compute-*    |      |
+   |IPv6 Next Header|8 |1 |Bi|17       | mapping| branch(3)    |0b000 |
+   |                |  |  |  |6        | mapping| branch(4)    |0b001 |
+   |                |  |  |  |44       | mapping| branch(5)    |0b010 |
+   |                |  |  |  |60       | mapping| branch(6)    |0b011 |
+   |                |  |  |  |41       | mapping| branch(7)    |0b100 |
+   |                |  |  |  |59       | mapping| branch(NULL) |0b101 |
+   |IPv6 Hop Limit  |8 |1 |Bi|255      | ignore | not-sent     |      |
+   |IPv6 DevPrefix  |64|1 |Bi|FE80::/64| equal  | not-sent     |      |
+   |IPv6 DevIID     |64|1 |Bi|         | ignore | DevIID       |      |
+   |IPv6 AppPrefix  |64|1 |Bi|FE80::/64| equal  | not-sent     |      |
+   |IPv6 AppIID     |64|1 |Bi|::1      | equal  | not-sent     |      |
+   +----------------+--+--+--+---------+--------+--------------+------+
+
+               Figure 5: IPv6 Rule with branch on Next Header
+
+   The mapping table for the Next Header field is:
+
+                  +====+====================+==========+
+                  | TV | Next Rule          | Residual |
+                  +====+====================+==========+
+                  | 17 | Rule 3 (UDP)       | 0b000    |
+                  +----+--------------------+----------+
+                  | 6  | Rule 4 (TCP)       | 0b001    |
+                  +----+--------------------+----------+
+                  | 44 | Rule 5 (Fragment)  | 0b010    |
+                  +----+--------------------+----------+
+                  | 60 | Rule 6 (Dest Opts) | 0b011    |
+                  +----+--------------------+----------+
+                  | 41 | Rule 7 (IPv6-in-6) | 0b100    |
+                  +----+--------------------+----------+
+                  | 59 | NULL (No Next Hdr) | 0b101    |
+                  +----+--------------------+----------+
+
+                   Table 1: Next Header Branch Mapping
+
+   When compressing, if the IPv6 Next Header field contains 17 (UDP),
+   the compressor encodes 0b000 as residual and queues Rule 3 for
+   processing after the current rule completes.
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                [Page 11]
+
+Internet-Draft             Context Management                  July 2026
+
+
+5.3.  The match-rule MO
+
+   The "match-rule" MO is a novel Matching Operator for use with branch
+   when FL = 0 (no corresponding packet field).  It determines which
+   rule fragment matches the remainder of the packet by attempting to
+   match each referenced rule in order.
+
+   The match-rule MO takes a list of Rule IDs as argument.  For each
+   referenced Rule ID, in list order, the compressor MUST:
+
+   1.  Save the current packet location.
+
+   2.  Load the referenced rule and perform all its matching operations
+       starting at the current location.
+
+   3.  If all fields match successfully, return the index of this rule.
+
+   4.  If any field fails to match, reset the packet location and
+       proceed to the next Rule ID in the list.
+
+   If no rule matches and no NULL entry exists, the match-rule MO fails.
+   If the list contains a NULL entry, it automatically matches when
+   reached.  Therefore, a NULL entry SHOULD be placed last in the list;
+   any entries after NULL will never be evaluated.
+
+   The following example shows match-rule used in a UDP rule to branch
+   into RTP or CoAP compression:
+
+  Rule 3
+  +--------------+--+--+--+----+-----------------+--------------+------+
+  | FID          |FL|FP|DI| TV | MO              | CDA          | Sent |
+  +--------------+--+--+--+----+-----------------+--------------+------+
+  |UDP.SrcPort   |16|1 |Dw|1123| equal           | not-sent     |      |
+  |UDP.SrcPort   |16|1 |Up|1124| equal           | not-sent     |      |
+  |UDP.DstPort   |16|1 |Dw|1124| equal           | not-sent     |      |
+  |UDP.DstPort   |16|1 |Up|1123| equal           | not-sent     |      |
+  |UDP.Length    |16|1 |Bi|    | ignore          | compute-*    |      |
+  |UDP.checksum  |16|1 |Bi|    | ignore          | compute-*    |      |
+  |UDP.PayProto  |0 |1 |Bi|    | match-rule(8)   | branch(8)    | 0b00 |
+  |              |  |  |  |    | match-rule(9)   | branch(9)    | 0b01 |
+  |              |  |  |  |    | match-rule(NULL)| branch(NULL) | 0b10 |
+  +--------------+--+--+--+----+-----------------+--------------+------+
+
+         Figure 6: UDP Rule with match-rule Branching to RTP/CoAP
+
+
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                [Page 12]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   Here, after compressing the UDP header, the compressor attempts to
+   match Rule 8 (RTP) against the UDP payload.  If RTP matching
+   succeeds, 0b00 is encoded and Rule 8 is used.  Otherwise, Rule 9
+   (CoAP) is attempted.  If neither matches, the NULL entry matches and
+   no further compression is applied to the payload.
+
+5.4.  Interaction Between branch and ref(N)
+
+   The branch CDA and the ref(N) CDA (defined in Section 4) are
+   complementary mechanisms:
+
+   *  ref(N) provides static rule composition: the referenced rule is
+      always applied unconditionally.
+
+   *  branch provides dynamic rule composition: the referenced rule
+      fragment is selected based on packet content or rule matching at
+      compression time.
+
+   Both mechanisms MAY be used within the same context.  A rule fragment
+   referenced by branch MAY itself contain ref(N) references to other
+   rules.
+
+6.  Examples
+
+   This section provides comprehensive examples demonstrating the
+   mechanisms defined in this document.
+
+6.1.  IPv6/UDP/TCP Rule Composition Using ref(N) and ref-edit(N,M)
+
+   This example shows how ref(N) and ref-edit(N,M) eliminate duplication
+   when multiple transport protocols share the same IPv6 compression
+   rule.
+
+   Without referencing CDAs, compressing IPv6/UDP and IPv6/TCP requires
+   two complete rules, each repeating 10 IPv6 field descriptions.  With
+   referencing CDAs, a single IPv6 rule (Rule 2 in Figure 1) is defined
+   once and referenced by the UDP rule (Rule 3 in Figure 2) using
+   ref(2), and the TCP rule (Rule 4 in Figure 3) using ref-edit(2,1) to
+   override the Next Header value from 17 to 6.
+
+   For a context with 3 IPv6 address variants and 4 transport/
+   application protocols, the traditional approach requires 12 rules
+   with 10 duplicated IPv6 field descriptions each (120 total IPv6 field
+   descriptions).  Using referencing CDAs, only 3 IPv6 rules plus 4
+   transport rules are needed (3 + 4 = 7 rules, 30 IPv6 field
+   descriptions).
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                [Page 13]
+
+Internet-Draft             Context Management                  July 2026
+
+
+6.2.  Multi-Protocol Branching with branch
+
+   This example demonstrates branch used with match-mapping to handle
+   IPv6 packets with different next headers.  Rule 2 in Figure 5 uses
+   the IPv6 Next Header field to branch into different rule fragments
+   for UDP, TCP, IPv6 Fragment Header, Destination Options, and IPv6-in-
+   IPv6 tunneling.
+
+   The following rule fragments are referenced by the branch entries:
+
+6.2.1.  UDP Rule Fragment (Rule 3)
+
+  Rule 3
+  +--------------+--+--+--+----+-----------------+--------------+------+
+  | FID          |FL|FP|DI| TV | MO              | CDA          | Sent |
+  +--------------+--+--+--+----+-----------------+--------------+------+
+  |UDP.SrcPort   |16|1 |Dw|1123| equal           | not-sent     |      |
+  |UDP.SrcPort   |16|1 |Up|1124| equal           | not-sent     |      |
+  |UDP.DstPort   |16|1 |Dw|1124| equal           | not-sent     |      |
+  |UDP.DstPort   |16|1 |Up|1123| equal           | not-sent     |      |
+  |UDP.Length    |16|1 |Bi|    | ignore          | compute-*    |      |
+  |UDP.checksum  |16|1 |Bi|    | ignore          | compute-*    |      |
+  |UDP.PayProto  |0 |1 |Bi|    | match-rule(8)   | branch(8)    | 0b00 |
+  |              |  |  |  |    | match-rule(9)   | branch(9)    | 0b01 |
+  |              |  |  |  |    | match-rule(NULL)| branch(NULL) | 0b10 |
+  +--------------+--+--+--+----+-----------------+--------------+------+
+
+            Figure 7: UDP Rule Fragment with Payload Branching
+
+   Rule 3 compresses the UDP header and then uses match-rule to
+   determine whether the payload is RTP (Rule 8), CoAP (Rule 9), or
+   unknown (NULL).
+
+6.2.2.  TCP Rule Fragment (Rule 4)
+
+   Rule 4
+   +--------------+--+--+--+----+--------+------------+------+
+   | FID          |FL|FP|DI| TV | MO     | CDA        | Sent |
+   +--------------+--+--+--+----+--------+------------+------+
+   |TCP.SrcPort   |16|1 |Dw|1321| equal  | not-sent   |      |
+   |TCP.SrcPort   |16|1 |Up|1421| equal  | not-sent   |      |
+   |TCP.DstPort   |16|1 |Dw|1421| equal  | not-sent   |      |
+   |TCP.DstPort   |16|1 |Up|1321| equal  | not-sent   |      |
+   |TCP.Length    |16|1 |Bi|    | ignore | compute-*  |      |
+   |TCP.checksum  |16|1 |Bi|    | ignore | compute-*  |      |
+   +--------------+--+--+--+----+--------+------------+------+
+
+                        Figure 8: TCP Rule Fragment
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                [Page 14]
+
+Internet-Draft             Context Management                  July 2026
+
+
+6.2.3.  IPv6 Fragment Header Rule Fragment (Rule 5)
+
+   This rule handles the first fragment of a fragmented IPv6 packet.
+   The Next Header field in the fragment header uses branch to determine
+   what protocol follows.
+
+   Rule 5
+   +----------------+--+--+--+---+--------+--------------+------+
+   | FID            |FL|FP|DI| TV| MO     | CDA          | Sent |
+   +----------------+--+--+--+---+--------+--------------+------+
+   |Frag Next Header|8 |1 |Bi|17 | mapping| branch(3)    |0b000 |
+   |                |  |  |  | 6 | mapping| branch(4)    |0b001 |
+   |                |  |  |  |60 | mapping| branch(6)    |0b010 |
+   |                |  |  |  |41 | mapping| branch(7)    |0b011 |
+   |                |  |  |  |59 | mapping| branch(NULL) |0b100 |
+   |Frag Reserved   |8 |1 |Bi|0  | ignore | not-sent     |      |
+   |Frag Offset     |13|1 |Bi|0  | equal  | not-sent     |      |
+   |Frag Res        |2 |1 |Bi|0  | equal  | not-sent     |      |
+   |Frag M flag     |1 |1 |Bi|1  | equal  | not-sent     |      |
+   |Frag Ident      |32|1 |Bi|   | ignore | value-sent   |      |
+   +----------------+--+--+--+---+--------+--------------+------+
+
+                Figure 9: IPv6 First Fragment Rule Fragment
+
+6.2.4.  IPv6-in-IPv6 Tunneling Rule Fragment (Rule 7)
+
+   For IPv6-in-IPv6 tunneling, the inner header may use different
+   address prefixes than the outer header.  This rule does not include
+   IPv6-in-IPv6 as a further nesting option.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                [Page 15]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   Rule 7
+   +----------------+--+--+--+---------+--------+--------------+------+
+   | FID            |FL|FP|DI| TV      | MO     | CDA          | Sent |
+   +----------------+--+--+--+---------+--------+--------------+------+
+   |IPv6 Version    |4 |1 |Bi|6        | ignore | not-sent     |      |
+   |IPv6 Diffserv   |8 |1 |Bi|0        | equal  | not-sent     |      |
+   |IPv6 Flow Label |20|1 |Bi|0        | equal  | not-sent     |      |
+   |IPv6 Length     |16|1 |Bi|         | ignore | compute-*    |      |
+   |IPv6 Next Header|8 |1 |Bi|17       | mapping| branch(3)    |0b000 |
+   |                |  |  |  | 6       | mapping| branch(4)    |0b001 |
+   |                |  |  |  |44       | mapping| branch(5)    |0b010 |
+   |                |  |  |  |60       | mapping| branch(6)    |0b011 |
+   |                |  |  |  |59       | mapping| branch(NULL) |0b100 |
+   |IPv6 Hop Limit  |8 |1 |Bi|255      | ignore | not-sent     |      |
+   |IPv6 DevPrefix  |64|1 |Bi|2001::/64| equal  | not-sent     |      |
+   |IPv6 DevIID     |64|1 |Bi|         | ignore | DevIID       |      |
+   |IPv6 AppPrefix  |64|1 |Bi|2001::/64| equal  | not-sent     |      |
+   |IPv6 AppIID     |64|1 |Bi|::1      | equal  | not-sent     |      |
+   +----------------+--+--+--+---------+--------+--------------+------+
+
+                 Figure 10: Inner IPv6 Header Rule Fragment
+
+6.2.5.  RTP Rule Fragment (Rule 8)
+
+   Rule 8
+   +----------------+--+--+--+---------+--------+------------+------+
+   | FID            |FL|FP|DI| TV      | MO     | CDA        | Sent |
+   +----------------+--+--+--+---------+--------+------------+------+
+   |RTP.version     |2 |1 |Bi|2        | equal  | not-sent   |      |
+   |RTP.padding     |1 |1 |Bi|0        | equal  | not-sent   |      |
+   |RTP.Extension   |1 |1 |Bi|0        | ignore | value-sent |      |
+   |RTP.csrc-count  |4 |1 |Bi|0b00     | MSB(2) | LSB(2)     |      |
+   |RTP.marker      |1 |1 |Bi|0        | ignore | value-sent |      |
+   |RTP.payloadType |7 |1 |Bi|0b1100000| MSB(2) | LSB(5)     |      |
+   |RTP.SeqNr       |16|1 |Bi|0        | ignore | value-sent |      |
+   |RTP.SSRC        |32|1 |Bi|0        | ignore | value-sent |      |
+   +----------------+--+--+--+---------+--------+------------+------+
+
+                  Figure 11: RTP Base Header Rule Fragment
+
+6.3.  Compression Walkthrough
+
+   Consider an IPv6/UDP/RTP packet with the following header values:
+
+   *  IPv6 Next Header: 17 (UDP)
+
+   *  UDP Source Port: 1123 (downlink)
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                [Page 16]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   *  UDP Destination Port: 1124 (downlink)
+
+   *  RTP Version: 2
+
+   The compression proceeds as follows:
+
+   1.  The compressor iterates through the rule set and attempts to
+       match each rule against the packet.  Rule 2 (Figure 5) is
+       selected as the initial rule because its IPv6 field descriptions
+       (Version, Diffserv, Flow Label, Hop Limit, prefixes, IIDs) all
+       match the packet.  Note that Rule 2 here uses branch rather than
+       a fixed Next Header value, so matching succeeds regardless of the
+       transport protocol.
+
+   2.  IPv6 fields are matched and compressed.  The Next Header field
+       (value 17) matches the first mapping entry.  The compressor
+       encodes residual 0b000 and queues Rule 3 for processing.
+
+   3.  After completing Rule 2, the compressor loads Rule 3 (Figure 7).
+       UDP fields are matched and compressed.
+
+   4.  The match-rule MO at the end of Rule 3 loads Rule 8 and attempts
+       matching against the UDP payload.  RTP version = 2 matches the
+       first field.  All other RTP fields match.  The compressor encodes
+       residual 0b00 and processes Rule 8.
+
+   5.  Rule 8 (Figure 11) compresses the RTP header fields.
+
+   The resulting compressed packet contains: Rule ID + IPv6 branch
+   residual (3 bits) + UDP payload branch residual (2 bits) + RTP
+   residual fields (Extension, csrc-count LSB, marker, payloadType LSB,
+   SeqNr, SSRC).
+
+7.  Security Considerations
+
+   The mechanisms defined in this document introduce new attack surfaces
+   related to context provisioning and rule processing.
+
+7.1.  Circular Reference Attacks
+
+   The ref(N), ref-edit(N,M), and branch CDAs create directed references
+   between rules.  If not validated, a malicious or misconfigured
+   context could contain circular references (e.g., Rule A references
+   Rule B which references Rule A), causing the compressor or
+   decompressor to enter an infinite loop.
+
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                [Page 17]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   Implementations MUST detect circular references when a context is
+   provisioned or updated.  A simple approach is to verify that the rule
+   reference graph is a directed acyclic graph (DAG).  Alternatively,
+   implementations MAY enforce a maximum reference depth and abort
+   processing if exceeded.
+
+7.2.  Resource Exhaustion Attacks
+
+   Deeply nested rule references, large branch mapping tables, or
+   extensive match-rule candidate lists can consume significant
+   processing time and memory on constrained devices.  An attacker able
+   to provision or influence context content could craft rules designed
+   to exhaust device resources.
+
+   Implementations SHOULD enforce limits on:
+
+   *  Maximum reference chain depth (number of nested ref/ref-edit/
+      branch invocations).
+
+   *  Maximum number of entries in a branch mapping table.
+
+   *  Maximum number of candidate rules evaluated by match-rule.
+
+   *  Total processing time for a single packet compression/
+      decompression operation.
+
+   If any limit is exceeded, the implementation MUST abort processing
+   and transmit the packet uncompressed.
+
+7.3.  Context Integrity
+
+   The security of these mechanisms depends on the integrity of the
+   shared context.  Unauthorized modification of rules (e.g.,
+   redirecting a ref(N) to a different rule, or altering branch
+   mappings) could cause incorrect compression or decompression, leading
+   to data corruption or information disclosure.  Context provisioning
+   and update mechanisms MUST ensure integrity and authenticity of rule
+   definitions.
+
+8.  IANA Considerations
+
+   TODO
+
+9.  References
+
+9.1.  Normative References
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                [Page 18]
+
+Internet-Draft             Context Management                  July 2026
+
+
+   [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
+              Requirement Levels", BCP 14, RFC 2119,
+              DOI 10.17487/RFC2119, March 1997,
+              <https://www.rfc-editor.org/info/rfc2119>.
+
+   [RFC8174]  Leiba, B., "Ambiguity of Uppercase vs Lowercase in RFC
+              2119 Key Words", BCP 14, RFC 8174, DOI 10.17487/RFC8174,
+              May 2017, <https://www.rfc-editor.org/info/rfc8174>.
+
+   [RFC8724]  Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and JC.
+              Zuniga, "SCHC: Generic Framework for Static Context Header
+              Compression and Fragmentation", RFC 8724,
+              DOI 10.17487/RFC8724, April 2020,
+              <https://www.rfc-editor.org/info/rfc8724>.
+
+   [RFC9363]  Minaburo, A. and L. Toutain, "A YANG Data Model for Static
+              Context Header Compression (SCHC)", RFC 9363,
+              DOI 10.17487/RFC9363, March 2023,
+              <https://www.rfc-editor.org/info/rfc9363>.
+
+9.2.  Informative References
+
+   [I-D.corneo-schc-compress-payload]
+              Corneo, L., Ramos, E., and J. Jimenez, "SCHC Payload
+              Compression for Structured Formats", Work in Progress,
+              Internet-Draft, draft-corneo-schc-compress-payload-02, 3
+              July 2026, <https://datatracker.ietf.org/doc/html/draft-
+              corneo-schc-compress-payload-02>.
+
+   [I-D.pelov-schclet-architecture]
+              Pelov, A., Lampin, Q., and M. Dumay, "SCHClet - Modular
+              Use of the SCHC Framework", Work in Progress, Internet-
+              Draft, draft-pelov-schclet-architecture-02, 12 January
+              2026, <https://datatracker.ietf.org/doc/html/draft-pelov-
+              schclet-architecture-02>.
+
+   [I-D.toutain-schc-coreconf-management]
+              Minaburo, A., Toutain, L., FERNANDEZ, J. A., Banier, C.,
+              and M. Dumay, "CORECONF Rule management for SCHC", Work in
+              Progress, Internet-Draft, draft-toutain-schc-coreconf-
+              management-01, 19 October 2025,
+              <https://datatracker.ietf.org/doc/html/draft-toutain-schc-
+              coreconf-management-01>.
+
+   [RFC8200]  Deering, S. and R. Hinden, "Internet Protocol, Version 6
+              (IPv6) Specification", STD 86, RFC 8200,
+              DOI 10.17487/RFC8200, July 2017,
+              <https://www.rfc-editor.org/info/rfc8200>.
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                [Page 19]
+
+Internet-Draft             Context Management                  July 2026
+
+
+Authors' Addresses
+
+   Lorenzo Corneo
+   Ericsson
+   FI- Jorvas
+   Finland
+   Email: lorenzo.corneo@ericsson.com
+
+
+   Magnus Westerlund
+   Ericsson
+   Kista
+   Sweden
+   Email: magnus.westerlund@ericsson.com
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Corneo & Westerlund      Expires 7 January 2027                [Page 20]

@@ -1,0 +1,135 @@
+--- draft-ietf-schc-universal-option-01.txt
++++ draft-ietf-schc-universal-option-01-migrated.txt
+@@ -181,1 +181,1 @@
+-    *  Simplify Rule management between SCHC endpoints
++    *  Simplify Context management between SCHC Instances
+
+@@ -229,30 +229,30 @@
+-2.2.  Rule Management Challenges
+-
+-   This limitation becomes particularly problematic in scenarios
+-   involving rule management between two SCHC endpoints.  The following
+-   scenario (cf. Figure 1) illustrates this issue:
+-
+-                                 rule mngt
+-                                +----------+
+-                                |          |
+-                                v          v
+-                   A <-------> S1 <~~~~~~> S2 <-----> B
+-
+-           Figure 1: Rule Management between two SCHC end-points
+-
+-   In this scenario:
+-
+-   *  Device A generates CoAP packets that may include various options,
+-      including newly defined ones.
+-
+-   *  SCHC nodes S1 and S2 compress and decompress the traffic using
+-      Rules they share.
+-
+-   *  When A uses a recently defined or private option, S1 can parse this
+-      option (as the CoAP header structure remains consistent) and could
+-      potentially derive a new Rule to optimize compression.
+-
+-   *  However, S1 faces a critical problem: how to identify this new
+-      option in the Rule and communicate this identifier to S2 in a way
+-      that S2 can understand which option is involved and correctly
+-      reconstruct the header.
++2.2.  Context Management Challenges
++
++   This limitation becomes particularly problematic in scenarios
++   involving context management between two SCHC Instances.  The following
++   scenario (cf. Figure 1) illustrates this issue:
++
++                                 context mngt
++                                +----------+
++                                |          |
++                                v          v
++                   A <-------> S1 <~~~~~~> S2 <-----> B
++
++           Figure 1: Context Management between two SCHC Instances
++
++   In this scenario:
++
++   *  Device A generates CoAP packets that may include various options,
++      including newly defined ones.
++
++   *  SCHC Instances S1 and S2 compress and decompress the traffic using
++      Contexts they share.
++
++   *  When A uses a recently defined or private option, S1 can parse this
++      option (as the CoAP header structure remains consistent) and could
++      potentially derive a new Rule to optimize compression.
++
++   *  However, S1 faces a critical problem: how to identify this new
++      option in the Rule and communicate this identifier to S2 in a way
++      that S2 can understand which option is involved and correctly
++      reconstruct the header.
+
+@@ -677,12 +677,12 @@
+-5.2.  Implications for Residue Serialization
+-
+-   This design has implications for how residues are serialized.  To
+-   ensure consistent interpretation, both SCHC endpoints must process
+-   entries in the same order.  Therefore:
+-
+-   *  Fields from the standard “entry” list MUST be serialized before
+-      those defined in the new “entry-option-space” list
+-
+-   *This constraint should be documented in
+-   [I-D.ietf-lpwan-architecture] to ensure interoperability
++5.2.  Implications for Residue Serialization
++
++   This design has implications for how residues are serialized.  To
++   ensure consistent interpretation, both SCHC Instances must process
++   entries in the same order.  Therefore:
++
++   *  Fields from the standard “entry” list MUST be serialized before
++      those defined in the new “entry-option-space” list
++
++   *  This constraint should be documented in
++      [draft-ietf-schc-architecture-06] (specifically Section 4.2.1.2) to
++      ensure interoperability.
+
+@@ -705,2 +705,2 @@
+-    *  It allows for cleaner Rule exchange between SCHC endpoints,
+-       improving interoperability in heterogeneous environments
++    *  It allows for cleaner Context exchange between SCHC Instances,
++       improving interoperability in heterogeneous environments
+
+@@ -749,10 +749,10 @@
+-   for the serialization of residues.  When transmitting Rules from one
+-   endpoint to another, the order of Field Descriptors must be preserved
+-   to ensure consistent handling of residues.  This requirement should
+-   be explicitly documented in [I-D.ietf-lpwan-architecture] to clarify
+-   that:
+-
+-   *  The order of entries should not be changed when transmitted
+-      between endpoints This ordering preserves the guidance in
+-      [RFC8724] that Field Descriptors (entries) should be listed in the
+-      order they appear in the packet header
++   for the serialization of residues.  When transmitting Contexts from one
++   Instance to another, the order of Field Descriptors must be preserved
++   to ensure consistent handling of residues.  This requirement should
++   be explicitly documented in [draft-ietf-schc-architecture-06] (specifically
++   Section 4.2.1.2) to clarify that:
++
++   *  The order of entries should not be changed when transmitted
++      between Instances. This ordering preserves the guidance in
++      [RFC8724] that Field Descriptors (entries) should be listed in the
++      order they appear in the packet header.
+
+@@ -817,6 +817,7 @@
+-   [I-D.ietf-lpwan-architecture]
+-              Pelov, A., Thubert, P., and A. Minaburo, "LPWAN Static
+-              Context Header Compression (SCHC) Architecture", Work in
+-              Progress, Internet-Draft, draft-ietf-lpwan-architecture-
+-              02, 30 June 2022, <https://datatracker.ietf.org/doc/html/
+-              draft-ietf-lpwan-architecture-02>.
++   [draft-ietf-schc-architecture-06]
++              Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and
++              M. Dumay, "Static Context Header Compression (SCHC)
++              Architecture", Work in Progress, Internet-Draft,
++              draft-ietf-schc-architecture-06, 6 July 2026,
++              <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
++              architecture-06>.

@@ -1,0 +1,246 @@
+# Terminology and architectural-framing migration for draft-ietf-schc-schclet-00
+#
+# Target vocabulary: draft-ietf-schc-architecture-06 (referred to below as [ARCH]).
+# Assumes the two Trivial architecture clarifications in schc-architecture-edits.md
+# are accepted, i.e. that [ARCH] states the single-SCHClet/single-Instance/single-
+# Stratum relationship explicitly (Edit 1) and identifies "SCHC Stratum Header" with
+# the Control Header (Edit 2).
+#
+# Migration rules applied:
+#   - "SCHC Stratum Header" / "SCHC Header" / "SCHC Stratum functions" -> "Control Header"
+#   - a SCHClet is framed as a subfunction hosted within a single Instance; a minimal
+#     deployment is one SCHClet in one Instance on one Stratum (Instance selection
+#     implicit, Discriminator/Control Header elided)
+#   - interoperability is anchored on a compatible Context / Set of Rules, per [ARCH] 6.2
+#   - "CoDA"/"CoDAs" -> "CDA"/"CDAs" (consistent with [ARCH] 3 and RFC 8724)
+#   - no protocol behaviour, wire format, cardinality, or normative keyword is changed
+#
+# A new reference is required and assumed added to the References section:
+#   [ARCH]  Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and M. Dumay,
+#           "Static Context Header Compression (SCHC) Architecture",
+#           draft-ietf-schc-architecture (Work in Progress).
+
+
+## Abstract
+
+- Each SCHClet is defined by the SCHC Profiles and configuration
+- parameters necessary for interoperability.  It operates within a
+- single Stratum and a single SCHC Instance.  For example, a device may
++ Each SCHClet is defined by the SCHC Profiles and configuration
++ parameters necessary for interoperability.  It is hosted within a
++ single SCHC Instance and operates on a single Stratum.  For example, a device may
+  implement only the NoAck fragmentation mode as a standalone SCHClet,
+  potentially with fixed parameters.
+
+
+## Section 1 (Introduction)
+
+- A SCHClet is a self-contained function of SCHC, which may or may not
+- include all aspects discussed in RFC8724, or other related SCHC RFCs.
+- A SCHClet operates on a single Stratum and on a single SCHC Instance.
+- Notions such as SCHC Stratum Header, SCHC Instance and Discriminator
+- can therefore be omitted in the specification of a SCHClet.
++ A SCHClet is a self-contained function of SCHC, which may or may not
++ include all aspects discussed in RFC8724, or other related SCHC RFCs.
++ A SCHClet is hosted within a single SCHC Instance and operates on a
++ single Stratum.  When a deployment consists of a single such SCHClet,
++ Instance selection is implicit; notions such as the Control Header
++ [ARCH] and the Discriminator can therefore be omitted in the
++ specification of a SCHClet.
+
+- In addition, the
+- SCHC Architecture introduces the notions of SCHC Stratum Header, SCHC
+- Instance and Discriminator, which while useful for a Full SCHC
+- Implementation, could be seen as unnecessary for many of the
+- applications of SCHClets.
++ In addition, the
++ SCHC Architecture [ARCH] introduces the notions of Control Header, SCHC
++ Instance and Discriminator, which while useful for a full SCHC
++ implementation, could be seen as unnecessary for many of the
++ applications of SCHClets.
+
+- A SCHClet is defined by the SCHC Profiles or configuration parameters
+- that enable interoperability with a Full SCHC Implementation.  A
+- SCHClet operates on a single Stratum, within a single SCHC Instance.
++ A SCHClet is defined by the SCHC Profiles or configuration parameters
++ that enable interoperability with a full SCHC implementation.  A
++ SCHClet is hosted within a single SCHC Instance and operates on a
++ single Stratum.
+
+- For example, the IPsec draft, includes only compression, and with
+- specific compression rules.  It may be seen as a SCHClet, using only
+- SCHC Compression from RFC8724, with only a subset of the MOs/CDAs.
++ For example, the IPsec draft includes only compression, with
++ specific compression Rules.  It may be seen as a SCHClet, using only
++ SCHC Compression/Decompression (C/D) from RFC8724, with only a subset
++ of the MOs/CDAs.
+
+
+## Section 2 (Terminology)
+
+- *  SCHClet: A self-contained unit within the SCHC framework that
+-    implements a specific SCHC function or a subset of SCHC
+-    operations.  A SCHClet may implement aspects defined in RFC8724 or
+-    other related SCHC RFCs, and MAY be combined with other SCHClets
+-    or integrated into a full SCHC implementation.
++ *  SCHClet: A self-contained modular unit within the SCHC framework
++    that implements a specific SCHC function or a subset of SCHC
++    operations, corresponding to the SCHClet defined in [ARCH]
++    Section 4.2.2.3.  A SCHClet is hosted within a single SCHC Instance;
++    it may implement aspects defined in RFC8724 or other related SCHC
++    RFCs, and MAY be combined with other SCHClets within an Instance or
++    integrated into a full SCHC implementation.
+
+- *  Full SCHC Implementation: An implementation that covers all
+-    mandatory aspects of SCHC as defined in RFC8724, potentially
+-    extended by additional functionalities introduced in subsequent/
+-    related RFCs.
++ *  Full SCHC Implementation: An implementation that covers all
++    mandatory aspects of SCHC as defined in RFC8724, potentially
++    extended by additional functionalities introduced in subsequent/
++    related RFCs.  In [ARCH] terms, this is an Endpoint whose Instance
++    is configured with the full set of SCHC functions over a complete
++    Context.
+
+- *  Full SCHC Implementation Configuration (Full Configuration): The
+-    set of SCHC Profiles/configurations/parameters supported by a Full
+-    SCHC Implementation.
++ *  Full SCHC Implementation Configuration (Full Configuration): The
++    set of SCHC Profiles/configurations/parameters supported by a Full
++    SCHC Implementation.  In [ARCH] terms, this corresponds to the
++    Instance Configuration together with the Context (Set of Rules) of
++    such an Instance.
+
+- *  SCHClet Configuration: A subset of a Full Configuration, which are
+-    implemented and supported by a given SCHClet.  This may be a
+-    single SCHC Profile, or a set of such.
++ *  SCHClet Configuration: A subset of a Full Configuration that is
++    implemented and supported by a given SCHClet.  This may be a
++    single SCHC Profile, or a set of such.  In [ARCH] terms, it
++    corresponds to a constrained Instance Configuration together with a
++    compatible subset of the Context (Set of Rules); see [ARCH]
++    Section 6.2.
+
+
+## Section 3.1 (Simplifications Enabled by SCHClets)
+
+- *  Simplification of the use of SCHC Framework: The notions of SCHC
+-    Stratum Header, SCHC Instance, and Discriminator MAY be omitted.
++ *  Simplification of the use of SCHC Framework: For a single-SCHClet
++    deployment, Instance selection is implicit (see [ARCH]
++    Section 4.2.2.4) and the notions of Control Header, SCHC Instance,
++    and Discriminator MAY be omitted.
+
+- A full SCHC implementation with the right configuration MUST
+- interoperate with a specific SCHClet.  The SCHClet in question may
+- not necessarily handle these configurations itself (e.g. it may be a
+- fixed implementation with no parametrization possible on its side),
+- they can be reinterpreted as a full SCHC implementation would.  For
+- example, an implementer of a compression SCHClet may never formally
+- use Rule Management, Discriminators, SCHC Header or other notions
+- defined in the SCHC Architecture, these can be inferred by the
+- knowledgeable SCHC practitioner.  It is of course RECOMMENDED that a
+- SCHClet provides a complete picture of its use in the context of a
+- full SCHC implementation.
++ A full SCHC implementation with the right configuration MUST
++ interoperate with a specific SCHClet.  The SCHClet in question may
++ not necessarily handle these configurations itself (e.g. it may be a
++ fixed implementation with no parametrization possible on its side);
++ interoperability holds because the SCHClet's Context and Set of Rules
++ are compatible with those of the peer (see [ARCH] Section 6.2), and
++ the elided notions can be reconstructed as a full SCHC implementation
++ would.  For example, an implementer of a compression SCHClet may never
++ formally reify Rule management, Discriminators, the Control Header, or
++ other notions defined in the SCHC Architecture; these can be inferred
++ by the knowledgeable SCHC practitioner.  It is of course RECOMMENDED
++ that a SCHClet provides a complete picture of its use in the context of
++ a full SCHC implementation.
+
+
+## Section 4 (Formal SCHClet definition and validation)
+
+- A SCHClet is designed to be interoperable with both minimal and full
+- SCHC implementations.  For instance, an endpoint may implement a
+- single SCHClet for a specific function (e.g., IPsec compression)
+- while the corresponding peer uses a comprehensive SCHC implementation
+- that supports multiple SCHClets.  Proper configuration and
+- negotiation mechanisms are essential to ensure that both ends
+- correctly interpret the SCHC context.
++ A SCHClet is designed to be interoperable with both minimal and full
++ SCHC implementations.  For instance, an Endpoint may host a single
++ Instance implementing a single SCHClet for a specific function (e.g.,
++ IPsec compression) while the corresponding peer uses a comprehensive
++ SCHC implementation that supports multiple SCHClets.  Because SCHC
++ assumes that the Context is static and provisioned before use (see
++ [ARCH] Section 1), a consistent, pre-provisioned Context on both ends
++ is essential to ensure that they correctly interpret the SCHC Context.
+
+
+## Section 4.1 (SCHC Stratum Header, SCHC Instance, Discriminator)
+
+- 4.1.  SCHC Stratum Header, SCHC Instance, Discriminator
++ 4.1.  Control Header, SCHC Instance, Discriminator
+
+- A SCHClet operates on a single Stratum and on a single SCHC Instance.
+- As such, there is no need to specify SCHC Stratum Header, which is
+- always fully elided.  In addition, there is no need for a
+- Discriminator.  Documents specifying the use of a SCHClet MAY omit
+- the specification of SCHC Stratum Header, SCHC Instance and/or
+- Discriminator considerations.
++ A SCHClet is hosted within a single SCHC Instance and operates on a
++ single Stratum.  As such, there is no need to specify a Control Header,
++ which is always absent (fully elided).  In addition, Instance selection
++ is implicit and there is no need for a Discriminator.  Documents
++ specifying the use of a SCHClet MAY omit the specification of Control
++ Header, SCHC Instance and/or Discriminator considerations.
+
+- It is RECOMMENDED if there are more than one SCHC Instances to use a
+- Full SCHC Implementation within the Full SCHC Architecture.  While
+- not recommended, a SCHC Stratum Instance MAY be defined as a SCHClet,
+- and combined with other SCHClets to achieve the functionality of a
+- complete SCHC Stratum implementation.
++ It is RECOMMENDED that deployments requiring more than one SCHC
++ Instance use a full SCHC implementation as described in [ARCH].  While
++ not recommended, a single-Instance function MAY be defined as a
++ SCHClet, and combined with other SCHClets within an Instance to
++ achieve the functionality of a complete SCHC Instance.
+
+
+## Section 5.1 (IPsec Compression SCHClet)
+
+- *  Functionality: This SCHClet implements only the compression rules
+-    defined in RFC8724 and a limited set of Context-Dependent
+-    Attributes (CoDAs).
++ *  Functionality: This SCHClet implements only the compression Rules
++    defined in RFC8724 and a limited set of Compression/Decompression
++    Actions (CDAs).
+
+- *  Deployment: The implementation is tailored for IPsec environments,
+-    focusing solely on compression without engaging in rule management
+-    or SCHC Stratum functions.
++ *  Deployment: The implementation is tailored for IPsec environments,
++    focusing solely on compression without engaging in Rule management
++    or Control Header functions.
+
+- *  Interoperability: Although minimal, this SCHClet must be
+-    configured to operate alongside endpoints that might use full SCHC
+-    implementations.
++ *  Interoperability: Although minimal, this SCHClet must be
++    configured with a Context compatible with the Endpoints that might
++    use full SCHC implementations (see [ARCH] Section 6.2).
+
+
+## Section 5.3 (Minimal Fixed-Field Compression SCHClet)
+
+# The worked example, the JSON SCHC Context, and the C implementation already use
+# [ARCH]/RFC 9363-native vocabulary (Context, Rule, rule-id-value, field-id,
+# matching-operator, comp-decomp-action) and RFC 8724 mechanisms verbatim.
+# No terminology migration is required in Sections 5.2, 5.3.1, or 5.3.2.
+
+
+## References (add the architecture reference used above)
+
++ [ARCH]     Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and M.
++            Dumay, "Static Context Header Compression (SCHC)
++            Architecture", Work in Progress, Internet-Draft,
++            draft-ietf-schc-architecture, 2026.

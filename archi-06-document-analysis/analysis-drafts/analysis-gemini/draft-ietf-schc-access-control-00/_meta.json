@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-schc-access-control-00",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 67016,
+  "started": "2026-07-10T14:19:00Z",
+  "ended": "2026-07-10T14:20:14Z",
+  "duration_seconds": 74,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

@@ -1,0 +1,13 @@
+{
+  "draft": "rfc8724",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 50006,
+  "started": "2026-07-21T13:47:40Z",
+  "ended": "2026-07-21T13:48:24Z",
+  "duration_seconds": 44,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

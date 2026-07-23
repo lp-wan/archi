@@ -1,0 +1,292 @@
+# Terminology migration diff: draft-ietf-schc-access-control-00 -> SCHC Architecture -06
+#
+# Scope: complete terminology and architectural-framing migration of the technical,
+# architectural, and normative text of draft-ietf-schc-access-control-00 onto the
+# concepts of draft-ietf-schc-architecture-06.
+#
+# Adaptation need is None, so no dependency on an accepted architecture edit exists;
+# there are no <<BLOCKED>> locations.
+#
+# Technical behavior is preserved throughout. RFC 2119/8174 keywords are unchanged.
+# Unchanged boilerplate, references (except the stale -01 citation), CoAP FID tables,
+# and the TV/MO/CDA validity table are omitted because they already use RFC 8724 /
+# RFC 8824 vocabulary that -06 shares and does not override (only illustrative CoAP
+# prose is touched where it names "rule"/"compression").
+
+## ============================================================
+## Abstract
+## ============================================================
+
+- The framework for SCHC defines an abstract view of the rules,
+- formalized through a YANG Data Model.  In its original description,
+- rules are static and shared by two endpoints.  This document defines
+- defines augmentation to the existing Data Model in order to restrict
+- the changes in the rule and, therefore, the impact of possible
+- attacks.
++ The framework for SCHC defines an abstract view of the Rules,
++ formalized through a YANG Data Model.  In its original description,
++ the Rules of a Context (its Set of Rules) are static and shared by
++ two or more SCHC Instances.  This document defines an augmentation to
++ the existing Data Model in order to restrict the changes in the Rules
++ and, therefore, the impact of possible attacks.
+
+## ============================================================
+## 1. Introduction
+## ============================================================
+
+- SCHC is a compression and fragmentation mechanism defined in
+- [RFC8724] while [RFC9363] provides a YANG Data Model for formal
+- representation of SCHC Rules used either for compression/
+- decompression (C/D) or fragmentation/reassembly (F/R).  The
+- inappropriate changes to SCHC Rules leads to some possible attacks.
+- The goal of this document is to define a augmentation to the existing
+- Data Model in order to restrict the changes in the rules and,
+- therefore, the impact of possible attacks.
++ SCHC is a compression and fragmentation mechanism defined in
++ [RFC8724] while [RFC9363] provides a YANG Data Model for formal
++ representation of SCHC Rules used either for compression/
++ decompression (C/D) or fragmentation/reassembly (F/R).  The SCHC
++ Architecture [I-D.ietf-schc-architecture] organizes a SCHC deployment
++ into Endpoints, Instances, Contexts (each a Set of Rules together with
++ metadata), Sessions, and Domains.  Inappropriate changes to SCHC Rules
++ lead to some possible attacks.  The goal of this document is to define
++ an augmentation to the existing Data Model in order to restrict the
++ changes in the Rules and, therefore, the impact of possible attacks.
+
+## ============================================================
+## 3. Terminology  (replace the "ToDo" stub with -06-aligned definitions)
+## ============================================================
+
+  It is expected that the reader will be familiar with the terms and
+  concepts associated with the SCHC framework [RFC8724],
+- [I-D.ietf-schc-architecture], and managmente request processing
++ [I-D.ietf-schc-architecture], and management request processing
+  [I-D.ietf-core-comi], NETCONF[RFC6241], RESTCONF [RFC8040].
+
+- ToDo * Access Control. * Management request processing: The NETCONF,
+- RESTCONF or CORECONF request is processed and passed to the end-point
+- Rule Manager. * Rule Manager (RM). * Context.  SCHC Rules
++ This document uses the following terms, aligned with the SCHC
++ Architecture [I-D.ietf-schc-architecture]:
++
++ Access Control:  The set of restrictions that limit which Rules, field
++    descriptors, and Rule elements of a Context may be added, removed,
++    or modified.  These restrictions are expressed as metadata carried
++    in the SCHC Data Model [RFC9363]; in the terminology of
++    [I-D.ietf-schc-architecture], they form part of the metadata of a
++    Context (a Set of Rules together with metadata).
++
++ Management request processing:  A NETCONF [RFC6241], RESTCONF
++    [RFC8040], or CORECONF [I-D.ietf-core-comi] request is processed and
++    applied to the Context used by a SCHC Instance.  In
++    [I-D.ietf-schc-architecture] this write path is the Context
++    Provisioning, Synchronization, and Configuration Distribution
++    performed by the Domain's management entities.
++
++ Rule Manager (RM):  The management function that applies Rule
++    modifications to the Context used by an Endpoint's Instances,
++    subject to the Access Control defined in this document.  It
++    corresponds to the combination of the Instance Manager (per-Endpoint
++    apply and synchronization) and the Domain Manager and Context
++    Repository (Domain-scoped ownership of Contexts) of
++    [I-D.ietf-schc-architecture].
++
++ Context / Set of Rules (SoR):  As defined in
++    [I-D.ietf-schc-architecture], a Context is a Set of Rules together
++    with metadata.  The access rights defined in this document are part
++    of that metadata and apply to the Rules of the SoR.
+
+## ============================================================
+## 5. YANG Access Control
+## ============================================================
+
+  This granularity does not fit this rule model.  For instance, the
+  goal is not to allow all the field-id leaves to be modified.  The
+  objective is to allow a specific rule entry to be changed and,
+- therefore, some of the leaves to be modified.  For instance, an entry
+- with FID containing Uri-path may have its target value modified, as
+- in the same rule, the entry regarding the application prefix should
+- not be changed.
++ therefore, some of the leaves to be modified.  For instance, a field
++ descriptor with FID containing Uri-path may have its Target Value
++ modified, while in the same Rule, the field descriptor regarding the
++ application prefix should not be changed.
+
+- The SCHC access control augments the YANG module defined in [RFC9363]
+- to allow a remote entity to manipulate the rules.  Several levels are
+- defined.
++ The SCHC access control augments the YANG module defined in [RFC9363]
++ to constrain how a management entity - the Domain Manager or Instance
++ Manager of [I-D.ietf-schc-architecture] - may modify the Rules of a
++ Context.  The resulting access rights are Context metadata and are
++ enforced on the management write path referenced in the Security
++ Considerations of [I-D.ietf-schc-architecture].  Several levels are
++ defined.
+
+- *  in the set of rules, it authorizes or NOT a new rule to be added.
++ *  in the Set of Rules (SoR), it authorizes or NOT a new Rule to be
++    added.
+
+- *  in a compression rule, it allows adding or removing field
+-    descriptions.
++ *  in a compression (C/D) Rule, it allows adding or removing field
++    descriptors.
+
+- *  in a compression rule, it allows modifying some elements of the
+-    rule, such as the TV, MO, or/and CDA, and associated values.
++ *  in a compression (C/D) Rule, it allows modifying some elements of
++    the Rule, such as the TV, MO, or/and CDA, and associated values.
+
+- *  in a fragmentation rule, it allows modifying some parameters.
++ *  in a fragmentation (F/R) Rule, it allows modifying some
++    configuration parameters.  These parameters are part of the F/R
++    Rule in the Context; they are distinct from the runtime Set of
++    Variables (SoV) of [I-D.ietf-schc-architecture].
+
+## ============================================================
+## 6. YANG Data Model
+## ============================================================
+
+- The YANG DM proposed in Appendix A extends the SCHC YANG Data Model
+- introduced in [RFC9363].  It adds read-only leaves containing access
+- rights.  If these leaves are not present, the information cannot be
+- modified.
++ The YANG DM proposed in Appendix A extends the SCHC YANG Data Model
++ introduced in [RFC9363].  It adds read-only leaves containing access
++ rights that form part of the metadata of the Context (as defined in
++ [I-D.ietf-schc-architecture]).  If these leaves are not present, the
++ information cannot be modified.
+
+### 6.1. leaf ac-modify-set-of-rules
+
+- This leaf controls modifications applied to a set of rules.  They are
+- specified with the rule-access-right enumeration:
++ This leaf controls modifications applied to a Set of Rules (SoR).  They
++ are specified with the rule-access-right enumeration:
+
+- *  no-change (0): rules cannot be modified in the Set of Rules.  This
+-    is the equivalent of having no access control elements in the set
+-    of rules.
++ *  no-change (0): Rules cannot be modified in the Set of Rules.  This
++    is the equivalent of having no access control elements in the Set
++    of Rules.
+
+  *  modify-existing-element (1): an existing rule may be modified.
+
+- *  add-remove-element (2): a rule can be added or deleted from the
+-    Set of Rules, or an existing rule can be modified.
++ *  add-remove-element (2): a Rule can be added or deleted from the
++    Set of Rules, or an existing Rule can be modified.
+
+### 6.2. leaf ac-modify-compression-rule
+
+- This leaf allows to modify a compression element.  To be active, leaf
+- ac-modify-set-of-rules MUST be set to modify-existing-element or add-
+- remove-element.  This leaf uses the same enumeration as add-remove-
+- element:
++ This leaf allows modification of a compression (C/D) Rule.  To be
++ active, leaf ac-modify-set-of-rules MUST be set to
++ modify-existing-element or add-remove-element.  This leaf uses the
++ rule-access-right enumeration:
+
+  *  no-change (0): The rule cannot be modified.
+
+- *  modify-existing-element (1): an existing Field Description may be
+-    modified.
++ *  modify-existing-element (1): an existing field descriptor may be
++    modified.
+
+- *  add-remove-element (2): a Field Description can be added or
+-    deleted from the Rule or an existing rule can be modified.
++ *  add-remove-element (2): a field descriptor can be added or deleted
++    from the Rule, or an existing Rule can be modified.
+
+### 6.3. leaf ac-modify-field
+
+- This leaf allows to modify a Field Description in a compression rule.
+- To be active, leaves ac-modify-set-of-rules and ac-modify-
+- compression-rule MUST be set to modify-existing-element or add-
+- remove-element and ac-modify-compression-rule and leaf.
++ This leaf allows modification of a field descriptor in a compression
++ (C/D) Rule.  To be active, leaves ac-modify-set-of-rules and
++ ac-modify-compression-rule MUST be set to modify-existing-element or
++ add-remove-element.
+
+### 6.3.1. CoAP base header Access Control
+
+- CoAP protocol uses a request/reply model with compact messages.  The
+- format of these messages starts with a fixed format of 4-byte length,
+- followed by a variable Token format with a length between 0 and 8
+- bytes.  While applying SCHC header compression [RFC8824], the based
+- header is only readable and MUST NOT be modified.  Figure 2 shows the
+- access-control for the FID and TV in a Rules.
++ CoAP protocol uses a request/reply model with compact messages.  The
++ format of these messages starts with a fixed format of 4-byte length,
++ followed by a variable Token format with a length between 0 and 8
++ bytes.  While applying SCHC header compression [RFC8824], the base
++ header is only readable and MUST NOT be modified.  Figure 2 shows the
++ access control for the FID and TV in a C/D Rule of the SCHC-for-CoAP
++ profile.
+
+### 6.3.2. CoAP Options Access Control
+
+  The CoAP options are used by both request and responses messages.
+  Some of them are defined as repeatable which implies that it MAY be
+  included one or more times in a message.  In this case, a SCHC Rule
+  MAY be able to modify the FID and the TV in order to include the
+  repetition.  The only FID's that have access to be modifiable are
+  those that have been defined as repeatable.  The Figure 3 give the
+  control access for all the CoAP Options defined in [RFC7252];
+  [RFC8613]; [RFC8768]; [RFC9177]; [RFC7959]; and [RFC9175].
+# (No terminology change needed: "SCHC Rule", "FID", and "TV" already
+#  match RFC 8724 / RFC 8824 and -06 vocabulary. The CoAP FID/TV tables
+#  in Figures 2 and 3 are profile-specific applications of the access
+#  rights and are unchanged.)
+
+## ============================================================
+## 7. Normative References  (update stale architecture citation)
+## ============================================================
+
+  [I-D.ietf-schc-architecture]
+             Pelov, A., Thubert, P., and A. Minaburo, "Static Context
+             Header Compression (SCHC) Architecture", Work in Progress,
+-            Internet-Draft, draft-ietf-schc-architecture-01, 6 October
+-            2023, <https://datatracker.ietf.org/doc/html/draft-ietf-
+-            schc-architecture-01>.
++            Internet-Draft, draft-ietf-schc-architecture-06, 6 July
++            2026, <https://datatracker.ietf.org/doc/html/draft-ietf-
++            schc-architecture-06>.
+
+## ============================================================
+## Appendix A. YANG Data Model  (align stray boilerplate; no behavioral change)
+## ============================================================
+# The module structure, augment targets, typedefs, and leaves are preserved
+# unchanged (technical behavior). Only mis-copied description/reference text is
+# corrected; these are EDITORIAL and do not affect the model semantics.
+
+     description
+        "
+        Copyright (c) 2021 IETF Trust and the persons identified as
+        authors of the code.  All rights reserved.
+        ...
+-        *************************************************************************
+-
+-        This module extends the ietf-schc module to include the compound-ack
+-        behavior for Ack On Error as defined in RFC YYYY.
+-        It introduces a new leaf for Ack on Error defining the format of the
+-        SCHC Ack and add the possibility to send several bitmaps in a single
+-        answer.";
++        *************************************************************************
++
++        This module extends the ietf-schc module [RFC9363] with access-control
++        metadata that restricts how the Rules of a Context may be added,
++        removed, or modified, as described in the SCHC Access Control document.";
+
+     revision 2023-02-14 {
+       description
+-        "Initial version for RFC YYYY ";
++        "Initial version for RFC XXXX ";
+       reference
+-        "RFC YYYY: Compound Ack";
++        "RFC XXXX: SCHC Access Control";
+     }

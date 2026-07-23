@@ -1,0 +1,3 @@
+# Source drafts/RFCs are intentionally published here.
+# The repository root .gitignore ignores *.txt; re-include them within this subtree.
+!*.txt

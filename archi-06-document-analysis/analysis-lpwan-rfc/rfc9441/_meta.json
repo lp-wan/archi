@@ -1,0 +1,13 @@
+{
+  "draft": "rfc9441",
+  "agent": "agy",
+  "model": "default",
+  "host": "slug",
+  "pid": 50006,
+  "started": "2026-07-21T13:43:34Z",
+  "ended": "2026-07-21T13:44:26Z",
+  "duration_seconds": 52,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

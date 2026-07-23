@@ -1,0 +1,141 @@
+# Author-facing consolidated migration diff for draft-ietf-schc-protocol-numbers-06
+
+Source: copied from the most complete available terminology migration diff (Gemini). Consolidated analysis records any source disagreements.
+
+--- Abstract
++++ Abstract
+@@ -25,3 +25,3 @@
+-   architecture, the SCHC instance establishment, and the SCHC
++   architecture, the SCHC Instance and Session establishment, and the SCHC
+    compression/decompression processes are simplified when SCHC is
+-   easily recognised.
++   easily recognised.
+
+--- Section 1. Introduction
++++ Section 1. Introduction
+@@ -126,5 +126,5 @@
+    In the evolution of SCHC, compression and fragmentation are available
+    at any layer.  After applying SCHC, the protocol information is
+-   reduced to a RuleID and the compression residue (if any).  We need to
++   reduced to a RuleID and the compression residue (if any), forming a SCHC Datagram.  We need to
+    identify SCHC to recognise when a protocol header has been compressed
+    by SCHC.
+@@ -132,4 +132,4 @@
+-   The identifier to be used depends on the protocol/layer in the stack
+-   where SCHC is applied.  The identifier has to be unambiguous to
+-   ensure correct SCHC processing at the receiver side; it could be a
+-   protocol number or port number.
++   The Discriminator to be used depends on the protocol/layer in the stack
++   where SCHC is applied.  This Discriminator has to be unambiguous to
++   ensure correct routing to the appropriate SCHC Instance at the receiver;
++   it could be a protocol number or port number.
+
+--- Section 3.2. Basic use case for SCHC as an Ethertype
++++ Section 3.2. Basic use case for SCHC as an Ethertype
+@@ -237,10 +237,10 @@
+-   In the case of a classical LPWAN link such as LoRa [RFC9011], the use
+-   of SCHC to compress the transported protocol, as well as the SCHC
+-   session (called instance) to use, are implicit.  The MAC-Layer
+-   endpoints are preconfigured so there can be only one session, and
+-   there can be only SCHC.  When extended to Ethernet and more powerful
+-   endpoint, this model is way too restrictive, and it is necessary to
+-   signal both the use of SCHC and the SCHC session to be used.  While
+-   the SCHC WG is chartered to produce the latter, the Ethertype defined
++   In the case of a classical LPWAN link such as LoRa [RFC9011], the use
++   of SCHC to compress the transported protocol, as well as the SCHC
++   Instance and Session to use, are implicit.  The MAC-Layer
++   Endpoints are preconfigured so there can be only one Session between the
++   associated Instances, and only SCHC is used.  When extended to Ethernet
++   and more capable Endpoints, this model is too restrictive, and it is
++   necessary to signal both the use of SCHC and the specific Session or Instance
++   to be used.  While the SCHC WG is chartered to produce the latter, the Ethertype defined
+
+--- Section 3.3. Basic use case for SCHC as a UDP port
++++ Section 3.3. Basic use case for SCHC as a UDP port
+@@ -283,5 +283,5 @@
+-   identifies the presence of a SCHC Stratum (defined in
+-   [schc-architecture]) atop UDP, i.e., that the UDP payload is a SCHC
+-   datagram (in this case, a SCHC-compressed CoAP message).
++   identifies that the payload of the UDP packet is a SCHC Datagram,
++   which belongs to a Session operating on a specific Stratum (defined in
++   [schc-architecture]) atop UDP, i.e., that the UDP payload is a SCHC
++   datagram (in this case, a SCHC-compressed CoAP message).
+
+--- Section 3.4. Basic Use case for SCHC over connection-oriented communication
++++ Section 3.4. Basic Use case for SCHC over connection-oriented communication
+@@ -302,9 +302,9 @@
+-   In a connection-oriented communication, two endpoints establish a
+-   session to transfer data reliably, with error detection and
+-   reordering of received data.  During the connection establishment
+-   (3-way handshake), both hosts must identify SCHC with the layer-4
+-   port number and exchange and agree on the Set of Rules (SoR).
+-   Through the data transfer, the management of the SoR uses the Yang
+-   data model as described in the [schc-coreconf-management].  Both
+-   endpoints must make the same changes to keep the integrity of the
+-   flow control.
++   In a connection-oriented communication, two Endpoints establish a
++   Session between their respective Instances to transfer data reliably,
++   with error detection and reordering of received data.  During the
++   connection establishment (3-way handshake), both Endpoints must identify
++   SCHC using the layer-4 port number (acting as a Discriminator) and
++   exchange and agree on the Context containing the Set of Rules (SoR).
++   Through the data transfer, the management of the Context and its SoR uses
++   the Yang data model as described in [schc-coreconf-management].  Both
++   Instances must apply the same changes to keep the integrity of the
++   flow control.
+
+--- Section 3.6. SCHC Port Numbers and protocol number as identifiers
++++ Section 3.6. SCHC Port Numbers and protocol number as identifiers
+@@ -341,11 +341,12 @@
+-3.6.  SCHC Port Numbers and protocol number as identifiers
+-
+-   In the current SCHC architecture, the SCHC Stratum Header adds
+-   signalling information to the SCHC datagram.  It may be fully
+-   compressed, and it does not add any overhead in that case.  The SCHC
+-   Stratum Header helps to identify the use of SCHC and selects the
+-   correct instance and SoR in the SCHC process.  The SCHC Stratum
+-   Header format includes an identifier that depends on the compressed
+-   stack layer.  These identifiers are the protocol number at layer
+-   three and port numbers at layer four.
++3.6.  SCHC Port Numbers and protocol number as identifiers
++
++   In the SCHC architecture [schc-architecture], a Discriminator is used
++   by the Dispatcher to route incoming SCHC Datagrams to the correct Instance.
++   This Discriminator is derived from the protocol stack layer where SCHC is
++   applied.  Specifically, the IP Protocol Number at Layer 3 and the Port
++   Numbers at Layer 4 serve as the outer Discriminator to signal that the packet
++   carries a SCHC Datagram.  The Dispatcher uses this Discriminator, along with
++   any lower-layer context (such as addresses or ports), to select the correct
++   Instance and its associated Context (which contains the Set of Rules (SoR)).
++   Additionally, if lower-layer context is insufficient to route the packet, an
++   optional Control Header may be added to the SCHC Datagram to carry additional
++   signaling information, such as Session or Instance identifiers.
+
+--- Section 4. Internet Protocol Number for SCHC
++++ Section 4. Internet Protocol Number for SCHC
+@@ -354,1 +354,1 @@
+-   The transport of a SCHC datgram as payload of an IP packet SHOULD be
++   The transport of a SCHC datagram as payload of an IP packet SHOULD be
+@@ -369,5 +369,6 @@
+    The SCHC compressed header with payload is shown below.  The size of
+    the SCHC RuleID is variable as described in [RFC8724].  An
+-   implementation should have a table of source IP address and RuleID
+-   size.  The addresses should be represented in prefix format to allow
+-   for groups of addresses having the same RuleID size.
++   expected RuleID size is a parameter of the Instance Configuration or Context metadata
++   associated with the peer.  An implementation may map the peer's source IP address or prefix
++   to the corresponding RuleID size to enable correct parsing of the incoming
++   SCHC Datagram.
+
+--- Section 10.2. Informative References
++++ Section 10.2. Informative References
+@@ -634,6 +634,6 @@
+    [schc-architecture]
+               Pelov, A., Thubert, P., and A. Minaburo, "Static Context
+               Header Compression (SCHC) Architecture", Work in Progress,
+-              Internet-Draft, draft-ietf-schc-architecture-05, 17
+-              October 2025, <https://datatracker.ietf.org/doc/html/
+-              draft-ietf-schc-architecture-05>.
++              Internet-Draft, draft-ietf-schc-architecture-06, 6
++              July 2026, <https://datatracker.ietf.org/doc/html/
++              draft-ietf-schc-architecture-06>.

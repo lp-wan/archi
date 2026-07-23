@@ -1,0 +1,27 @@
+# Author-facing consolidated migration diff for draft-westerlund-schc-compute-address-00
+
+No complete source terminology diff was available. The following section-oriented pseudo-diff lists required author changes from the consolidated analysis.
+
+@@ Section 4, Paragraph 2 & Section 2 Terminology @@
+# Category: REQUIRED FOR CONCEPTUAL ALIGNMENT
+- "The Address Table is maintained per-context and shared between compressor and decompressor."
++ Clarify that the Address Table is maintained as part of the Instance's Set of Variables (SoV) rather than the shared static Context (SoR).
+
+@@ Section 7.2, Paragraph 1 @@
+# Category: REQUIRED FOR CONCEPTUAL ALIGNMENT
+- "...or MAY be provisioned as part of the SCHC context setup." (regarding secret_key)
++ Specify that the secret_key is provisioned as part of the Instance Configuration or SoV, rather than the shared Context.
+
+@@ Section 1 & Section 4 @@
+# Category: REQUIRED FOR TERMINOLOGY MIGRATION
+- General references to "compressor and decompressor" or "endpoints".
++ Update the terminology to refer to "SCHC Endpoints" hosting "SCHC Instances" participating in a "SCHC Session".
+
+@@ Section 9.2 & Section 4 @@
+# Category: REQUIRED FOR TERMINOLOGY MIGRATION
+- General description of device identity and session mapping without architectural terms.
++ Frame the network-side routing and session mapping in terms of the "Dispatcher" routing packets to the correct "Instance" using a "Discriminator" (e.g. PDU session ID).
+
+
+# Final minimal -07 note:
+# Not included in final minimal -07: compute-address is an early individual draft; SoV/C-D dynamic-state changes are deferred.

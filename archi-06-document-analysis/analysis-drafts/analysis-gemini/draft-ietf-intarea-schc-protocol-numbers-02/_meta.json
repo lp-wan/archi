@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-intarea-schc-protocol-numbers-02",
+  "agent": "claude",
+  "model": "default",
+  "host": "slug",
+  "pid": 61631,
+  "started": "2026-07-10T14:00:10Z",
+  "ended": "2026-07-10T14:13:42Z",
+  "duration_seconds": 812,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

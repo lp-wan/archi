@@ -1,0 +1,228 @@
+# Author-facing consolidated migration diff for draft-ietf-ipsecme-diet-esp-10
+
+Source: copied from the most complete available terminology migration diff (Gemini). Consolidated analysis records any source disagreements.
+
+--- draft-ietf-ipsecme-diet-esp-10.txt
++++ draft-ietf-ipsecme-diet-esp-10-migrated.txt
+@@ -27,4 +27,4 @@
+-   This document specifies Diet-ESP, a compression mechanism for control
+-   information in IPsec/ESP communications.  The compression uses Static
+-   Context Header Compression rules.
++   This document specifies Diet-ESP, a compression mechanism for control
++   information in IPsec/ESP communications.  The compression is framed as
++   a profile of the Static Context Header Compression (SCHC) Architecture.
+ 
+@@ -408,27 +408,18 @@
+-2.2.  The Scope of SCHC in this Specification
+-
+-   SCHC [RFC8724] offers a mechanism for header compression as well as
+-   an optional fragmentation feature.  SCHC facilitates the compression
+-   and decompression of headers by utilizing a common context that may
+-   encompass multiple Rules.  Each Rule is designed to correspond with
+-   specific values or ranges of values within the header fields.  When a
+-   Rule is successfully matched, the corresponding header fields are
+-   substituted with the Rule ID and the Compression Residue.  The
+-   Compression Residue for the packet header is the concatenation of the
+-   non-empty residues for each field of the header.  The Compression
+-   Residue is directly followed by the packet payload and an optional
+-   padding to ensure byte alignment.
+-
+-   This document utilizes SCHC as a practical means to illustrate the
+-   capability to compress and decompress a structured payload.  It is
+-   important to note that any elements of SCHC that pertain to aspects
+-   other than compression or decompression, such as fragmentation, fall
+-   outside the purview of this document.  The reference to SCHC herein
+-   is solely for descriptive purposes related to compression and
+-   decompression, and it is not anticipated that the general SCHC
+-   framework will be integrated into the ESP implementation.  The
+-   structured payloads addressed in this specification pertain to
+-   internal structures managed by ESP for the processing of an IP
+-   packet.  Consequently, the compression and decompression processes
+-   outlined in this document represent supplementary steps for the ESP
+-   stack in handling the ESP packet.
++2.2.  The Scope of the SCHC Architecture in this Specification
++
++   The Static Context Header Compression (SCHC) Architecture [draft-ietf-schc-architecture]
++   defines a framework for deploying SCHC.  SCHC [RFC8724] offers a mechanism for
++   header compression as well as an optional fragmentation feature.  SCHC facilitates the
++   compression and decompression of headers by utilizing a SCHC Context that contains
++   a Set of Rules (SoR).  Each SCHC Rule is identified by a RuleID and contains field
++   descriptors.  When a Rule is matched, the header fields are substituted with the
++   RuleID (which may be elided if implicit) and the Compression Residue.  The
++   Compression Residue is followed by the packet payload and any required padding.
++
++   This document defines a Diet-ESP profile under the SCHC Architecture, mapping
++   its processes to the architectural components.  The compression and decompression
++   operations represent supplementary steps for the ESP stack, implemented as three
++   coordinated SCHClets (IIPC, CTEC, EEC) within a single SCHC Instance associated
++   with the Security Association (SA).  Fragmentation is out of scope.
+ 
+@@ -436,17 +427,15 @@
+-2.3.  Diet-ESP Rules and Context
+-
+-   In IPsec, the process of encryption or decryption between IPsec peers
+-   necessitates a common context known as a Security Association (SA).
+-   More broadly, the SA encompasses all essential parameters required by
+-   the ESP to handle both inbound and outbound packets.  SAs are
+-   unidirectional.  Furthermore, IPsec can link both outbound and
+-   inbound IP packets to the SA through Traffic Selectors (TS) or
+-   Security Parameter Index (SPI).  This capability allows IPsec to
+-   uniquely associate outbound and inbound packets with a specific
+-   context (SA), which contains all pertinent information for IPsec
+-   processing.
+-
+-   This document adopts a comparable methodology for compression and
+-   decompression, ensuring that the SA includes all necessary parameters
+-   to create the Rules applicable for compressing or decompressing each
+-   structured payload.  The Rule associated with each structured payload
+-   is generated based on specific parameters referred to in this
+-   document as Attributes for Rule Derivation (AfRD) (see Section 4.2
+-   for a more detailed description).  These AfRDs are negotiated through
+-   IKEv2 [RFC7296], and in such cases, they are likely already included
+-   in the SA.  Any additional missing AfRDs are negotiated via
+-   [I-D.ietf-ipsecme-ikev2-diet-esp-extension].
++2.3.  Diet-ESP Rules and SCHC Context Alignment
++
++   In IPsec, encryption and decryption between peers use a shared Security
++   Association (SA).  The SA encompasses all essential parameters required by
++   the ESP layer, linking packets through Traffic Selectors (TS) or the
++   Security Parameter Index (SPI).
++
++   In this profile, the SA acts as the conceptual owner of a unidirectional
++   SCHC Session and its associated SCHC Context.  The SCHC Context includes the
++   Set of Rules (SoR) derived dynamically from the Attributes for Rule Derivation
++   (AfRD) negotiated via IKEv2 [RFC7296] or
++   [I-D.ietf-ipsecme-ikev2-diet-esp-extension].  The SA uniquely identifies
++   the SCHC Instance.
+ 
+@@ -468,54 +457,28 @@
+-3.  Terminology
+-
+-   ESP Header Compression:  A method to reduce the size of ESP headers
+-      and trailer using predefined compression rules and contexts to
+-      improve efficiency.
+-
+-   ESP Trailer:  A set of fields added at the end of the ESP payload,
+-      including Padding, Pad Length, and Next Header, used to ensure
+-      alignment and indicate the next protocol.
+-
+-   Inner IP C/D (IIPC):  Process that compresses/decompresses the inner
+-      IP packet headers.
+-
+-   Clear Text ESP C/D (CTEC):  Process that compresses/decompresses all
+-      fields that will later be encrypted by ESP, which include the ESP
+-      Data Payload and ESP Trailer.
+-
+-   Encrypted ESP C/D (EEC):  Process that compresses/decompresses ESP
+-      fields not encrypted by ESP.
+-
+-   Security Parameter Index (SPI):  As defined in [RFC4301],
+-      Section 4.1.
+-
+-   Sequence Number (SN):  As defined in [RFC4303], Section 2.2.
+-
+-   Static Context Header Compression (SCHC):  A framework for header
+-      compression designed for LPWANs, as defined in [RFC8724].
+-
+-   Static Context Header Compression Rules (SCHC Rules):  As defined in
+-      [RFC8724]
+-
+-   RuleID:  A unique identifier for each Rule part of the Diet-ESP
+-      context.
+-
+-   SCHC Parameters:  A set of predefined values used for SCHC
+-      compression and decompression, ensuring byte alignment and proper
+-      packet formatting based on the SCHC profile.
+-
+-   Traffic Selector (TS):  A set of parameters (e.g., IP address range,
+-      port range, and protocol) used to define which traffic should be
+-      protected by a specific Security Association (SA).
+-
+-   It is assumed that the reader is familiar with other SCHC terminology
+-   defined in [RFC8376], [RFC8724], and eventually
+-   [I-D.ietf-schc-architecture].
++3.  Terminology
++
++   The terminology of the SCHC Architecture [draft-ietf-schc-architecture] applies
++   to this document.  Specific terms used in the context of Diet-ESP are:
++
++   ESP Header Compression:  A method to reduce the size of ESP headers
++      and trailer using derived SCHC Rules within a SCHC Context.
++
++   ESP Trailer:  A set of fields added at the end of the ESP payload,
++      including Padding, Pad Length, and Next Header.
++
++   Inner IP C/D (IIPC):  A SCHClet that compresses/decompresses the inner
++      IP packet headers (Inner IP Stratum).
++
++   Clear Text ESP C/D (CTEC):  A SCHClet that compresses/decompresses all
++      fields encrypted by ESP, including ESP Data Payload and ESP Trailer (ESP Trailer Stratum).
++
++   Encrypted ESP C/D (EEC):  A SCHClet that compresses/decompresses the unencrypted
++      ESP header fields, specifically the SPI and SN (ESP Header Stratum).
++
++   Security Parameter Index (SPI):  As defined in [RFC4301]. It acts as the basis
++      for the Discriminator under the SCHC Architecture.
++
++   Sequence Number (SN):  As defined in [RFC4303].
++
++   SCHC Context:  The Set of Rules (SoR) and associated metadata owned by the SA.
++
++   SCHC Instance:  The logical component associated with the Security Association (SA)
++      that executes the Diet-ESP SCHClets (IIPC, CTEC, EEC).
++
++   SCHC Session:  The unidirectional communication session between peer Instances.
++
++   RuleID:  The identifier of a SCHC Rule, which is elided (implicit) on the wire
++      for Diet-ESP.
+ 
+@@ -523,34 +486,15 @@
+-4.1.  SCHC Parameters for Diet-ESP
+-
+-   The SCHC Packet [RFC8724] is always in the form:
+-
+-     0 1 2 3 4 5 6 7
+-     +-+-+-+-+-+-+-+---------...----------+~~~~~~~~~+---------------+
+-     |   RuleID    | Compression Residue  | Payload | SCHC padding  |
+-     +-+-+-+-+-+-+-+---------...----------+~~~~~~~~~+---------------+
+-     |----------- SCHC Header ------------|         |-- as needed --|
+-
+-                           Figure 3: SCHC Packet
+-
+-   The RuleID is a unique identifier for each SCHC Rule.  It is included
+-   in packets to ensure the receiver applies the correct decompression
+-   rule, maintaining consistency in packet processing.  Note that the
+-   Rule ID does not need to be explicitly agreed upon and can be defined
+-   independently by each party.  Furthermore, [RFC8724] indicates that
+-   the way the RuleID is sent is left open to the profile specification.
+-   The RuleID in Diet-ESP is expressed as 1 byte but it can be elided as
+-   there is a unique Rule determined for the compressors.  The 1 byte
+-   may be used in future implementations to support multiple flows over
+-   the same SA.
+-
+-   SCHC padding in SCHC serves the purpose of aligning data to a
+-   designated boundary, which is typically byte-aligned or aligned to 8
+-   bits.  This document presumes that this field is not utilized in CET
+-   and EEC.  This document outlines a simpler form of padding for byte-
+-   alignment, as detailed in section Section 6.1.  Such alignment is
+-   essential to ensure that encryption is applied to data that is byte-
+-   aligned.  The rationale for employing a padding method other than
+-   SCHC Padding is to accommodate the length of the compressed ESP
+-   Payload Data.
++4.1.  SCHC Parameters for Diet-ESP
++
++   In accordance with the SCHC Architecture, the Diet-ESP profile uses
++   implicit RuleID selection.  Since a unique SCHC Rule is derived for each
++   compressor (IIPC, CTEC, EEC) within the SA's SCHC Context, the RuleID is
++   elided on the wire to save overhead.  This aligns with the architecture's
++   allowance for implicit RuleID resolution when the active rule is uniquely
++   determined by the out-of-band context (the SA).
++
++   SCHC padding serves the purpose of aligning data to a designated boundary.
++   This profile uses a custom padding method detailed in Section 6.1 rather than
++   standard SCHC Padding to ensure byte-alignment for hardware-friendly ESP
++   encryption.
+
+
+# Final minimal -07 note:
+# Not included in final minimal -07: Diet-ESP-specific behavior remains SCHClet/profile-level work.

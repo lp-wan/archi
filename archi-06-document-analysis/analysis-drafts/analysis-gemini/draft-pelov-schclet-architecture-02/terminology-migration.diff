@@ -1,0 +1,104 @@
+--- draft-pelov-schclet-architecture-02.txt
++++ draft-pelov-schclet-architecture-02-migrated.txt
+@@ -86,5 +86,5 @@
+       3.1.  Simplifications Enabled by SCHClets . . . . . . . . . .   5
+    4.  Formal SCHClet definition and validation  . . . . . . . . . .   5
+-     4.1.  SCHC Stratum Header, SCHC Instance, Discriminator . . . .   6
++     4.1.  Control Header, SCHC Instance, Discriminator . . . . . .   6
+    5.  Use Cases and Examples  . . . . . . . . . . . . . . . . . . .   6
+ 
+@@ -117,7 +117,7 @@
+    A SCHClet is a self-contained function of SCHC, which may or may not
+    include all aspects discussed in RFC8724, or other related SCHC RFCs.
+    A SCHClet operates on a single Stratum and on a single SCHC Instance.
+-   Notions such as SCHC Stratum Header, SCHC Instance and Discriminator
+-   can therefore be omitted in the specification of a SCHClet.
++   Notions such as the Control Header, SCHC Instance, and Discriminator
++   can therefore be omitted in the specification of a SCHClet.
+ 
+    One of the goals for definition of a SCHClet is the fact that parts
+@@ -133,9 +133,9 @@
+    CompoundAck.  In this sense, what is considered a full SCHC
+    implementation today, may not be exhaustive tomorrow.  In addition,
+-   the SCHC Architecture introduces the notions of SCHC Stratum Header,
+-   SCHC Instance and Discriminator, which while useful for a Full SCHC
+-   Implementation, could be seen as unnecessary for many of the
+-   applications of SCHClets.
++   the SCHC Architecture introduces the notions of the Control Header,
++   SCHC Instance, and Discriminator, which while useful for a Full SCHC
++   Implementation, could be seen as unnecessary for many of the
++   applications of SCHClets.
+ 
+    A generic SCHC Framework implementation which has all SCHClets
+@@ -242,5 +242,5 @@
+       read-only access to existing rules.
+ 
+-   *  Simplification of the use of SCHC Framework: The notions of SCHC
+-      Stratum Header, SCHC Instance, and Discriminator MAY be omitted.
++   *  Simplification of the use of SCHC Framework: The notions of the
++      Control Header, SCHC Instance, and Discriminator MAY be omitted.
+ 
+    *  Targeted Functionality: Specific optional functions (such as
+@@ -256,7 +256,7 @@
+    fixed implementation with no parametrization possible on its side),
+    they can be reinterpreted as a full SCHC implementation would.  For
+    example, an implementer of a compression SCHClet may never formally
+-   use Rule Management, Discriminators, SCHC Header or other notions
+-   defined in the SCHC Architecture, these can be inferred by the
++   use Rule Management, Discriminators, Control Header or other notions
++   defined in the SCHC Architecture, these can be inferred by the
+    knowledgeable SCHC practitioner.  It is of course RECOMMENDED that a
+ 
+@@ -297,15 +297,15 @@
+-4.1.  SCHC Stratum Header, SCHC Instance, Discriminator
+-
+-   A SCHClet operates on a single Stratum and on a single SCHC Instance.
+-   As such, there is no need to specify SCHC Stratum Header, which is
+-   always fully elided.  In addition, there is no need for a
+-   Discriminator.  Documents specifying the use of a SCHClet MAY omit
+-   the specification of SCHC Stratum Header, SCHC Instance and/or
+-   Discriminator considerations.
+-
+-   It is RECOMMENDED if there are more than one SCHC Instances to use a
+-   Full SCHC Implementation within the Full SCHC Architecture.  While
+-   not recommended, a SCHC Stratum Instance MAY be defined as a SCHClet,
+-   and combined with other SCHClets to achieve the functionality of a
+-   complete SCHC Stratum implementation.
++4.1.  Control Header, SCHC Instance, Discriminator
++
++   A SCHClet operates on a single Stratum and on a single SCHC Instance.
++   As such, there is no need to specify a Control Header, which is
++   always fully elided.  In addition, there is no need for a
++   Discriminator.  Documents specifying the use of a SCHClet MAY omit
++   the specification of the Control Header, SCHC Instance, and/or
++   Discriminator considerations.
++
++   It is RECOMMENDED if there are more than one SCHC Instances to use a
++   Full SCHC Implementation within the Full SCHC Architecture.  While
++   not recommended, a SCHC Instance operating on a specific Stratum MAY
++   be defined as a SCHClet, and combined with other SCHClets to achieve
++   the functionality of a complete implementation of SCHC operations on a
++   specific Stratum.
+ 
+@@ -321,7 +321,7 @@
+ 
+    *  Deployment: The implementation is tailored for IPsec environments,
+       focusing solely on compression without engaging in rule management
+-      or SCHC Stratum functions.
++      or multi-stratum operations.
+ 
+    *  Interoperability: Although minimal, this SCHClet must be
+@@ -650,7 +650,13 @@
+ 8.  Normative References
+ 
+    [RFC8724]  Minaburo, A., Toutain, L., Gomez, C., Barthel, D., and JC.
+               Zuniga, "SCHC: Generic Framework for Static Context Header
+               Compression and Fragmentation", RFC 8724,
+               DOI 10.17487/RFC8724, April 2020,
+               <https://www.rfc-editor.org/info/rfc8724>.
++
++   [DRAFT-ARCH]
++              Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and M.
++              Dumay, "Static Context Header Compression (SCHC) Architecture",
++              Work in Progress, Internet-Draft, draft-ietf-schc-architecture-06,
++              6 July 2026, <https://datatracker.ietf.org/doc/html/draft-ietf-schc-architecture-06>.

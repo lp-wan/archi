@@ -1,0 +1,103 @@
+# Terminology and Architectural-Framing Migration Diff
+## Target: draft-pelov-schc-header-format-00.txt
+
+--- draft-pelov-schc-header-format-00.txt
++++ draft-pelov-schc-header-format-00.txt
+@@ -14,8 +14,8 @@
+ Abstract
+ 
+-   The SCHC architecture separates a SCHC Control Header from a SCHC
+-   Data Header but leaves the format of the Control Header, the RuleID
++   The SCHC architecture allows a SCHC Datagram to carry a Control
++   Header alongside the core SCHC Datagram containing a RuleID and rule
++   content, but leaves the format of the Control Header, the RuleID
+    encoding, and the Discriminator deployment-specific.  A node that
+    handles a SCHC datagram without being a Compression/Decompression
+@@ -94,6 +94,6 @@
+ 1.  Introduction
+ 
+-   The SCHC architecture [SCHC-ARCH] separates a SCHC Control Header
+-   (multiplexing, integrity, OAM, routing) from a SCHC Data Header (a
+-   RuleID followed by rule content: a compression residue or a
+-   fragment).  It leaves the Control Header format and the Discriminator
++   The SCHC architecture [SCHC-ARCH] allows a SCHC Datagram to carry a
++   Control Header (multiplexing, integrity, OAM, routing) alongside the
++   core SCHC Datagram (a RuleID followed by rule content: a compression
++   residue or a fragment).  It leaves the Control Header format and the
++   Discriminator
+@@ -137,3 +137,3 @@
+-   This document reuses SCHC Control Header, SCHC Data Header, RuleID,
+-   Dispatcher, Discriminator, Instance, Context, and Session from
+-   [SCHC-ARCH], and Compression/Decompression (C/D) from [RFC8724].
++   This document reuses RuleID, Dispatcher, Discriminator, Instance,
++   Context, and Session from [SCHC-ARCH], Control Header from Section
++   4.2.5.1 of [SCHC-ARCH], and Compression/Decompression (C/D) from
++   [RFC8724].
+@@ -176,8 +176,8 @@
+      +==========+===================================================+
+      | Element  | Meaning                                           |
+      +==========+===================================================+
+-     | RuleID   | How the RuleID at the head of the Data Header is  |
+-     | encoding | delimited, from the SCHC RuleID Encodings         |
++     | RuleID   | How the RuleID at the start of the core SCHC      |
++     | encoding | Datagram is delimited, from the SCHC RuleID       |
+      |          | Encodings registry (Section 4).                   |
+      +----------+---------------------------------------------------+
+-     | Control  | Which Control Header accompanies the Data Header, |
+-     | Header   | from the SCHC Control-Header Types registry       |
++     | Control  | Which Control Header accompanies the core SCHC    |
++     | Header   | Datagram, from the SCHC Control-Header Types      |
++     | type     | registry (Section 5); "none" means no Control      |
+      |          | Header.                                           |
+@@ -187,6 +187,6 @@
+    A node that holds a Header Format can delineate the datagram - locate
+-   and delimit the RuleID and any Control Header present (the Control-
+-   Header type may be "none") - without decompressing the residue or
+-   being a C/D endpoint.  This delineation is the minimum a Shape
+-   guarantees.  A Shape MAY additionally resolve to the full Context -
++   and delimit the RuleID and any Control Header present (the Control-
++   Header type may be "none") - without decompressing the residue or
++   being a C/D endpoint.  This delineation is the minimum a Shape
++   guarantees.  A Shape MAY additionally resolve to the full Context -
+@@ -248,4 +248,4 @@
+    Naming the context-defined encoding does not make the RuleID
+    locatable by an intermediary; it states the opposite - that the
+-   datagram cannot be delineated without the Context, so a node lacking
+-   it MUST treat the Data Header as opaque.  Fixed and self-delimiting
++   datagram cannot be delineated without the Context, so a node lacking
++   it MUST treat the core SCHC Datagram as opaque.  Fixed and self-delimiting
+@@ -259,3 +259,3 @@
+         +------+-------+--------------+---------------+
+-        | 0    | none  | terminal     | This document |
++        | 0    | none  | terminal     | This document |
+         +------+-------+--------------+---------------+
+@@ -266,4 +266,4 @@
+-   Type 0 (none) is a bare Data Header.  Type 1 (VOICI) is the VOICI
+-   Control Header [VOICI], which multiplexes content on a link.  Further
++   Type 0 (none) is a bare core SCHC Datagram.  Type 1 (VOICI) is the
++   VOICI Control Header [VOICI], which multiplexes content on a link.  Further
+@@ -289,3 +289,3 @@
+    Content Identifier.  A terminal Control Header (such as none) is
+-   followed directly by the Data Header.
++   followed directly by the core SCHC Datagram.
+ 
+@@ -330,4 +330,4 @@
+    control-first encapsulation order), and either fixes the RuleID
+    encoding as well or delegates it to the Session and Context and
+-   leaves the Data Header opaque to intermediaries.  Several Header Formats
++   leaves the core SCHC Datagram opaque to intermediaries.  Several Header Formats
+@@ -375,4 +375,4 @@
+    octet, the RuleID-Encoding (RIE) octet, and any Params, then parses
+-   the Control Header (per its type) and the Data Header.  A node that
+-   does not recognize the Control-Header-Type or the RuleID-Encoding
++   the Control Header (per its type) and the core SCHC Datagram.  A node
++   that does not recognize the Control-Header-Type or the RuleID-Encoding
+@@ -542,4 +542,5 @@
+    [SCHC-ARCH]
+-              lp-wan SCHC Architecture Design Team, "SCHC Architecture",
+-              2026, <https://github.com/lp-wan/archi/blob/designteam/
+-              revised-schc-architecture.md>.
++              Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and
++              M. Dumay, "Static Context Header Compression (SCHC)
++              Architecture", draft-ietf-schc-architecture-06, Work in
++              Progress, July 2026.

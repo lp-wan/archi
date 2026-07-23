@@ -1,0 +1,13 @@
+{
+  "draft": "draft-ietf-schc-protocol-numbers-06",
+  "agent": "claude",
+  "model": "default",
+  "host": "slug",
+  "pid": 20921,
+  "started": "2026-07-15T14:55:05Z",
+  "ended": "2026-07-15T15:01:33Z",
+  "duration_seconds": 388,
+  "exit_code": 0,
+  "deliverables_produced": 3,
+  "dry_run": false
+}

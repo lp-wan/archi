@@ -1,0 +1,223 @@
+# Terminology and architectural-framing migration diff
+# draft-ietf-schc-protocol-numbers-06  ->  SCHC Architecture -06 vocabulary
+#
+# Scope: technical, architectural, and normative text only. Boilerplate, IANA
+# tables, acknowledgements, and administrative metadata are omitted unless a
+# terminology change touches them. RFC 2119/8174 normative force is preserved.
+# No Architecture edits are required (adaptation need = None), so there are no
+# <<BLOCKED>> locations.
+#
+# Term map applied throughout:
+#   "SCHC Stratum Header" (recognition/selection role) -> Discriminator
+#   "SCHC Stratum Header" (in-band signalling on the Datagram) -> Control Header
+#   "session (called instance)" / loose "session"       -> Instance (vs Session, disambiguated)
+#   "endpoints"/"hosts" acting as SCHC peers            -> Instances (hosted on Endpoints)
+#   "SCHC datagram(s)"                                  -> SCHC Datagram(s)
+#   citation draft-ietf-schc-architecture-05            -> -06
+
+## Abstract
+
+- The SCHC architecture, the SCHC instance establishment, and the SCHC
+- compression/decompression processes are simplified when SCHC is
+- easily recognised.
++ The SCHC architecture, the SCHC Instance establishment, and the SCHC
++ compression/decompression processes are simplified when SCHC is
++ easily recognised.
+
+## Section 1 (Introduction)
+
+- In the evolution of SCHC, compression and fragmentation are available
+- at any layer.  After applying SCHC, the protocol information is
+- reduced to a RuleID and the compression residue (if any).  We need to
+- identify SCHC to recognise when a protocol header has been compressed
+- by SCHC.
++ In the evolution of SCHC, compression and fragmentation are available
++ at any layer.  After applying SCHC, the protocol information is
++ reduced to a RuleID and the compression residue (if any), forming a
++ SCHC Datagram.  We need to identify SCHC to recognise when a protocol
++ header has been compressed by SCHC.
+
+- The identifier to be used depends on the protocol/layer in the stack
+- where SCHC is applied.  The identifier has to be unambiguous to
+- ensure correct SCHC processing at the receiver side; it could be a
+- protocol number or port number.
++ The identifier to be used depends on the protocol/layer in the stack
++ where SCHC is applied.  This identifier acts as a Discriminator (in the
++ sense of [schc-architecture]): it is consumed by the Dispatcher to
++ recognise SCHC and route the SCHC Datagram to the appropriate Instance.
++ The identifier has to be unambiguous to ensure correct SCHC processing
++ at the receiver side; it could be a protocol number or port number.
+
+## Section 3.2 (SCHC as an Ethertype)
+
+- In the case of a classical LPWAN link such as LoRa [RFC9011], the use
+- of SCHC to compress the transported protocol, as well as the SCHC
+- session (called instance) to use, are implicit.  The MAC-Layer
+- endpoints are preconfigured so there can be only one session, and
+- there can be only SCHC.  When extended to Ethernet and more powerful
+- endpoint, this model is way too restrictive, and it is necessary to
+- signal both the use of SCHC and the SCHC session to be used.  While
+- the SCHC WG is chartered to produce the latter, the Ethertype defined
+- in this document will be used to signal SCHC as the upper-layer
+- protocol.
++ In the case of a classical LPWAN link such as LoRa [RFC9011], the use
++ of SCHC to compress the transported protocol, as well as the SCHC
++ Instance to use, are implicit.  The MAC-layer Endpoints are
++ preconfigured so there can be only one SCHC Instance (and its implicit
++ Session), and there can be only SCHC.  When extended to Ethernet and
++ more powerful Endpoints, this model is way too restrictive, and it is
++ necessary to signal both the use of SCHC and the SCHC Instance to be
++ used (i.e., to provide a Discriminator).  While the SCHC WG is
++ chartered to produce the latter, the Ethertype defined in this document
++ will be used to signal SCHC as the upper-layer protocol.
+
+## Section 3.3 (SCHC as a UDP port)
+
+- There is a need to allow carrying SCHC-compressed data units (i.e.,
+- SCHC datagrams [schc-architecture]) atop UDP.
++ There is a need to allow carrying SCHC-compressed data units (i.e.,
++ SCHC Datagrams [schc-architecture]) atop UDP.
+
+- To support this functionality, there is a
+- need for UDP port numbers known by both endpoints (sender and
+- receiver) that identifies the presence of a SCHC Stratum (defined in
+- [schc-architecture]) atop UDP, i.e., that the UDP payload is a SCHC
+- datagram (in this case, a SCHC-compressed CoAP message).
++ To support this functionality, there is a
++ need for UDP port numbers known by the Instances on both Endpoints
++ (sender and receiver) that identify the presence of a SCHC Stratum
++ (defined in [schc-architecture]) atop UDP, i.e., that the UDP payload
++ is a SCHC Datagram (in this case, a SCHC-compressed CoAP message).
++ Such a port number acts as a Discriminator for the Dispatcher.
+
+- Therefore, the only way to support
+- CoAP header compression on devices running 6LoWPAN is by means of
+- SCHC, which again requires to place a SCHC Stratum on top of UDP.
++ Therefore, the only way to support
++ CoAP header compression on devices running 6LoWPAN is by means of
++ SCHC, which again requires to place a SCHC Stratum on top of UDP.
+# (unchanged: "SCHC Stratum" here matches the -06 Stratum concept)
+
+## Section 3.4 (connection-oriented communication)
+
+- In a connection-oriented communication, two endpoints establish a
+- session to transfer data reliably, with error detection and
+- reordering of received data.  During the connection establishment
+- (3-way handshake), both hosts must identify SCHC with the layer-4
+- port number and exchange and agree on the Set of Rules (SoR).
+- Through the data transfer, the management of the SoR uses the Yang
+- data model as described in the [schc-coreconf-management].  Both
+- endpoints must make the same changes to keep the integrity of the
+- flow control.
++ In a connection-oriented communication, two Instances establish a
++ Session to transfer data reliably, with error detection and
++ reordering of received data.  During the connection establishment
++ (3-way handshake), both Instances identify SCHC with the layer-4
++ port number (used as a Discriminator) and provision and synchronize
++ the Context (its Set of Rules, SoR).  Through the data transfer, the
++ management of the Context (SoR) uses the YANG data model as described
++ in [schc-coreconf-management].  Both Instances must apply the same
++ changes to keep their Contexts consistent for correct flow control.
+# NOTE: "exchange and agree on the SoR" -> "provision and synchronize the
+# Context" is the one REQUIRED FOR CONCEPTUAL ALIGNMENT edit (see verdicts.md):
+# SCHC Architecture -06 base SCHC assumes no in-band negotiation between the
+# compressing and decompressing entities; the outcome (both ends share the
+# same SoR) is unchanged.
+
+- The SoR may contain dedicated Rules for Acknowledgements and
+- connection termination.
++ The SoR may contain dedicated Rules for Acknowledgements and
++ connection termination.
+# (unchanged: SoR and Rules are -06 terms)
+
+## Section 3.6 (identifiers)
+
+- 3.6.  SCHC Port Numbers and protocol number as identifiers
++ 3.6.  SCHC Port Numbers and protocol numbers as Discriminators
+
+- In the current SCHC architecture, the SCHC Stratum Header adds
+- signalling information to the SCHC datagram.  It may be fully
+- compressed, and it does not add any overhead in that case.  The SCHC
+- Stratum Header helps to identify the use of SCHC and selects the
+- correct instance and SoR in the SCHC process.  The SCHC Stratum
+- Header format includes an identifier that depends on the compressed
+- stack layer.  These identifiers are the protocol number at layer
+- three and port numbers at layer four.
++ In the SCHC architecture [schc-architecture], the identifier used to
++ recognise SCHC is a Discriminator, and any additional signalling
++ carried in band with the SCHC Datagram is a Control Header.  A Control
++ Header may be fully compressed, and it does not add any overhead in
++ that case.  Together, the Discriminator and any Control Header help to
++ identify the use of SCHC and select the correct Instance (and thereby
++ its Context and SoR) in the SCHC process.  The Discriminator depends on
++ the compressed stack layer: it is the protocol number at layer three
++ and the port number at layer four.
+
+## Section 4 (Internet Protocol Number for SCHC)
+
+- The transport of a SCHC datgram as payload of an IP packet SHOULD be
+- indicated in the IPv4 "Protocol" field or the IPv6 "Next Header"
+- field with a value of TBD1 (recommended: 145) as shown below:
++ The transport of a SCHC Datagram as payload of an IP packet SHOULD be
++ indicated in the IPv4 "Protocol" field or the IPv6 "Next Header"
++ field with a value of TBD1 (recommended: 145) as shown below:
+# (normative SHOULD preserved; "datgram" typo corrected to Datagram)
+
+- The SCHC compressed header with payload is shown below.  The size of
+- the SCHC RuleID is variable as described in [RFC8724].  An
+- implementation should have a table of source IP address and RuleID
+- size.  The addresses should be represented in prefix format to allow
+- for groups of addresses having the same RuleID size.
++ The SCHC compressed header with payload is shown below.  The size of
++ the SCHC RuleID is variable as described in [RFC8724].  As part of its
++ Instance Configuration, an implementation should have a table of source
++ IP address and RuleID size.  The addresses should be represented in
++ prefix format to allow for groups of addresses having the same RuleID
++ size.
+
+## Section 5 (Ethertype for SCHC)
+
+- The use of SCHC as an Ethertype is similar to that as in Section 4
+- above.  Immediately after the SCHC Ethertype is the RuleID as in
+- Figure 1.  If the rules associated with the RuleID does not provide
+- the datagram length, the datagram length MUST be explicit in the
+- Compression Residue, as the IEEE 802 header may not provide the
+- needed length information to properly process the datagram.
++ The use of SCHC as an Ethertype is similar to that in Section 4
++ above.  The Ethertype = SCHC serves as the Discriminator.  Immediately
++ after the SCHC Ethertype is the RuleID as in Figure 1.  If the Rules
++ associated with the RuleID do not provide the SCHC Datagram length,
++ the length MUST be explicit in the Compression Residue, as the IEEE 802
++ header may not provide the needed length information to properly process
++ the SCHC Datagram.
+# (normative MUST preserved)
+
+## Section 6 (Transport Port Numbers for SCHC)
+
+- SCHC's first function is to compress the header; with this action,
+- the protocol ports are hidden from the application.  To identify SCHC
+- in the upper layers, the protocols do not have a next header field.
+- The port numbers are necessary to be aware that the protocol's header
+- has been compressed.
++ SCHC's first function is to compress the header; with this action,
++ the protocol ports are hidden from the application.  To identify SCHC
++ in the upper layers, the protocols do not have a next header field.
++ The port numbers are necessary to be aware that the protocol's header
++ has been compressed; they act as the Discriminator consumed by the
++ Dispatcher.
+
+## References
+
+- [schc-architecture]
+-            Pelov, A., Thubert, P., and A. Minaburo, "Static Context
+-            Header Compression (SCHC) Architecture", Work in Progress,
+-            Internet-Draft, draft-ietf-schc-architecture-05, 17
+-            October 2025, <https://datatracker.ietf.org/doc/html/
+-            draft-ietf-schc-architecture-05>.
++ [schc-architecture]
++            Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and M.
++            Dumay, "Static Context Header Compression (SCHC)
++            Architecture", Work in Progress, Internet-Draft,
++            draft-ietf-schc-architecture-06, 6 July 2026,
++            <https://datatracker.ietf.org/doc/html/
++            draft-ietf-schc-architecture-06>.

@@ -1,0 +1,222 @@
+# Terminology and architectural-framing migration diff
+# Draft: draft-ietf-schc-8824-update-09
+# Target terminology: draft-ietf-schc-architecture-06
+#
+# Notes:
+# - The Architecture adaptation need is None; no edit below depends on any
+#   change to draft-ietf-schc-architecture-06. No location is blocked.
+# - Sections not shown are UNCHANGED. In particular, Sections 3.1, 4, 5, 6,
+#   7, 8, 10, 11, 13, and Appendices A/B use only [RFC8724]-level terminology
+#   (Rule, RuleID, Field Descriptor, FID/FL/FP/DI/TV/MO/CDA, Compression
+#   Residue, SCHC Packet, Device/NGW/App roles) that Architecture -06 keeps
+#   unchanged, plus CoAP/OSCORE terminology that must not be migrated.
+# - Deliberately NOT migrated (overloaded, non-SCHC senses; see the new
+#   terminology note in Section 1.1):
+#     * "application endpoint", "origin endpoint", "sender/recipient
+#       endpoint", "OSCORE endpoint"  -> CoAP/OSCORE [RFC7252]/[RFC8613]
+#       terms, not SCHC Endpoints (Sections 7, 8.2, 9, 10, 12).
+#     * "instance(s)" of a CoAP option -> occurrences of a repeatable option
+#       in a message (Sections 5.1, 5.4), unrelated to SCHC Instances.
+#     * "Security Context" -> OSCORE state, not a SCHC Context.
+# - No normative (RFC 2119/8174) keyword is added, removed, or altered in
+#   meaning by any edit below.
+
+================================================================
+Section 1.  Introduction
+================================================================
+
+--- paragraph 2 ---
+- [RFC8724] defines the SCHC framework, which includes a header
+- compression mechanism for LPWANs that is based on a static context.
+- Section 5 of [RFC8724] explains where compression and decompression
+- occur in the architecture.  The SCHC compression scheme assumes as a
+- prerequisite that both endpoints know the static context before
+- transmission.  The way the context is configured, provisioned, or
+- exchanged is out of the scope of this document.
++ [RFC8724] defines the SCHC framework, which includes a header
++ compression mechanism for LPWANs that is based on a static Context.
++ Section 5 of [RFC8724] explains where compression and decompression
++ occur in the architecture.  The SCHC compression scheme assumes as a
++ prerequisite that both SCHC Instances share the static Context before
++ transmission.  The way the Context is configured, provisioned, or
++ exchanged is out of the scope of this document.
+
+--- paragraph 3 ---
+- Since CoAP is an application-layer protocol, compressing CoAP headers
+- requires installing common Rules between the two SCHC instances.
+- SCHC compression may apply at two different levels: at the IP and UDP
+- level in the LPWAN, as well as at the application level for CoAP.
+- These two compression techniques may be independent.  Both follow the
+- same principle as that described in [RFC8724].  As different entities
+- manage the CoAP compression process at different levels, the SCHC
+- Rules driving the compression/decompression are also different.
++ Since CoAP is an application-layer protocol, compressing CoAP headers
++ requires installing a common Context, containing the common Set of
++ Rules (SoR), between the two SCHC Instances.  SCHC compression may
++ apply at two different levels: at the IP and UDP level in the LPWAN,
++ as well as at the application level for CoAP.  These two compression
++ techniques may be independent; they are then performed by distinct
++ SCHC Instances, each operating with its own Context.  Both follow the
++ same principle as that described in [RFC8724].  As different entities
++ manage the CoAP compression process at different levels, the SCHC
++ Rules driving the compression/decompression are also different.
+
+--- paragraph 4 ---
+- SCHC compresses and decompresses headers based on common contexts
+- between Devices.  The SCHC context includes multiple Rules.  Each
+- Rule can match the header fields to specific values or ranges of
+- values.
++ SCHC compresses and decompresses headers based on a common Context
++ shared between SCHC Instances.  The SCHC Context includes multiple
++ Rules in its Set of Rules (SoR).  Each Rule can match the header
++ fields to specific values or ranges of values.
+
+================================================================
+Section 1.1.  Terminology
+================================================================
+
+--- after the paragraph "Readers are expected to be familiar with the
+--- terms and concepts related to the SCHC framework [RFC8724], CoAP
+--- [RFC7252], and the security protocols OSCORE [RFC8613] and Group
+--- Object Security for Constrained RESTful Environments (Group OSCORE)
+--- [I-D.ietf-core-oscore-groupcomm]. --- insert:
++ Readers are also expected to be familiar with the terms and concepts
++ defined in the SCHC architecture [I-D.ietf-schc-architecture], in
++ particular Endpoint, Instance, Context, Set of Rules (SoR), Session,
++ and Domain.
++
++ In this document, the terms "application endpoint", "origin
++ endpoint", "sender endpoint", "recipient endpoint", and "OSCORE
++ endpoint" refer to CoAP and OSCORE endpoints as defined in [RFC7252]
++ and [RFC8613]; they never denote a SCHC Endpoint.  The SCHC
++ operations performed by such an endpoint are executed by a SCHC
++ Instance hosted on that node.  Likewise, an "instance" of a CoAP
++ option denotes one occurrence of that option within a CoAP message
++ and is unrelated to a SCHC Instance.
+
+================================================================
+Section 2.  SCHC Applicability to CoAP
+================================================================
+
+--- paragraph after Figure 1 (unchanged except shown for context of the
+--- level model; no edit) ---
+
+--- paragraph before Figure 2 ---
+- This use case needs an end-to-end context initialization between the
+- Device and the application.  The context initialization is out of
+- scope for this document.
++ This use case needs an end-to-end Context initialization between the
++ Device and the application.  The Context initialization is out of
++ scope for this document.
+
+--- last paragraph before "This document focuses on CoAP compression" ---
+- In the case of several SCHC instances as shown in Figure 2 and
+- Figure 3, the Rules may come from different provisioning domains.
++ In the case of several SCHC Instances as shown in Figure 2 and
++ Figure 3, each Instance operates with its own Context, and the
++ Contexts may be provided and managed by different SCHC Domains.
+
+================================================================
+Section 9.  CoAP Header Compression with Proxies
+================================================================
+
+--- intro, after "The following refers to the origin client and origin
+--- server as application endpoints." --- insert:
++ In terms of the SCHC architecture [I-D.ietf-schc-architecture], each
++ communication leg on which SCHC is used corresponds to a SCHC Session
++ between two SCHC Instances that share a common Context.  An entity
++ that performs SCHC on several legs, such as a proxy, hosts a SCHC
++ Instance for each such leg and terminates the corresponding Session;
++ SCHC-compressed data is never relayed as such across legs.
+
+================================================================
+Section 9.1.  Without End-to-End Security
+================================================================
+
+- In the case that OSCORE is not used end-to-end between client and
+- server, the SCHC processing occurs hop-by-hop, by relying on SCHC
+- Rules that are consistently shared between two adjacent hops.
++ In the case that OSCORE is not used end-to-end between client and
++ server, the SCHC processing occurs hop-by-hop, by relying on SCHC
++ Rules that are consistently shared between two adjacent hops, i.e.,
++ on a Context shared within the SCHC Session established between the
++ SCHC Instances of the two adjacent hops.
+
+(The bulleted procedure of Section 9.1 is unchanged: "the SCHC Rules
+that it shares with the next hop" remains valid -06 terminology, with
+the sharing relationship now framed by the paragraph above.)
+
+================================================================
+Section 9.2.  With End-to-End Security
+================================================================
+
+- The SCHC processing occurs end-to-end as to the Inner SCHC
+- Compression/Decompression, by relying on Inner SCHC Rules that are
+- consistently shared between the two application endpoints acting as
+- OSCORE endpoints and sharing the used OSCORE Security Context.
++ The SCHC processing occurs end-to-end as to the Inner SCHC
++ Compression/Decompression, by relying on Inner SCHC Rules that are
++ consistently shared between the two application endpoints acting as
++ OSCORE endpoints and sharing the used OSCORE Security Context.  The
++ Inner SCHC Rules form a Context shared end-to-end, within a SCHC
++ Session between the SCHC Instances of the two application endpoints.
+
+- Instead, the SCHC processing occurs hop-by-hop as to the Outer SCHC
+- Compression/Decompression, by relying on Outer SCHC Rules that are
+- consistently shared between two adjacent hops.
++ Instead, the SCHC processing occurs hop-by-hop as to the Outer SCHC
++ Compression/Decompression, by relying on Outer SCHC Rules that are
++ consistently shared between two adjacent hops, i.e., on a per-leg
++ Context used within a distinct SCHC Session between the SCHC
++ Instances of the two adjacent hops.
+
+(The bulleted procedure of Section 9.2 is unchanged.)
+
+================================================================
+Section 12.  Security Considerations
+================================================================
+
+- SCHC header compression Rules MUST remain tightly coupled between the
+- compressor and the decompressor.  If the compression Rules get out of
+- sync, a Compression Residue might be decompressed differently at the
+- receiver, thus yielding a result different than the initial message
+- submitted to compression procedures.  Accordingly, any time the
+- context Rules are updated on an OSCORE endpoint, that endpoint MUST
+- trigger an update of the OSCORE key material, e.g., by running the
+- lightweight key update protocol KUDOS
+- [I-D.ietf-core-oscore-key-update].
++ SCHC header compression Rules MUST remain tightly coupled between the
++ compressor and the decompressor.  If the compression Rules get out of
++ sync, a Compression Residue might be decompressed differently at the
++ receiver, thus yielding a result different than the initial message
++ submitted to compression procedures.  Accordingly, any time the Rules
++ of the Context are updated on an OSCORE endpoint, that endpoint MUST
++ trigger an update of the OSCORE key material, e.g., by running the
++ lightweight key update protocol KUDOS
++ [I-D.ietf-core-oscore-key-update].
+
+================================================================
+Section 14.2.  Informative References
+================================================================
+
+--- insert (alphabetical position) ---
++ [I-D.ietf-schc-architecture]
++            Pelov, A., Thubert, P., Minaburo, A., Lampin, Q., and M.
++            Dumay, "Static Context Header Compression (SCHC)
++            Architecture", Work in Progress, Internet-Draft,
++            draft-ietf-schc-architecture-06, 6 July 2026,
++            <https://datatracker.ietf.org/doc/html/draft-ietf-schc-
++            architecture-06>.
+
+================================================================
+End of migration diff
+================================================================
+# Coverage statement: all occurrences in the draft of lowercase
+# "context" in the SCHC sense (Sections 1, 2, 12), of "SCHC instance(s)"
+# (Sections 1, 2), and of "endpoints" in the SCHC sense (Section 1,
+# paragraph 2 — the sole such occurrence) are covered above.  All other
+# occurrences of "endpoint", "instance", and "context" in the draft are
+# CoAP/OSCORE-domain uses and are intentionally preserved, as recorded
+# in the header notes and in the new Section 1.1 terminology paragraph.
+# Technical behavior, Rule definitions, examples, YANG module, and IANA
+# considerations are unchanged.
