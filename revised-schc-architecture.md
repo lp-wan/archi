@@ -205,11 +205,11 @@ This section defines terminology and abbreviations used in this document.
   ends with a Payload taken from the original packet (if any).
 
 **Control Header**: A structure used to provide one or more control information
-  elements in a SCHC Datagram whenever necessary. For example, it may contain 
+  elements in a SCHC Data Unit whenever necessary. For example, it may contain 
   a Discriminator to route a Data Unit to the correct instance.
 <!-- 
 Quentin: (minor) I'd replace *in* by *for*. The Control Header is not part
-         of the SCHC Datagram following the rationale of the Control Header 
+         of the SCHC Data Unit following the rationale of the Control Header 
          section.
 -->
 
