@@ -93,8 +93,8 @@ and their interactions required for effective SCHC operation.
 The IETF LPWAN Working Group defined the necessary operations to enable
   IPv6 over selected Low-Power Wide-Area Networking (LPWAN) radio
   technologies; {{RFC8376}} presents an overview of those technologies.
-  The Static Context Header Compression (SCHC) framework {{RFC8724}} is the
-  core product of that effort and was the basis to form the SCHC Working
+  The Static Context Header Compression (SCHC) framework {{RFC8724}} is 
+  the core product of that effort and was the basis to form the SCHC Working
   Group. {{RFC8724}} defines a generic framework for compressing and
   decompressing protocol headers and, optionally, fragmenting and
   reassembling packets. Although SCHC was initially developed for constrained
@@ -106,14 +106,14 @@ The IETF LPWAN Working Group defined the necessary operations to enable
 
 This document does not replace or update {{RFC8724}}. In other words, it
   does not modify the mechanisms specified in {{RFC8724}}. It provides an
-  architectural entry point to SCHC and a common understanding that helps tie
-  together SCHC-related specifications. This broader approach aligns with the
-  objective defined by the SCHC Working Group Charter, which is to extend the
-  benefits of SCHC to both LPWA and non-LPWA environments.
+  architectural entry point to SCHC and a common understanding that helps 
+  tie together SCHC-related specifications. This broader approach aligns 
+  with the objective defined by the SCHC Working Group Charter, which is 
+  to extend the benefits of SCHC to both LPWA and non-LPWA environments.
 
 The architecture document details the constitutive elements of a SCHC-based
-  solution as well guidance on SCHC deployment and operation.
-  It provides a common terminology as well as a general architecture for SCHC
+  solution as well guidance on SCHC deployment and operation. It provides 
+  a common terminology as well as a general architecture for SCHC
   deployments, describing the essential components and their interactions,
   possible deployment types, and some operational and security considerations.
 
@@ -231,9 +231,11 @@ This section defines terminology and abbreviations used in this document.
 **Context Repository**: A logical component that stores and manages the
   Contexts used by its Domain.
 
-**C/D**: SCHC function that performs the Compression and Decompression of headers.
+**C/D**: SCHC function that performs the Compression and Decompression of 
+  headers.
 
-**F/R**: SCHC function that performs the Fragmentation and Reassembly of headers.
+**F/R**: SCHC function that performs the Fragmentation and Reassembly of 
+  headers.
 
 **MO**: Matching Operator
 
@@ -287,21 +289,22 @@ SCHC is a framework designed to efficiently compress headers of network
 <!-- TODO: This section should:
 
 - Define the logical components of SCHC (endpoints, profiles, contexts, 
-  management entities, etc.).
+    management entities, etc.).
 - Describe their responsibilities and relationships.
-- Remain independent of specific technologies (LPWAN vs PPP vs Ethernet, etc.),
-  these mappings come later.
-- Serve as a reference for the other sections (Architecture Overview, Deployment).
+- Remain independent of specific technologies (LPWAN vs PPP vs Ethernet,
+  etc.), these mappings come later.
+- Serve as a reference for the other sections (Architecture Overview, 
+  Deployment).
 
 SCHC may operate in multiple environments, from extremely constrained (LPWANs),
-to highly-capable, with simple or complex topologies.
+  to highly-capable, with simple or complex topologies.
 
 This document provides an architecture in which both the simple and the complex
-operations of SCHC can be developed. 
+  operations of SCHC can be developed. 
 -->
 
 <!-- TODO: This section should explain the basic operation and components of
-SCHC defined in RFC 8724, such as Rules. -->
+  SCHC defined in RFC 8724, such as Rules. -->
 
 ## Overview of a Basic Architecture
 
@@ -311,28 +314,29 @@ SCHC defined in RFC 8724, such as Rules. -->
   applications running on two remote hosts using SCHC Compression/Decompression
   and optionally Fragmentation/Reassembly.
 
-Each host runs an Endpoint that implements SCHC functions that are executed by
-  an Instance. The Instance stores a Context that may have been obtained from
-  an entity called the Context Repository. The same Context is shared between
-  the two Endpoints. The Instance Configuration specifies the required SCHC
-  functions and parameters necessary for the Instance to operate properly:
+Each host runs an Endpoint that implements SCHC functions that are executed
+  by an Instance. The Instance stores a Context that may have been obtained 
+  from an entity called the Context Repository. The same Context is shared 
+  between the two Endpoints. The Instance Configuration specifies the required 
+  SCHC functions and parameters necessary for the Instance to operate properly:
   which packets to intercept, the rule-matching policy (e.g., first-match,
-  best-match), the Instance's role (in the case of asymmetric processing), etc.
+  best-match), the Instance's role (in the case of asymmetric processing),
+  etc.
 
 Important notice: having the same Context is not sufficient to guarantee
-  the interoperability of SCHC operations between two Instances. The format of
-  the data obtained from the Parser when processing the headers must be
-  consistent on each Endpoint to allow the successful decompression. To ensure
-  interoperability, the Context may specify which Parser to use to delineate
-  the header fields, and/or which Data Model, such as the one defined in
-  {{RFC9363}}.
+  the interoperability of SCHC operations between two Instances. The format
+  of the data obtained from the Parser when processing the headers must
+  be consistent on each Endpoint to allow the successful decompression. 
+  To ensure interoperability, the Context may specify which Parser to use 
+  to delineate the header fields, and/or which Data Model, such as the one 
+  defined in {{RFC9363}}.
 
 Instances sharing a common set of Contexts form a Domain. The Domain Manager
-  is responsible for managing the Contexts of all Instances that belong to it.
-  A communication between two Instances or more that share a common Context is
-  called a Session. Each Instance, Context, and Session must be uniquely
-  identifiable to allow the Domain Manager to update the Context of a specific
-  Instance.
+  is responsible for managing the Contexts of all Instances that belong to
+  it. A communication between two Instances or more that share a common
+  Context is called a Session. Each Instance, Context, and Session must 
+  be uniquely identifiable to allow the Domain Manager to update the Context 
+  of a specific Instance.
 
 ~~~~~~~~
 +-----------------------+                   +-----------------------+
@@ -416,10 +420,10 @@ configuration and management'}
 ### Instance
 
 An Instance is the fundamental component that runs a set of SCHC functionalities
-  as defined in {{RFC8724}} hosted on an Endpoint. Its operation is defined by
-  an Instance Configuration and a Context. An Endpoint MAY execute several
-  Instances. Each Instance operates independently, with its own Context and
-  Instance Configuration. Instances may execute dynamic Context update
+  as defined in {{RFC8724}} hosted on an Endpoint. Its operation is defined 
+  by an Instance Configuration and a Context. An Endpoint MAY execute several
+  Instances. Each Instance operates independently, with its own Context 
+  and Instance Configuration. Instances may execute dynamic Context update
   mechanisms and performance monitoring and reporting in complex scenarios.
   
 #### Instance Configuration
@@ -439,9 +443,9 @@ The Instance Configuration may also include the following parameters:
   which direction the rule applies to (Up, Dw, Bi).
 - Matching policy (e.g., first-match, best-match, etc.) to apply when multiple
   rules match a packet.
-- Packet interception criteria (e.g., Stratum - the protocol headers that the
-  SCHC Rules in the associated Context can address, Filters based on specific
-  values or characteristics of packets, etc.)
+- Packet interception criteria (e.g., Stratum - the protocol headers that 
+  the SCHC Rules in the associated Context can address, Filters based on 
+  specific values or characteristics of packets, etc.)
 - Dispatch information (e.g., how to identify the Instance for incoming
   packets, how to route packets to the appropriate Instance, etc.).
 
@@ -462,10 +466,10 @@ The Context contains operational information shared between two or more
 Instances.
 
 For example, for Header Compression and Decompression (C/D) or Fragmentation
-  and Reassembly (F/R), the Context defines the set of C/D and F/R Rules - or
-  Set of Rules - describing the specific actions to be performed on the packets
-  using the corresponding SCHC functionalities, and, optionally, the Parser and
-  the Data Model to delineate and dissect the header fields.
+  and Reassembly (F/R), the Context defines the set of C/D and F/R Rules
+  - or Set of Rules - describing the specific actions to be performed on 
+  the packets using the corresponding SCHC functionalities, and, optionally, 
+  the Parser and the Data Model to delineate and dissect the header fields.
 
 ### Endpoint
 
@@ -476,14 +480,15 @@ functionalities.
 #### Header Compression and Decompression (C/D)
 
 This component is responsible for compressing and decompressing headers
-  using the SCHC framework, as described in {{RFC8724}}. It applies the rules
-  defined in the Context.
+  using the SCHC framework, as described in {{RFC8724}}. It applies the 
+  rules defined in the Context.
 
 Internally, on compression, the C/D engine:
 
-- delineates the fields using the Parser and/or Data Model provided in the Context;
-- chooses the appropriate compression Rule among candidate Rules from the Context
-  based on the matching policy defined in the Instance Configuration;
+- delineates the fields using the Parser and/or Data Model provided in the 
+  Context;
+- chooses the appropriate compression Rule among candidate Rules from the 
+  Context based on the matching policy defined in the Instance Configuration;
 - applies the compression Rule to the fields of the header(s);
 - generates the compressed SCHC Data Unit.
 In {{RFC8724}}, a packet whose header has been compressed is called a SCHC
@@ -491,8 +496,8 @@ In {{RFC8724}}, a packet whose header has been compressed is called a SCHC
 
 On decompression, the C/D engine:
 
-- identifies the appropriate decompression Rule based on the RuleID stored in
-  the SCHC Packet;
+- identifies the appropriate decompression Rule based on the RuleID stored
+  in the SCHC Packet;
 - applies the decompression Rule to reconstruct the original header;
 - reconstructs and returns the original packet from the decompressed header
   and payload.
@@ -529,26 +534,26 @@ Configuration.
 When an Endpoint is supporting multiple Instances, the Instance Manager is
   responsible for managing the lifecycle and configuration of these Instances.
   Data Units are routed to the appropriate Instance by the Dispatcher using
-  the Discriminator and admission criteria based on information provided in the
-  Instance Configuration. The Dispatcher is a single point of decision for
-  packet forwarding within the Endpoint.
+  the Discriminator and admission criteria based on information provided
+  in the Instance Configuration. The Dispatcher is a single point of decision 
+  for packet forwarding within the Endpoint.
 
-The Dispatcher runs ahead of the selection of an Instance. At the moment it
-  makes its decision, no Context has been selected, no Session has been
-  identified, and no SCHC state is available for the packet at hand: those are
-  consequences of the decision, not inputs to it. The Dispatcher therefore
+The Dispatcher runs ahead of the selection of an Instance. At the moment 
+  it makes its decision, no Context has been selected, no Session has been
+  identified, and no SCHC state is available for the packet at hand: those
+  are consequences of the decision, not inputs to it. The Dispatcher therefore
   does not require SCHC Rules, a Context, or per-Session SCHC state to operate.
   It uses the Discriminator to route the Data Units to the correct Instance
-  which has to be locatable and interpretable without them. A design in which
-  the Dispatcher would have to consult SCHC Rules or state to
+  which has to be locatable and interpretable without them. A design in 
+  which the Dispatcher would have to consult SCHC Rules or state to
   find the Instance that owns those very Rules and that state cannot be
   resolved, and is outside this architecture.
 
 In some deployments, the Discriminator is derived entirely from lower-layer
   context (e.g., a specific PPP link, an IPv6 address, or a UDP port).
-  If external context is insufficient or unavailable, the Dispatcher may need
-  an explicit Discriminator. For example, Data Units can be encapsulated in a
-  light transport protocol whose header contains the disambiguation
+  If external context is insufficient or unavailable, the Dispatcher may 
+  need an explicit Discriminator. For example, Data Units can be encapsulated 
+  in a light transport protocol whose header contains the disambiguation
   information elements, such as a Session Identifier.
   These information elements may also be provided in a custom Control Header
   placed before the RuleID.
@@ -623,8 +628,8 @@ As illustrated in the figure below, the Session is a communication session
 In the figure below, two Domains are represented, where Endpoint A and
   Endpoint B host Instances belonging to Domain 1, and Endpoint B and
   Endpoint C host Instances belonging to Domain 2. Instances from the same
-  Domain communicate through a Session. A Session Identifier, or Session ID,
-  may be used as a Discriminator to route the Data Units to the correct
+  Domain communicate through a Session. A Session Identifier, or Session 
+  ID, may be used as a Discriminator to route the Data Units to the correct
   Instance (e.g., to distinguish between the two Instances of Endpoint B),
   and/or for management purpose.
 
@@ -666,9 +671,9 @@ It provides a unified representation for:
   ACK, SCHC ACK REQ, SCHC Sender-Abort, and SCHC Receiver-Abort.
 
 A Data Unit begins with a RuleID, and the result of the SCHC operation
-  follows the RuleID immediately. The interpretation of that result depends on
-  the Rule that the RuleID identifies, so nothing that a receiver has to parse
-  independently of the Context can be placed between the two.
+  follows the RuleID immediately. The interpretation of that result depends 
+  on the Rule that the RuleID identifies, so nothing that a receiver has
+  to parse independently of the Context can be placed between the two.
 
 A Data Unit is composed of a RuleID followed by the result of the SCHC
   operation (if non-empty), such as a compression residue or a packet fragment.
@@ -676,9 +681,9 @@ A Data Unit is composed of a RuleID followed by the result of the SCHC
   It may be followed by a Payload (e.g., the paylaod of the original packet,
   fragment payload) called SCHC Payload.
 
-As stated in {{RFC8724}}, a Data Unit resulting from a compression operation is
-called a SCHC Packet, and a Data Unit resulting from a fragmentation operation
-is called a SCHC Fragment.
+As stated in {{RFC8724}}, a Data Unit resulting from a compression operation
+is called a SCHC Packet, and a Data Unit resulting from a fragmentation
+operation is called a SCHC Fragment.
 
 The following figure illustrates the general SCHC Data Unit format and the
 SCHC Header format of SCHC Packets and SCHC Fragments.
@@ -701,7 +706,7 @@ SCHC Header format of SCHC Packets and SCHC Fragments.
 
       SCHC Header, fragmentation case (Fragment Header, RFC 8724 8.3.1):
       +--------+-----------------------+
-      | RuleID | DTag | W | FCN | RCS |    SCHC Payload = Fragment
+      | RuleID | DTag | W | FCN | RCS  |    SCHC Payload = Fragment
       +--------+-----------------------+    Payload (tiles)
 ~~~~~~~~
 {: #Fig-DataUnit title='SCHC Data Unit, SCHC Header, and SCHC Payload'}
@@ -709,35 +714,38 @@ SCHC Header format of SCHC Packets and SCHC Fragments.
 
 #### Control Header {#ControlHeader}
 
-In some deployments, it may be necessary to add information to the Data Unit,
-  for example so that it can be properly routed to the correct Instance. This
-  information may be carried in a Control Header. An Instance that is handed a
-  Data Unit is unaffected by a Control Header which was removed before the
-  Data Unit reached it, typically by the Dispatcher.
+In some deployments, it may be necessary to add information to the Data 
+  Unit, for example so that it can be properly routed to the correct Instance. 
+  This information may be carried in a Control Header. An Instance that 
+  is handed a Data Unit is unaffected by a Control Header which was removed 
+  before the Data Unit reached it, typically by the Dispatcher.
 
-This document describes the Control Header as an architectural slot: where it
-  sits with respect to the Data Unit, and what a specification that fills the
-  slot has to provide. It does not define a Control Header format, and it does
-  not mandate or endorse any particular one. The architecture admits more than
-  one: different specifications may define different Control Headers for
-  different environments or deployments. Deployments that need no Control Header carry none, and that remains the common case. A Control Header, when present, precedes the RuleID, as represented in {{Fig-DataUnit}}.
+This document describes the Control Header as an architectural slot: where 
+  it sits with respect to the Data Unit, and what a specification that fills 
+  the slot has to provide. It does not define a Control Header format, and 
+  it does not mandate or endorse any particular one. The architecture admits 
+  more than one: different specifications may define different Control Headers
+  for different environments or deployments. Deployments that need no Control 
+  Header carry none, and that remains the common case. A Control Header, 
+  when present, precedes the RuleID, as represented in {{Fig-DataUnit}}.
 
-This position follows from the purpose of the Control Header rather than from
-  convention. A Control Header exists so that a node can act on a Data Unit
-  before the Instance, and hence the Context, has been selected; that is the
-  reason for carrying the information outside the SCHC operaton at all. A
-  Control Header placed after the RuleID could be delineated only by a node
-  that already holds the Context, which is precisely the node that does not
-  need the Control Header. A specification that defines a Control Header for
-  use with SCHC therefore MUST place it before the RuleID, and MUST NOT insert
-  any element between the RuleID and the result of the SCHC operation.  
+This position follows from the purpose of the Control Header rather than
+  from convention. A Control Header exists so that a node can act on a 
+  Data Unit before the Instance, and hence the Context, has been selected; 
+  that is the reason for carrying the information outside the SCHC operation
+  at all. A Control Header placed after the RuleID could be delineated only 
+  by a  node that already holds the Context, which is precisely the node
+  that does not need the Control Header. A specification that defines a
+  Control Header for use with SCHC therefore MUST place it before the RuleID,
+  and MUST NOT insert any element between the RuleID and the result of the 
+  SCHC operation.  
 
-For obvious reasons of interoperability, the format of the Control Header must
-  be clearly defined in a standard track document (in a profile such as
-  {{I-D.ietf-6lo-schc-15dot4}} or in a dedicated specification).
+For obvious reasons of interoperability, the format of the Control Header 
+  must be clearly defined in a standard track document (in a profile such 
+  as {{I-D.ietf-6lo-schc-15dot4}} or in a dedicated specification).
   
-A Control Header is a structure that may also be itself compressed with SCHC
-  using its own Context and Instance.
+A Control Header is a structure that may also be itself compressed with 
+  SCHC using its own Context and Instance.
 
 # Deployment models
 
@@ -747,12 +755,12 @@ Working Group and match the terminology with the scenario characteristics.
 ## LPWAN deployment
 
 This section considers a typical LPWAN deployment where an IoT device
-  communicates with a gateway or server using SCHC for header compression and
-  decompression. In this scenario, SCHC is used to compress the CoAP,
-  UDP, and IPv6 headers before sending the datagrams over the LPWAN link layer.
-  SCHC is used as an adaptation layer between the IPv6 layer and the LPWAN link
-  layer to compress the headers of the datagrams such that they fit within the
-  constraints of the LPWAN link layer.
+  communicates with a gateway or server using SCHC for header compression 
+  and decompression. In this scenario, SCHC is used to compress the CoAP,
+  UDP, and IPv6 headers before sending the datagrams over the LPWAN link
+  layer. SCHC is used as an adaptation layer between the IPv6 layer and
+  the LPWAN link layer to compress the headers of the datagrams such that
+  they fit within the constraints of the LPWAN link layer.
 
   In this setup, each device features a single SCHC Instance I1 in a single 
   SCHC Endpoint. Each Instance is pre-configured with a static Context.
@@ -905,17 +913,18 @@ SCHC Rules include a Direction Indicator (DI) that allows for asymmetric
       - Dw:  for packets traveling Downlink;
       - Bi:  for both Uplink or Downlink packets.
 
-The direction can be determined based on the Role of the Instance. The role is
-  specified in the Instance Configuration. If the Role of the Instance has not
-  been specified, then asymmetric rules cannot be used; only bidirectional
-  rules apply.
+The direction can be determined based on the Role of the Instance. The role
+  is specified in the Instance Configuration. If the Role of the Instance 
+  has not been specified, then asymmetric rules cannot be used; only 
+  bidirectional rules apply.
 
   In {{RFC8724}}, two roles were defined: App and Dev, which refer to the
-  LPWAN server and the devices, respectively. By convention, packet from App
-  to Dev are Downlink, and packets from Dev to App are Uplink.
+  LPWAN server and the devices, respectively. By convention, packet from 
+  App to Dev are Downlink, and packets from Dev to App are Uplink.
 
   When necessary, e.g. in cases where “App” and “Dev” do not apply, other
-  roles can be defined, along with an associated strategy for determining the direction between those Roles.
+  roles can be defined, along with an associated strategy for determining 
+  the direction between those Roles.
 
 ## Context consistency
 
@@ -924,12 +933,12 @@ In {{Architecture}}, we have established that a Session is a communication
   For a packet to be properly decompressed, the receiver must know the rule
   that the sender used to compress the packet headers.
 
-To facilitate the provisioning and synchronization of Contexts within a Domain
-  for a given Session, it is recommended to deploy the same Context (with
-  identical SoR) on all Instances participating in a given Session. However,
-  it is possible for one or more Instances to have only a subset of the SoR,
-  as long as the Contexts of the Instances participating in a given session
-  remain compatible.
+To facilitate the provisioning and synchronization of Contexts within a 
+  Domain for a given Session, it is recommended to deploy the same Context 
+  (with identical SoR) on all Instances participating in a given Session. 
+  However, it is possible for one or more Instances to have only a subset 
+  of the SoR, as long as the Contexts of the Instances participating in 
+  a given session remain compatible.
 
 In the following example of a deployment using a star topology where leaf
   nodes only communicate with the root, rather than creating a separate
@@ -962,12 +971,12 @@ In the following example of a deployment using a star topology where leaf
 ## Data Models and Parsing
 
 Having the same Context is not sufficient to guarantee
-  the interoperability of SCHC operations between two Instances. The format of
-  the data obtained from the Parser when processing the headers must be
-  consistent on each Endpoint to allow the successful decompression. To ensure
-  interoperability, the Context may specify which Parser to use to delineate
-  the header fields, and/or which Data Model, such as the one defined in
-  {{RFC9363}}.
+  the interoperability of SCHC operations between two Instances. The format 
+  of the data obtained from the Parser when processing the headers must
+  be consistent on each Endpoint to allow the successful decompression.
+  To ensure interoperability, the Context may specify which Parser to use 
+  to delineate the header fields, and/or which Data Model, such as the one
+  defined in {{RFC9363}}.
 
 ## Management
 
@@ -978,7 +987,8 @@ A SCHC Context needs to be provisioned at, or made available to, the
   protocol for establishing and synchromizing the Context.
   The Context can be configured and stored before the communication begins.
   It can be pre-provisioned, or installed by a provisioning protocol.
-  Any protocol used to provision SCHC Contexts needs to ensure that the communicating SCHC Instances use compatible configuration when processing
+  Any protocol used to provision SCHC Contexts needs to ensure that the
+  communicating SCHC Instances use compatible configuration when processing
   SCHC Data Units.
 
 ## Error handling
@@ -995,9 +1005,9 @@ A deployment may define a separate error-signaling protocol or carry error
   information in a Control Header. If a Control Header is used for this
   purpose, its presence and format must remain determinable when the Rule
   referenced by the failed Datagram is unknown or cannot be applied. For
-  example, a profile can define a fixed RuleID size and reserve a RuleID range
-  for Datagrams followed by a known Control Header format. This document does
-  not define the error messages or procedures.
+  example, a profile can define a fixed RuleID size and reserve a RuleID 
+  range for Datagrams followed by a known Control Header format. This document 
+  does not define the error messages or procedures.
 
 <!--
 ## Lifecycle
