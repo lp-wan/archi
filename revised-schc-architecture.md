@@ -731,13 +731,151 @@ A Control Header is a structure that may also be itself compressed with SCHC
 
 # Deployment models
 
+In this section, we review the deployment scenarios considered in the SCHC 
+Working Group and match the terminology with the scenario characteristics.
+
+## LPWAN deployment
+
+This section considers a typical LPWAN deployment where an IoT device
+  communicates with a gateway or server using SCHC for header compression and
+  decompression. In this scenario, SCHC is used to compress the CoAP,
+  UDP, and IPv6 headers before sending the datagrams over the LPWAN link layer.
+  SCHC is used as an adaptation layer between the IPv6 layer and the LPWAN link
+  layer to compress the headers of the datagrams such that they fit within the
+  constraints of the LPWAN link layer.
+
+  In this setup, each device features a single SCHC Instance I1 in a single 
+  SCHC Endpoint. Each Instance is pre-configured with a static Context.
+
+  The Discriminator is a field value within the LPWAN link layer, e.g. LoRAWAN
+  frame port (fPort) and the Dispatcher is hardcoded in the network stack: 
+  all traffic with pre-defined fPort or device ID are  dispatched to the 
+  SCHC Instance.
+
+
+~~~~~~~~
+                  Host A, IoT Device       Host B, Gateway/Server
+                 +------------------+       +------------------+
+                 |  Application A   |       |  Application B   |
+              +- +------------------+       +------------------+
+              |  |       CoAP       |       |       CoAP       |
+              |  +------------------+       +------------------+
+   I1 Stratum |  |       UDP        |       |       UDP        |
+              |  +------------------+       +------------------+
+              |  |       IPv6       |       |       IPv6       |
+              +- +------------------+       +------------------+
+                 |       SCHC       |       |       SCHC       |
+                 +------------------+       +------------------+
+Discriminator:   | LPWAN Link Layer |       | LPWAN Link Layer | 
+  fPort = xxx    +------------------+       +------------------+
+                 |  Physical Layer  |       |  Physical Layer  |
+                 +------------------+       +------------------+
+                          |                           |
+                          +---------------------------+
+~~~~~~~~
+{: #Fig-lpwan-deployment title='LPWAN deployment'}
+
 <!--
-Give deployment examples (point to point, point to multipoint,
-multi-instances, SCHC with cryptographic boundaries, etc.) and link them to
-specific technologies (LPWAN, PPP, Ethernet, 6Lo, etc.)
+| Core Element     | Notes          |
+|------------------|----------------|
+| Domain           | single         |
+| Endpoint         | single         |
+| Instance         | single         |
+| Context          | pre-configured |
+| Discriminator    |  fPort         |
+| Dispatcher       | hardcoded      |
 -->
 
-TBD
+  
+
+
+## 6Lo deployments
+
+In a first deployment example, a 6Lo Node (6LN) in a SCHC-Lo network 
+commmunicates with an external host on the Internet. 
+
+In this scenario, the 6LN is in direct communication with the 6Lo Border 
+Router (6LBR). SCHC Data Units are only carried over the SCHC-Lo network, 
+between the 6LN. The CoAP header and payload are sent in clear (no encryption), 
+and we assume that the SCHC datagram is small enough to fit in a single 
+802.15.4 frame.
+
+~~~~~~~~
+                  6LN                6LBR             External host
+
+             +- +--------+                              +--------+
+             |  |  CoAP  |                              |  CoAP  |
+             |  +--------+                              +--------+
+  I1 stratum |  |  UDP   |                              |  UDP   |
+             |  +--------+     +----------------+       +--------+
+             |  |  IPv6  |     |      IPv6      |       |  IPv6  |
+             +- +--------+     +----------------+       +--------+
+ Discriminator: |  6lo   |     |  6lo   |       .       .        .
+ 6Lo Dispatch   +--------+     +--------+       .       .        .
+ 0b01000100     |802.15.4|     |802.15.4|       .       .        .
+                +--------+     +----------------+       ..........
+                    |               |        |               |
+                    +---------------+        +---------------+
+                     SCHC-Lo network              Internet
+~~~~~~~~
+{: #Fig-6lo-simple title='6Lo deployment: 6Lo Node connected to an external host through a 6Lo Border Router'}
+
+
+In this scenario, the 6LN endpoint features a single Instance I1 that 
+compresses the IPv6, UDP and CoAP stratum. The Discriminator for the SCHC
+instance is located at the 6Lo adaptation and is materialized by the dispatch 
+byte.
+
+A datagram compressed by SCHC results in the following frame format:
+
+~~~~~~~~
++- - - - - -+------------------------+--------------+
+|           |   01000100   | Rule ID |   Residue    |
++- - - - - -+------------------------+--------------+
+  802.15.4  | 6Lo Dispatch |     SCHC Data Unit     |
+   header   |   (1 byte)   |                        | 
+~~~~~~~~
+{: #Fig-6lo-simple-datagram title='SCHC-Lo Data Unit'}
+
+
+
+
+Placeholder description text 
+
+~~~~~~~~
+
+
+                                                   Host E
+                    (RuleID 2, E2)                /
+                    (RuleID 1, E1)      +--------+
+                    (RuleID 2, E1)  --- |Internet|
+                    (RuleID 3, E1) /    +--------+
+                   6LBR -----------
+                 /      \
+                /        \
+              6LR         6LR -------------+            Nodes | End point
+(RuleID 1, E1) |         | (RuleID 1, E1)  |   RuleID 1: A, B      E1
+(RuleID 2, E1) |         | (RuleID 2, E1)  |   RuleID 2: A, C      E1
+(RuleID 3, E1) |         | (RuleID 3, E1)  |   RuleID 3: A, E      E1
+(RuleID 2, E2) |         | (RuleID 2, E2)  |   RuleID 2: A, B      E2
+               |         |                 |
+              Host A      Host B         Host C
+        (RuleID 1, E1)    (RuleID 1, E1)   (RuleID 2, E1)
+        (RuleID 2, E1)    (RuleID 2, E2)
+        (RuleID 3, E1)
+        (RuleID 2, E2)
+~~~~~~~~
+
+| Core Element     | Notes          |
+|------------------|----------------|
+| Domains          | 2              |
+| Endpoint         | 1 per device   |
+| Instance         | 2, I1 & I2     |
+| Contexts         | pre-configured |
+| Discriminator    | session ID     |
+| Dispatcher       | VOICI ?        |
+
+
 
 # Operational considerations
 
