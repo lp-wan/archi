@@ -95,30 +95,27 @@ The IETF LPWAN Working Group defined the necessary operations to enable
   technologies; {{RFC8376}} presents an overview of those technologies.
   The Static Context Header Compression (SCHC) framework {{RFC8724}} is the
   core product of that effort and was the basis to form the SCHC Working
-  Group. {{RFC8724}} defines a generic framework for header compression and
-  fragmentation, based on a static context that is pre-installed on the
-  SCHC endpoints.
+  Group. {{RFC8724}} defines a generic framework for compressing and
+  decompressing protocol headers and, optionally, fragmenting and
+  reassembling packets. Although SCHC was initially developed for constrained
+  LPWAN environments, the framework itself is generic: its mechanisms can
+  also be used over other network technologies and in a wider range of
+  deployment models. The architecture defined in this document is applicable
+  to LPWAN and non-LPWAN environments alike, from highly constrained devices
+  and links to more capable ones.
 
-While SCHC was designed to address the severe constraints of LPWAN
-  technologies, the framework itself is generic: the architecture defined
-  in this document is applicable to LPWAN and non-LPWAN environments alike,
-  from highly constrained devices and links to more capable ones.
+This document does not replace or update {{RFC8724}}. In other words, it
+  does not modify the mechanisms specified in {{RFC8724}}. It provides an
+  architectural entry point to SCHC and a common understanding that helps tie
+  together SCHC-related specifications. This broader approach aligns with the
+  objective defined by the SCHC Working Group Charter, which is to extend the
+  benefits of SCHC to both LPWA and non-LPWA environments.
 
-This document details the constitutive elements of a SCHC-based solution
-  and how the solution can be deployed. It provides a general architecture
-  for SCHC deployments, describing the essential components and their
-  interactions, the possible deployment types, and the models whereby
-  Contexts can be distributed and installed to enable reliable and scalable
-  operations.
-
-This document does not update {{RFC8724}} and does not define new Rule
-  formats, Data Unit formats, or protocols. It names the components of a SCHC
-  deployment and describes how they relate, so that documents that specify a
-  particular deployment, profile, or extension can refer to a common
-  architecture and vocabulary. Assumptions that stem from the LPWAN
-  environment, such as extreme bandwidth scarcity, very small frames, or
-  intermittent connectivity, apply where that environment does and are not
-  required by this architecture.
+The architecture document details the constitutive elements of a SCHC-based
+  solution as well guidance on SCHC deployment and operation.
+  It provides a common terminology as well as a general architecture for SCHC
+  deployments, describing the essential components and their interactions,
+  possible deployment types, and some operational and security considerations.
 
 # Requirements Language
 
@@ -169,12 +166,15 @@ This section defines terminology and abbreviations used in this document. In
   define how SCHC operations are performed, e.g. role of the Instance, matching
   policy, dispatcher configuration, supported SCHC features.
 
-**Session**: A communication session between two or more Instances that share a
-  common Context for SCHC operations.
+**Profile**: A set of guidelines and parameters that defines how SCHC operates
+  for a given network technology or deployment.
 
 **Set of Variables (SoV)**: Runtime parameters and session variables, such as
   fragmentation-related timers, retransmission counters, state flags, and other
   per-session values that may change during operation.
+
+**Session**: A communication session between two or more Instances that share
+  a common Context for SCHC operations.
 
 **Dispatcher**: A logical component that routes Data Units to the
    appropriate Instance based on defined admission criteria. The Dispatcher
@@ -239,9 +239,38 @@ This section defines terminology and abbreviations used in this document. In
 
 # SCHC: Primer
 
-<!-- TODO: This section should explain the basic operation and components of
+<!-- his section explains the basic operation and components of
 SCHC defined in RFC 8724, such as Rules. -->
 
+This section briefly recalls the SCHC concepts previously defined in
+  {{RFC8724}} needed to understand the architecture.
+
+SCHC is a framework designed to efficiently compress headers of network
+  packets. It provides compression/decompression (C/D) and optional
+  fragmentation/reassembly (F/R) functions. The compression/decompression
+  mechanism reduces payload overhead by exploiting the predictable nature of network flows. Instead of transmitting full headers, both the sending and receiving Instances store synchronized, static information about expected headers: the Context, which contains Rules. Using a Rule that matches the headers of a packet to be transmitted, the sender replaces the known header fields with a short RuleID which identifies the rule that applies, and a compression residue if any, forming a SCHC Data Unit. The receiver of this
+  SCHC Data Unit matches the RuleID against its own Context and applies decompression actions to reconstruct the original header.
+
+  A C/D Rule describes how to process identified header fields.  Its
+  Field Descriptors specify, among other things, the field, the value or
+  condition to be matched, the Matching Operator (MO), and the
+  Compression/Decompression Action (CDA). A parser identifies the fields
+  in the packet; the Rule defines how those fields are matched and
+  encoded. The compressor selects a matching Rule and sends its RuleID
+  together with any resulting Compression Residue. The decompressor uses
+  the corresponding Rule to reconstruct the header. Fields that need not
+  be transmitted can be recovered from the Rule or computed during
+  decompression; other fields may contribute bits to the Compression
+  Residue. The resulting SCHC Data Unit consists of a compressed header (the RuleID
+  and, when present, the Compression Residue) followed by the original
+  packet payload.
+
+  When required by the underlying link or deployment, F/R operates on the
+  SCHC Packet produced by C/D.  The receiver reassembles the SCHC Data Unit
+  before applying C/D.  F/R is optional, and its use and operating
+  parameters depend on the applicable Profile.  C/D and F/R are distinct
+  SCHC functions and use Rules for different purposes, even though their
+  RuleIDs may share a namespace within their scope.
 
 # Architecture {#Architecture}
 
@@ -263,17 +292,6 @@ operations of SCHC can be developed.
 
 <!-- TODO: This section should explain the basic operation and components of
 SCHC defined in RFC 8724, such as Rules. -->
-
-SCHC is a framework designed to efficiently compress headers of network packets.
-  It reduces payload overhead by exploiting the predictable nature of network
-  flows. Instead of transmitting full headers, both the sending and receiving
-  Instances store synchronized, static information about expected headers:
-  the Context, which contains Rules. Using a Rule that matches the headers of
-  a packet to be transmitted, the sender replaces the known header fields with
-  a short RuleID which identifies the rule that applies, and a compression
-  residue if any, forming a SCHC Datagram. The receiver of this SCHC Datagram
-  matches the RuleID against its own Context and applies decompression actions
-  to reconstruct the original header.
 
 ## Overview of a Basic Architecture
 
@@ -803,6 +821,18 @@ Having the same Context is not sufficient to guarantee
   the header fields, and/or which Data Model, such as the one defined in
   {{RFC9363}}.
 
+## Management
+
+### Context Provisioning
+
+A SCHC Context needs to be provisioned at, or made available to, the
+  SCHC Instances that use it. {{RFC8724}} does not define a negotiation
+  protocol for establishing and synchromizing the Context.
+  The Context can be configured and stored before the communication begins.
+  It can be pre-provisioned, or installed by a provisioning protocol.
+  Any protocol used to provision SCHC Contexts needs to ensure that the communicating SCHC Instances use compatible configuration when processing
+  SCHC Data Units.
+
 ## Error handling
 
 When an Instance receives a Datagram that references a RuleID unknown in
@@ -824,7 +854,6 @@ A deployment may define a separate error-signaling protocol or carry error
 <!--
 ## Lifecycle
 
-## Management
 -->
 
 # Security Considerations
