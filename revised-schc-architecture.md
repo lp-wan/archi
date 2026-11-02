@@ -207,6 +207,11 @@ This section defines terminology and abbreviations used in this document.
 **Control Header**: A structure used to provide one or more control information
   elements in a SCHC Datagram whenever necessary. For example, it may contain 
   a Discriminator to route a Data Unit to the correct instance.
+<!-- 
+Quentin: (minor) I'd replace *in* by *for*. The Control Header is not part
+         of the SCHC Datagram following the rationale of the Control Header 
+         section.
+-->
 
 **Domain**: A logical grouping of Instances that share a common set of Contexts
    for SCHC operations.
@@ -259,11 +264,10 @@ SCHC is a framework designed to efficiently compress headers of network
   the headers of a packet to be transmitted, the sender replaces the known 
   header fields with a short RuleID which identifies the rule that applies, 
   and a compression residue if any, forming a SCHC Data Unit. The receiver 
-  of this
-  SCHC Data Unit matches the RuleID against its own Context and applies 
-  decompression actions to reconstruct the original header.
+  of this SCHC Data Unit matches the RuleID against its own Context and 
+  applies decompression actions to reconstruct the original header.
 
-  A C/D Rule describes how to process identified header fields.  Its
+  A C/D Rule describes how to process identified header fields. Its
   Field Descriptors specify, among other things, the field, the value or
   condition to be matched, the Matching Operator (MO), and the
   Compression/Decompression Action (CDA). A parser identifies the fields
