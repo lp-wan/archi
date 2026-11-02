@@ -122,75 +122,77 @@ The architecture document details the constitutive elements of a SCHC-based
 {::boilerplate bcp14}
 
 This document is Informational. It places no requirements on
-  implementations of {{RFC8724}}, and nothing in it contradicts {{RFC8724}} or
-  the profiles built on it. In some cases, terminology was clarified for
-  contexts or uses which were not initially in scope of SCHC.
+  implementations of {{RFC8724}}, and nothing in it contradicts {{RFC8724}} 
+  or the profiles built on it. In some cases, terminology was clarified
+  for contexts or uses which were not initially in scope of SCHC.
   Where this document uses BCP 14 keywords, they apply to documents that
-  specify an element this architecture leaves open, such as a Control Header ({{ControlHeader}}), and they state what such a document has to provide for
-  the architecture to hold.
+  specify an element this architecture leaves open, such as a Control Header 
+  ({{ControlHeader}}), and they state what such a document has to provide
+  for the architecture to hold.
 
 # Terminology {#Terminology}
 
-This section defines terminology and abbreviations used in this document. In
-  the following, terms are assumed to be defined in the context of the SCHC
-  ecosystem, unless specified otherwise, *.e.g* Endpoint refers to a SCHC
-  Endpoint, Instance refers to a SCHC Instance, and so on.
+This section defines terminology and abbreviations used in this document. 
+  In the following, terms are assumed to be defined in the context of the 
+  SCHC ecosystem, unless specified otherwise, *.e.g* Endpoint refers to 
+  a SCHC Endpoint, Instance refers to a SCHC Instance, and so on.
 
 **SCHC**: A Generic Framework, as defined in {{RFC8724}}, that performs
   compression/decompression and, optionally, fragmentation/reassembly of
   protocol headers, based on a Static Context shared between two or more
-  Endpoints. The SCHC acronym is pronounced like "sheek" in English (or "chic"
-  in French).
+  Endpoints. The SCHC acronym is pronounced like "sheek" in English (or 
+  "chic" in French).
 
 **Endpoint**: A logical entity that provides SCHC functionality by hosting
   the SCHC processing code, rather than a physical device. Multiple SCHC
   Endpoints can operate on the same physical equipment, for example to serve
   different Domains, tenants, strata.
 
-**Instance**: A logical component of an Endpoint that executes the actual SCHC
-  operations, e.g. compressing and decompressing headers, fragmenting and
-  reassembling packets. Multiple Instances can coexist on the same Endpoint
-  but each Instance operates independently, with its own Context and Configuration.
+**Instance**: A logical component of an Endpoint that executes the actual
+  SCHC operations, e.g. compressing and decompressing headers, fragmenting 
+  and reassembling packets. Multiple Instances can coexist on the same Endpoint
+  but each Instance operates independently, with its own Context and 
+  Configuration.
 
-**Rule**: A structured set of header fields and matching conditions used by SCHC
-  to process packets in accordance with specified actions.
+**Rule**: A structured set of header fields and matching conditions used 
+  by SCHC to process packets in accordance with specified actions.
 
 **Set of Rules (SoR)**: A collection of Rule entries that define how specific
   header fields are processed by an Instance.
 
 **Context**: A SoR together with metadata, shared by two or more Instances.
-  Metadata may, for example, refer to a data model or a parser compatible with
-  the rule format.
+  Metadata may, for example, refer to a data model or a parser compatible 
+  with the rule format.
 
-**Instance Configuration**: A set of configurations specific to an Instance that
-  define how SCHC operations are performed, e.g. role of the Instance, matching
-  policy, dispatcher configuration, supported SCHC features.
+**Instance Configuration**: A set of configurations specific to an Instance 
+  that define how SCHC operations are performed, e.g. role of the Instance, 
+  matching policy, dispatcher configuration, supported SCHC features.
 
 **Profile**: A set of guidelines and parameters that defines how SCHC operates
   for a given network technology or deployment.
 
-**Set of Variables (SoV)**: Runtime parameters and session variables, such as
-  fragmentation-related timers, retransmission counters, state flags, and other
-  per-session values that may change during operation.
+**Set of Variables (SoV)**: Runtime parameters and session variables, such 
+  as fragmentation-related timers, retransmission counters, state flags,
+  and other per-session values that may change during operation.
 
-**Session**: A communication session between two or more Instances that share
-  a common Context for SCHC operations.
+**Session**: A communication session between two or more Instances that 
+  share a common Context for SCHC operations.
 
-**Dispatcher**: A logical component that routes Data Units to the
-   appropriate Instance based on defined admission criteria. The Dispatcher
-   can be integrated into the network stack or as a separate component.
+**Dispatcher**: A logical component that routes Data Units to the appropriate 
+  Instance based on defined admission criteria. The Dispatcher can be integrated
+  into the network stack or as a separate component.
 
-**Discriminator**: An optional information element used by the Dispatcher to
-   enable the selection of the correct Instance. The Discriminator can be a
-   combination of several criteria.
+**Discriminator**: An optional information element used by the Dispatcher 
+  to enable the selection of the correct Instance. The Discriminator can
+  be a combination of several criteria.
 
 **Parser**: A software tool or component that dissects and analyzes network
    packets, to extract header fields such as source and destination
    addresses, port numbers, and payload data.
 
 **Data Model**: A formal description of the Rules and of the header fields
-   they refer to, that allows an Instance to interpret those fields and to
-   exchange Contexts in an interoperable way.
+   they refer to, that allows an Instance to interpret those fields and 
+   to exchange Contexts in an interoperable way.
 
 **Stratum**: A background concept that identifies a portion of the network
   protocol stack targeted by SCHC, i.e., the contiguous layers within which
@@ -199,12 +201,12 @@ This section defines terminology and abbreviations used in this document. In
 
 **Data Unit**: The unit exchanged between SCHC instances. A Data Unit
   consists of a Rule Identifier (RuleID) and the result of the SCHC operation
-  (if non-empty), such as a compression residue or a packet fragment. It ends
-  with a Payload taken from the original packet (if any).
+  (if non-empty), such as a compression residue or a packet fragment. It 
+  ends with a Payload taken from the original packet (if any).
 
 **Control Header**: A structure used to provide one or more control information
-  elements in a SCHC Datagram whenever necessary. For example, it may contain a
-  Discriminator to route a Data Unit to the correct instance.
+  elements in a SCHC Datagram whenever necessary. For example, it may contain 
+  a Discriminator to route a Data Unit to the correct instance.
 
 **Domain**: A logical grouping of Instances that share a common set of Contexts
    for SCHC operations.
@@ -248,8 +250,16 @@ This section briefly recalls the SCHC concepts previously defined in
 SCHC is a framework designed to efficiently compress headers of network
   packets. It provides compression/decompression (C/D) and optional
   fragmentation/reassembly (F/R) functions. The compression/decompression
-  mechanism reduces payload overhead by exploiting the predictable nature of network flows. Instead of transmitting full headers, both the sending and receiving Instances store synchronized, static information about expected headers: the Context, which contains Rules. Using a Rule that matches the headers of a packet to be transmitted, the sender replaces the known header fields with a short RuleID which identifies the rule that applies, and a compression residue if any, forming a SCHC Data Unit. The receiver of this
-  SCHC Data Unit matches the RuleID against its own Context and applies decompression actions to reconstruct the original header.
+  mechanism reduces payload overhead by exploiting the predictable nature 
+  of network flows. Instead of transmitting full headers, both the sending 
+  and receiving Instances store synchronized, static information about expected 
+  headers: the Context, which contains Rules. Using a Rule that matches 
+  the headers of a packet to be transmitted, the sender replaces the known 
+  header fields with a short RuleID which identifies the rule that applies, 
+  and a compression residue if any, forming a SCHC Data Unit. The receiver 
+  of this
+  SCHC Data Unit matches the RuleID against its own Context and applies 
+  decompression actions to reconstruct the original header.
 
   A C/D Rule describes how to process identified header fields.  Its
   Field Descriptors specify, among other things, the field, the value or
@@ -261,9 +271,9 @@ SCHC is a framework designed to efficiently compress headers of network
   the corresponding Rule to reconstruct the header. Fields that need not
   be transmitted can be recovered from the Rule or computed during
   decompression; other fields may contribute bits to the Compression
-  Residue. The resulting SCHC Data Unit consists of a compressed header (the RuleID
-  and, when present, the Compression Residue) followed by the original
-  packet payload.
+  Residue. The resulting SCHC Data Unit consists of a compressed header 
+  (the RuleID and, when present, the Compression Residue) followed by the 
+  original packet payload.
 
   When required by the underlying link or deployment, F/R operates on the
   SCHC Packet produced by C/D.  The receiver reassembles the SCHC Data Unit
