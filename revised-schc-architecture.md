@@ -318,7 +318,7 @@ This document provides an architecture in which both the simple and the complex
   applications running on two remote hosts using SCHC Compression/Decompression
   and optionally Fragmentation/Reassembly.
 
-Each host runs an Endpoint that implements SCHC functions that are executed
+Each host features an Endpoint that implements SCHC functions that are executed
   by an Instance. The Instance stores a Context that may have been obtained 
   from an entity called the Context Repository. The same Context is shared 
   between the two Endpoints. The Instance Configuration specifies the required 
@@ -326,6 +326,11 @@ Each host runs an Endpoint that implements SCHC functions that are executed
   which packets to intercept, the rule-matching policy (e.g., first-match,
   best-match), the Instance's role (in the case of asymmetric processing),
   etc.
+<!--
+Quentin: [edit]: In my understanding, the Endpoint is not a running entity,
+                 rather a "container"/boundary around Instances that are 
+                 managed together. Opinions?
+-->
 
 Important notice: having the same Context is not sufficient to guarantee
   the interoperability of SCHC operations between two Instances. The format
