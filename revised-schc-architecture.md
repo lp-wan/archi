@@ -327,9 +327,9 @@ Each host features an Endpoint that implements SCHC functions that are executed
   best-match), the Instance's role (in the case of asymmetric processing),
   etc.
 <!--
-Quentin: [edit]: In my understanding, the Endpoint is not a running entity,
+Quentin: [edit] In my understanding, the Endpoint is not a running entity,
                  rather a "container"/boundary around Instances that are 
-                 managed together. Opinions?
+                 managed together. Opinions? (edit in place)
 -->
 
 Important notice: having the same Context is not sufficient to guarantee
@@ -346,6 +346,18 @@ Instances sharing a common set of Contexts form a Domain. The Domain Manager
   Context is called a Session. Each Instance, Context, and Session must 
   be uniquely identifiable to allow the Domain Manager to update the Context 
   of a specific Instance.
+
+<!--
+Quentin: [comment] The Domain discussion feels a bit unsupported here. The
+         need for a Domain raises is a bit overkill for the current scenario:
+         (two Endpoints, one Instance each, no configuration provisioning).
+         I'd rather introduce in sequence:
+          - Instance & Context (the simple case)
+          - Multiple Instances (e.g. two different traffic scenarios on 
+            the same Endpoint)
+          - Dynamic Configuration --> need for Domain Manager
+          as was done in rc6 (https://github.com/lp-wan/archi/blob/schc-revised-architecture-6rc/schc-architecture.md)
+-->
 
 ~~~~~~~~
 +-----------------------+                   +-----------------------+
@@ -376,9 +388,36 @@ Instances sharing a common set of Contexts form a Domain. The Domain Manager
               SCHC Data Units exchanged inside a Session         
 
 ~~~~~~~~
-{: #Fig-Simple-Overview title='Overview of two simple Endpoints exchanging
-SCHC Data Units'}
+{: #Fig-Simple-Overview title='Overview of two simple Endpoints exchanging SCHC Data Units'}
 
+<!--
+Quentin: [comment] The following figure shows entities that have not yet 
+         been described in the document. What follows is the text that was
+         describing its content.
+
+        """
+        An Endpoint can host multiple Instances, each with its own Context 
+         and  Instance Configuration.
+
+        When an Endpoint is supporting multiple Instances, the Instance 
+        Manager is responsible for managing the lifecycle and configuration 
+        of these Instances. Datagrams are routed to the appropriate Instance 
+        by the Dispatcher using the Discriminator and admission rules based 
+        on information provided in the Instance Configuration. The Dispatcher 
+        is a single point of decision for packet forwarding within the Endpoint.
+
+        In some deployments, the Discriminator is derived entirely from 
+        lower-layer context (e.g., a specific PPP link, an IPv6 address, 
+        or a UDP port). If external context is insufficient or unavailable, 
+        the Dispatcher may need an explicit Discriminator. For example, 
+        Datagrams can be encapsulated in a light transport protocol whose 
+        header contains a Session, Context, or Instance identifier, and 
+        can provide additional services such as integrity checking (CRC).
+
+        The following figure illustrates the main components of an Endpoint 
+        supporting multiple Instances and their interactions:
+        """
+-->
 ~~~~~~~~
          +-----------------------------------------------------+
          | Domain Manager                                      |
@@ -421,8 +460,7 @@ SCHC Data Units'}
 |            +--------------------+ |
 +-----------------------------------+
 ~~~~~~~~
-{: #Fig-Domain-Manager title='Overview of Endpoint, Instance, and Domain
-configuration and management'}
+{: #Fig-Domain-Manager title='Overview of Endpoint, Instance, and Domain configuration and management'}
 
 ## Focus on core components
 
@@ -430,7 +468,7 @@ configuration and management'}
 
 An Instance is the fundamental component that runs a set of SCHC functionalities
   as defined in {{RFC8724}} hosted on an Endpoint. Its operation is defined 
-  by an Instance Configuration and a Context. An Endpoint MAY execute several
+  by an Instance Configuration and a Context. An Endpoint may execute several
   Instances. Each Instance operates independently, with its own Context 
   and Instance Configuration. Instances may execute dynamic Context update
   mechanisms and performance monitoring and reporting in complex scenarios.
@@ -452,11 +490,16 @@ The Instance Configuration may also include the following parameters:
   which direction the rule applies to (Up, Dw, Bi).
 - Matching policy (e.g., first-match, best-match, etc.) to apply when multiple
   rules match a packet.
-- Packet interception criteria (e.g., Stratum - the protocol headers that 
+- Packet admission criteria (e.g., Stratum - the protocol headers that 
   the SCHC Rules in the associated Context can address, Filters based on 
   specific values or characteristics of packets, etc.)
 - Dispatch information (e.g., how to identify the Instance for incoming
   packets, how to route packets to the appropriate Instance, etc.).
+
+<!--
+Quentin: [edit] interception --> admission. Aligns with [#Fig-Multiple-Instances]
+                also discussed in Vienna Side meeting.
+-->
 
 The Role of an Instance is typically derived from extrinsic properties.
   In star-oriented deployments, the hub and the spokes derive their
@@ -495,21 +538,27 @@ This component is responsible for compressing and decompressing headers
 Internally, on compression, the C/D engine:
 
 - delineates the fields using the Parser and/or Data Model provided in the 
-  Context;
+    Context;
 - chooses the appropriate compression Rule among candidate Rules from the 
-  Context based on the matching policy defined in the Instance Configuration;
+   Context based on the matching policy defined in the Instance Configuration;
 - applies the compression Rule to the fields of the header(s);
-- generates the compressed SCHC Data Unit.
-In {{RFC8724}}, a packet whose header has been compressed is called a SCHC
-  Packet.
+- generates the compressed SCHC Data Unit. In {{RFC8724}}, a packet whose 
+    header has been compressed is called a SCHC Packet.
 
 On decompression, the C/D engine:
 
-- identifies the appropriate decompression Rule based on the RuleID stored
-  in the SCHC Packet;
+- identifies the appropriate decompression Rule based on the RuleID advertised
+  in the SCHC Data Unit;
 - applies the decompression Rule to reconstruct the original header;
 - reconstructs and returns the original packet from the decompressed header
   and payload.
+
+<!--
+Quentin: in my opinion, "original packet" may be misleading as multiple 
+         instances addressing different strata may need to be executed
+         to restore the "original packet". I'd prefer we restrict the 
+         description to : returns the "original header fields". Thoughts?
+-->
 
 #### Fragmentation and Reassembly (F/R)
 
@@ -536,7 +585,10 @@ A SCHClet is a self-contained unit within the SCHC framework that implements
   specified in the Manifest in the Instance Configuration.
 
 #### Multiple Instances {#MultipleInstances}
-
+<!-- 
+Quentin: [comment] Same as above, I'd prefer to see this up top in the 
+         Architecture section before the Focus on core elements.
+-->
 An Endpoint can host multiple Instances, each with its own Context and Instance
 Configuration.
 
@@ -563,11 +615,10 @@ In some deployments, the Discriminator is derived entirely from lower-layer
   If external context is insufficient or unavailable, the Dispatcher may 
   need an explicit Discriminator. For example, Data Units can be encapsulated 
   in a light transport protocol whose header contains the disambiguation
-  information elements, such as a Session Identifier.
-  These information elements may also be provided in a custom Control Header
-  placed before the RuleID.
-  The transport protocol or control header can provide additional services
-  such as integrity checking (CRC).
+  information elements, such as a Session Identifier. These information 
+  elements may also be provided in a custom Control Header placed before
+  the RuleID. The transport protocol or control header can provide additional 
+  services such as integrity checking (CRC).
 
 The following figure illustrates the main components of an Endpoint supporting
   multiple Instances and the interaction between the Network Stack, the
@@ -606,8 +657,7 @@ The following figure illustrates the main components of an Endpoint supporting
                           | Network stack |                  
                           +---------------+                  
 ~~~~~~~~
-{: #Fig-Multiple-Instances title='Overview of an Endpoint hosting multiple
-Instances'}
+{: #Fig-Multiple-Instances title='Overview of an Endpoint hosting multiple Instances'}
 
 ### Session
 
